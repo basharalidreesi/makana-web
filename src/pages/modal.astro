@@ -1,0 +1,61 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout useClientRouter={true}>
+	<div id="pseudo-container" transition:persist="root"></div>
+	<div id="modal">
+		<p>
+			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam nec eleifend leo, eget efficitur tellus. Suspendisse molestie, quam eget pharetra molestie, dui erat porttitor purus, sit amet dignissim magna risus vitae dui. Ut consequat viverra massa eget pellentesque. Donec suscipit feugiat libero, ac accumsan libero varius vitae. Aenean at interdum urna. Sed et mauris eu purus facilisis rhoncus a placerat est. In ut nisi eros. Sed ante justo, suscipit vitae aliquet a, feugiat vel tellus. Nulla facilisi. Duis tempor fringilla dictum. Nam tristique hendrerit imperdiet. Etiam blandit tortor et luctus tristique. Proin ultricies congue nisi eu congue.
+		</p>
+		<p>
+			Nulla aliquet efficitur enim, bibendum tincidunt nulla viverra a. Nulla sit amet pulvinar orci. Donec neque turpis, pretium eu feugiat non, accumsan et odio. Duis vel neque blandit, congue ipsum nec, dictum ligula. Praesent eu magna quis leo dapibus sollicitudin. Donec non felis tempor, semper dui quis, posuere metus. Vestibulum dui ipsum, maximus sed tincidunt ac, ultricies ac risus. Vestibulum non condimentum sem, et dignissim dolor. Maecenas porttitor arcu sed nisl aliquet, vitae tempus nulla mattis. In a aliquam lacus.
+		</p>
+		<p>
+			Duis sed convallis justo, sit amet pulvinar augue. Sed venenatis consectetur dolor varius fermentum. Proin ullamcorper eget eros sed elementum. Nulla in risus at leo eleifend egestas et quis orci. Aliquam porta laoreet bibendum. Quisque pellentesque imperdiet urna, ac interdum neque laoreet sit amet. Vestibulum fermentum lectus quis lacinia pretium. Praesent sed leo ut erat egestas tincidunt. Morbi vestibulum vulputate magna, a hendrerit neque molestie vitae. Donec iaculis dolor malesuada orci accumsan, convallis pulvinar eros sagittis. Nam at dapibus leo, et tempor ligula. Fusce et enim ac nisi pharetra commodo. Cras dui augue, vulputate in placerat eu, scelerisque nec sapien. Aenean congue, leo a sollicitudin aliquet, ligula ex faucibus ipsum, vel viverra sapien quam vitae justo. Suspendisse potenti. Sed eu varius sem.
+		</p>
+		<a href="/" id="close-button">Close modal</a>
+		<a href="/" id="navigate-button" data-astro-reload>Back to home</a>
+	</div>
+</Layout>
+
+<script>
+	const pseudoContainer = document.querySelector("#pseudo-container");
+	document.addEventListener("astro:before-preparation", (event) => {
+		if (!pseudoContainer) { return; };
+		if (event.to.pathname === "/") {
+			if (event.direction === "back") { history.back(); };
+			if (event.direction === "forward") { history.forward(); };
+		};
+	});
+</script>
+
+<style>
+	#pseudo-container {
+		& + #modal {
+			#close-button {
+				display: none;
+			}
+		}
+	}
+	:global(#container) {
+		& {
+			filter: blur(6px);
+		}
+		& + #modal {
+			& {
+				width: 90vw;
+				height: 90vh;
+				border: 1px solid;
+				background: white;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+			}
+			#navigate-button {
+				display: none;
+			}
+		}
+	}
+</style>

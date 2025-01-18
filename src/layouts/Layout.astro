@@ -1,6 +1,19 @@
+---
+import { ClientRouter } from "astro:transitions";
+
+export type Props = {
+	useClientRouter?: boolean;
+};
+
+const {
+	useClientRouter = false,
+} = Astro.props;
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
+		{useClientRouter && (<ClientRouter fallback="none" />)}
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -11,12 +24,3 @@
 		<slot />
 	</body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
