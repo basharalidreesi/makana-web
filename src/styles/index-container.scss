@@ -1,0 +1,15 @@
+@use "./mixins.scss";
+
+@mixin index-container {
+	& {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	ul {
+		padding-inline-start: 1rem;
+		a {
+			@include mixins.hyperlink;
+		}
+	}
+}
