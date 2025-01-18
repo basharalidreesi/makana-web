@@ -1,12 +1,23 @@
 ---
-
 ---
 
 <div transition:persist="modal">
 	<slot />
 </div>
 
+<style lang="scss">
+	:global(body[data-is-loading="true"]) {
+		cursor: wait;
+	}
+</style>
+
 <script>
+	document.addEventListener("astro:before-preparation", () => {
+		document.body.setAttribute("data-is-loading", "true");
+	});
+	document.addEventListener("astro:after-preparation", () => {
+		document.body.removeAttribute("data-is-loading");
+	});
 	document.addEventListener("astro:after-swap", () => {
 		document.body.setAttribute("data-has-persisted", "true");
 	});

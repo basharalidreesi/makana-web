@@ -5,9 +5,9 @@ import ModalReceiver from "../../components/ModalReceiver.astro";
 import MapStyles from "../../components/MapStyles.astro";
 
 export const entries = [
-	{ slug: "entry-1", title: "First Entry", content: "This is the content for the first entry. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam nec eleifend leo, eget efficitur tellus. Suspendisse molestie, quam eget pharetra molestie, dui erat porttitor purus, sit amet dignissim magna risus vitae dui. Ut consequat viverra massa eget pellentesque. Donec suscipit feugiat libero, ac accumsan libero varius vitae. Aenean at interdum urna. Sed et mauris eu purus facilisis rhoncus a placerat est. In ut nisi eros. Sed ante justo, suscipit vitae aliquet a, feugiat vel tellus. Nulla facilisi. Duis tempor fringilla dictum. Nam tristique hendrerit imperdiet. Etiam blandit tortor et luctus tristique. Proin ultricies congue nisi eu congue." },
-	{ slug: "entry-2", title: "Second Entry", content: "This is the content for the second entry. Nulla aliquet efficitur enim, bibendum tincidunt nulla viverra a. Nulla sit amet pulvinar orci. Donec neque turpis, pretium eu feugiat non, accumsan et odio. Duis vel neque blandit, congue ipsum nec, dictum ligula. Praesent eu magna quis leo dapibus sollicitudin. Donec non felis tempor, semper dui quis, posuere metus. Vestibulum dui ipsum, maximus sed tincidunt ac, ultricies ac risus. Vestibulum non condimentum sem, et dignissim dolor. Maecenas porttitor arcu sed nisl aliquet, vitae tempus nulla mattis. In a aliquam lacus." },
-	{ slug: "entry-3", title: "Third Entry", content: "This is the content for the third entry. Duis sed convallis justo, sit amet pulvinar augue. Sed venenatis consectetur dolor varius fermentum. Proin ullamcorper eget eros sed elementum. Nulla in risus at leo eleifend egestas et quis orci. Aliquam porta laoreet bibendum. Quisque pellentesque imperdiet urna, ac interdum neque laoreet sit amet. Vestibulum fermentum lectus quis lacinia pretium. Praesent sed leo ut erat egestas tincidunt. Morbi vestibulum vulputate magna, a hendrerit neque molestie vitae. Donec iaculis dolor malesuada orci accumsan, convallis pulvinar eros sagittis. Nam at dapibus leo, et tempor ligula. Fusce et enim ac nisi pharetra commodo. Cras dui augue, vulputate in placerat eu, scelerisque nec sapien. Aenean congue, leo a sollicitudin aliquet, ligula ex faucibus ipsum, vel viverra sapien quam vitae justo. Suspendisse potenti. Sed eu varius sem." },
+	{ slug: "entry-1", name: "First Entry", title: "This is the content for the first entry.", content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam nec eleifend leo, eget efficitur tellus. Suspendisse molestie, quam eget pharetra molestie, dui erat porttitor purus, sit amet dignissim magna risus vitae dui. Ut consequat viverra massa eget pellentesque. Donec suscipit feugiat libero, ac accumsan libero varius vitae. Aenean at interdum urna. Sed et mauris eu purus facilisis rhoncus a placerat est. In ut nisi eros. Sed ante justo, suscipit vitae aliquet a, feugiat vel tellus. Nulla facilisi. Duis tempor fringilla dictum. Nam tristique hendrerit imperdiet. Etiam blandit tortor et luctus tristique. Proin ultricies congue nisi eu congue." },
+	{ slug: "entry-2", name: "Second Entry", title: "This is the content for the second entry.", content: "Nulla aliquet efficitur enim, bibendum tincidunt nulla viverra a. Nulla sit amet pulvinar orci. Donec neque turpis, pretium eu feugiat non, accumsan et odio. Duis vel neque blandit, congue ipsum nec, dictum ligula. Praesent eu magna quis leo dapibus sollicitudin. Donec non felis tempor, semper dui quis, posuere metus. Vestibulum dui ipsum, maximus sed tincidunt ac, ultricies ac risus. Vestibulum non condimentum sem, et dignissim dolor. Maecenas porttitor arcu sed nisl aliquet, vitae tempus nulla mattis. In a aliquam lacus." },
+	{ slug: "entry-3", name: "Third Entry", title: "This is the content for the third entry.", content: "Duis sed convallis justo, sit amet pulvinar augue. Sed venenatis consectetur dolor varius fermentum. Proin ullamcorper eget eros sed elementum. Nulla in risus at leo eleifend egestas et quis orci. Aliquam porta laoreet bibendum. Quisque pellentesque imperdiet urna, ac interdum neque laoreet sit amet. Vestibulum fermentum lectus quis lacinia pretium. Praesent sed leo ut erat egestas tincidunt. Morbi vestibulum vulputate magna, a hendrerit neque molestie vitae. Donec iaculis dolor malesuada orci accumsan, convallis pulvinar eros sagittis. Nam at dapibus leo, et tempor ligula. Fusce et enim ac nisi pharetra commodo. Cras dui augue, vulputate in placerat eu, scelerisque nec sapien. Aenean congue, leo a sollicitudin aliquet, ligula ex faucibus ipsum, vel viverra sapien quam vitae justo. Suspendisse potenti. Sed eu varius sem." },
 ];
 
 export const getStaticPaths = (async () => {
@@ -29,6 +29,9 @@ const entry = Astro.props;
 <Layout useClientRouter={true}>
 	<ModalReceiver>
 		<div id="entry">
+			<h1>
+				{entry.title}
+			</h1>
 			<p>
 				{entry.content}
 			</p>
@@ -42,5 +45,8 @@ const entry = Astro.props;
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+	h1 {
+		font-weight: bold;
 	}
 </style>
