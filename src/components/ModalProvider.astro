@@ -1,0 +1,13 @@
+---
+
+---
+
+<div transition:persist="modal">
+	<slot />
+</div>
+
+<script>
+	document.addEventListener("astro:after-swap", () => {
+		document.body.setAttribute("data-has-persisted", "true");
+	});
+</script>

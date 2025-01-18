@@ -1,7 +1,8 @@
 ---
 import type { GetStaticPaths } from "astro";
 import Layout from "../../layouts/Layout.astro";
-import IndexContainerStyles from "../../components/IndexContainerStyles.astro";
+import ModalReceiver from "../../components/ModalReceiver.astro";
+import MapStyles from "../../components/MapStyles.astro";
 
 export const entries = [
 	{ slug: "entry-1", title: "First Entry", content: "This is the content for the first entry. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam nec eleifend leo, eget efficitur tellus. Suspendisse molestie, quam eget pharetra molestie, dui erat porttitor purus, sit amet dignissim magna risus vitae dui. Ut consequat viverra massa eget pellentesque. Donec suscipit feugiat libero, ac accumsan libero varius vitae. Aenean at interdum urna. Sed et mauris eu purus facilisis rhoncus a placerat est. In ut nisi eros. Sed ante justo, suscipit vitae aliquet a, feugiat vel tellus. Nulla facilisi. Duis tempor fringilla dictum. Nam tristique hendrerit imperdiet. Etiam blandit tortor et luctus tristique. Proin ultricies congue nisi eu congue." },
@@ -26,74 +27,20 @@ const entry = Astro.props;
 ---
 
 <Layout useClientRouter={true}>
-	<div id="modal-root">
-		<div id="modal-context" transition:persist="root"></div>
-		<IndexContainerStyles />
-		<a href="/" id="modal-context-overlay"></a>
-	</div>
-	<div id="entry-container">
-		<p>
-			{entry.content}
-		</p>
-		<a href="/" id="entry-close-modal">Close modal</a>
-		<a href="/" id="entry-navigate-away" data-astro-reload>Back to home</a>
-	</div>
+	<ModalReceiver>
+		<div id="entry">
+			<p>
+				{entry.content}
+			</p>
+		</div>
+		<MapStyles />
+	</ModalReceiver>
 </Layout>
 
-<script>
-	document.addEventListener("astro:before-preparation", (event) => {
-		let hasPersisted = document.body.getAttribute("data-has-persisted") && document.body.getAttribute("data-has-persisted") === "true";
-		if (event.direction === "back" && !hasPersisted) {
-			event.preventDefault();
-			history.back();
-		};
-	});
-</script>
-
 <style lang="scss">
-	@use "../../styles/mixins.scss";
-	:global(body:not([data-has-persisted="true"])) {
-		#modal-root {
-			display: none;
-		}
-		#entry-close-modal {
-			display: none;
-		}
-	}
-	:global(body[data-has-persisted="true"]) {
-		#entry-navigate-away {
-			display: none;
-		}
-		#modal-context {
-			@include mixins.user-select-none;
-			pointer-events: none;
-		}
-		#modal-context-overlay {
-			display: block;
-			position: absolute;
-			inset: 0;
-			-webkit-backdrop-filter: blur(6px);
-			backdrop-filter: blur(6px);
-			@include mixins.user-select-none;
-		}
-		#entry-container {
-			border: 1px solid;
-			background: white;
-			position: absolute;
-			top: 6rem;
-			right: 3rem;
-			bottom: 3rem;
-			left: 3rem;
-			padding: 1rem;
-		}
-	}
-	#entry-container {
+	#entry {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-	}
-	#entry-close-modal,
-	#entry-navigate-away {
-		@include mixins.hyperlink;
 	}
 </style>

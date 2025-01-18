@@ -1,0 +1,68 @@
+---
+
+---
+
+<div>
+	<div id="modal-root">
+		<div id="modal-context" transition:persist="modal"></div>
+		<a href="/" id="modal-context-overlay"></a>
+	</div>
+	<div id="modal-container">
+		<slot />
+		<div id="modal-close">
+			<a href="/">Close modal</a>
+		</div>
+	</div>
+</div>
+
+<script>
+	document.addEventListener("astro:before-preparation", (event) => {
+		let hasPersisted = document.body.getAttribute("data-has-persisted") && document.body.getAttribute("data-has-persisted") === "true";
+		if (event.direction === "back" && !hasPersisted) {
+			event.preventDefault();
+			history.back();
+		};
+	});
+</script>
+
+<style lang="scss">
+	@use "../styles/mixins.scss";
+	:global(body:not([data-has-persisted="true"])) {
+		#modal-root {
+			display: none;
+		}
+		#modal-close {
+			display: none;
+		}
+	}
+	:global(body[data-has-persisted="true"]) {
+		#modal-context {
+			@include mixins.user-select-none;
+			pointer-events: none;
+		}
+		#modal-context-overlay {
+			display: block;
+			position: absolute;
+			inset: 0;
+			-webkit-backdrop-filter: blur(6px);
+			backdrop-filter: blur(6px);
+			@include mixins.user-select-none;
+		}
+		#modal-container {
+			border: 1px solid;
+			background: white;
+			position: absolute;
+			top: 6rem;
+			right: 3rem;
+			bottom: 6rem;
+			left: 3rem;
+			padding: 1rem;
+		}
+		#modal-close {
+			margin-block-start: 1rem;
+			a {
+				@include mixins.hyperlink;
+			}
+		}
+	}
+</style>

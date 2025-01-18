@@ -2,14 +2,16 @@
 ---
 
 <header id="header">
-	Global Header
+	<a href="/" data-astro-reload>Global Header</a>
 </header>
 
 <style lang="scss">
+	@use "../styles/mixins.scss";
 	#header {
-		position: relative;
-		z-index: 100;
 		background: yellow;
 		padding: 1rem;
+	}
+	a {
+		@include mixins.hyperlink;
 	}
 </style>
