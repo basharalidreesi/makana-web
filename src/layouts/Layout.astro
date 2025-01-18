@@ -25,20 +25,20 @@ const {
 	</head>
 	<body>
 		<Header />
-		<div id="wrapper">
+		<main>
 			<slot />
-		</div>
+		</main>
 		<Footer />
 	</body>
 </html>
 
-<style lang="scss">
+<style lang="scss" is:global>
 	body {
 		// height: 100%;
 		display: flex;
 		flex-direction: column;
 	}
-	#wrapper {
+	main {
 		flex: 1;
 		padding: 1rem;
 	}

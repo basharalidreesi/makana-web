@@ -19,7 +19,7 @@ body {
 /* Set text defaults */
 html {
 	font-size: max(16px, 100%);
-	font-family: sans-serif;
+	font-family: serif;
 	font-weight: 400;
 	font-style: normal;
 	line-height: 1.0;

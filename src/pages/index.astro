@@ -1,22 +1,15 @@
 ---
+import IndexContainerStyles from "../components/IndexContainerStyles.astro";
 import Layout from "../layouts/Layout.astro";
-
-const projects = [
-	{ slug: "entry", title: "First Item", },
-	{ slug: "entry", title: "Second Item", },
-	{ slug: "entry", title: "Third Item", },
-	{ slug: "entry", title: "Fourth Item", },
-	{ slug: "entry", title: "Fifth Item", },
-	{ slug: "entry", title: "Sixth Item", },
-];
+import { entries } from "./entries/[entry].astro";
 ---
 
 <Layout useClientRouter={true}>
 	<div id="index-container" transition:persist="root">
 		<ul>
-			{projects.map((project) => (
+			{entries.map((entry) => (
 				<li>
-					<a href={`/${project.slug}`}>{project.title}</a>
+					<a href={`/entries/${entry.slug}`}>{entry.title}</a>
 				</li>
 			))}
 		</ul>
@@ -30,12 +23,23 @@ const projects = [
 			Duis sed convallis justo, sit amet pulvinar augue. Sed venenatis consectetur dolor varius fermentum. Proin ullamcorper eget eros sed elementum. Nulla in risus at leo eleifend egestas et quis orci. Aliquam porta laoreet bibendum. Quisque pellentesque imperdiet urna, ac interdum neque laoreet sit amet. Vestibulum fermentum lectus quis lacinia pretium. Praesent sed leo ut erat egestas tincidunt. Morbi vestibulum vulputate magna, a hendrerit neque molestie vitae. Donec iaculis dolor malesuada orci accumsan, convallis pulvinar eros sagittis. Nam at dapibus leo, et tempor ligula. Fusce et enim ac nisi pharetra commodo. Cras dui augue, vulputate in placerat eu, scelerisque nec sapien. Aenean congue, leo a sollicitudin aliquet, ligula ex faucibus ipsum, vel viverra sapien quam vitae justo. Suspendisse potenti. Sed eu varius sem.
 		</p>
 	</div>
+	<IndexContainerStyles />
 </Layout>
 
-<style lang="scss" is:global>
-	@use "../styles/mixins.scss";
-	@use "../styles/index-container.scss" as *;
-	#index-container {
-		@include index-container;
-	}
-</style>
+<script>
+	var hasPersisted = false;
+	document.addEventListener("astro:before-swap", (event) => {
+		if (event.from.pathname === "/" && event.to.pathname.startsWith("/entries")) {
+			hasPersisted = true;
+			return;
+		};
+		hasPersisted = false;
+	});
+	document.addEventListener("astro:after-swap", () => {
+		if (hasPersisted) {
+			document.body.setAttribute("data-has-persisted", "true");
+		} else {
+			document.body.removeAttribute("data-has-persisted");
+		};
+	});
+</script>
