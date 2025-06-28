@@ -1,0 +1,213 @@
+---
+import sanityClient from '@root/sanity/sanity.cli';
+import type { BasicAboutPage, BasicHappening, BasicProject, BasicResource, BasicWebsite, BasicWriting, Language, SanityImageObject } from '@root/sanity/sanity.types';
+import { DEFAULT_LANGUAGE, UI_DICTIONARY, SUPPORTED_LANGUAGES_SORTED } from '@lib/languageUtils';
+import { generateOgImage } from '@lib/imageUtils';
+import { ClientRouter } from 'astro:transitions';
+import { groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
+import { LOCALE_PREFIXES } from '@lib/routingUtils';
+import NavSection from '@components/NavSection.astro';
+import Logo from '@components/Logo.astro';
+
+const websiteSettings: BasicWebsite & { logoUrl: URL; } = await sanityClient.fetch(`
+    *[_id == 'website'][0] {
+        _type,
+        title,
+        summary,
+        keywords,
+        mainImage,
+        analytics,
+        'logoUrl': logo.asset->url
+    }
+`);
+
+const aboutPage: BasicAboutPage = await sanityClient.fetch(`
+    *[_id == 'aboutPage'][0] {
+        _type,
+        title,
+        slug
+    }
+`);
+
+const projects: BasicProject[] = await sanityClient.fetch(`
+    *[_type == 'project' && defined(language) && defined(slug.current)] {
+        _type,
+        language,
+        title,
+        slug,
+        date
+    } | order(date desc, title asc)
+`);
+
+const writings: BasicWriting[] = await sanityClient.fetch(`
+    *[_type == 'writing' && defined(language) && defined(slug.current)] {
+        _type,
+        language,
+        title,
+        slug,
+        date
+    } | order(date desc, title asc)
+`);
+
+const happenings: BasicHappening[] = await sanityClient.fetch(`
+    *[_type == 'happening' && defined(slug)] {
+        _type,
+        title,
+        slug,
+        startDate,
+        startTime {
+            hours,
+            minutes
+        }
+    } | order(startDate desc, startTime.hours desc, startTime.minutes desc, title asc)
+`);
+
+const resources: BasicResource[] = await sanityClient.fetch(`
+    *[_type == 'resource' && defined(slug)] {
+        _type,
+        title,
+        slug,
+        date
+    } | order(date desc, title asc)
+`);
+
+type Props = {
+    lang: Language | undefined;
+    title: string | undefined;
+    description?: string;
+    keywords?: Array<string>;
+    image?: SanityImageObject;
+    canonical?: URL;
+    analytics?: string;
+};
+
+const {
+    lang = DEFAULT_LANGUAGE.id,
+    title,
+    description,
+    keywords,
+    image,
+    canonical,
+    analytics,
+} = Astro.props;
+
+const websiteTitle = websiteSettings.title?.[lang];
+const pageTitle = title;
+
+const resolvedTitle = [pageTitle, websiteTitle].filter(Boolean).join(' · ');
+const resolvedDescription = description || websiteSettings.summary?.[lang];
+const resolvedKeywords = [...(keywords || []), ...(websiteSettings.keywords || [])].join(', ');
+const resolvedImage = image?.asset?._ref ? generateOgImage(image) : websiteSettings.mainImage?.asset?._ref ? generateOgImage(websiteSettings.mainImage) : undefined;
+const resolvedCanonical = canonical || new URL(Astro.url.pathname, Astro.site);
+const resolvedAnalytics = analytics || websiteSettings.analytics;
+---
+
+<html lang={lang}>
+    <head>
+        <meta charset='utf-8' />
+        {resolvedTitle && (
+            <title>{resolvedTitle}</title>
+        )}
+        {(pageTitle || websiteTitle) && (
+            <meta property='og:site_name' content={websiteTitle} />
+            <meta property='og:title' content={pageTitle || websiteTitle} />
+            <meta name='twitter:title' content={pageTitle || websiteTitle} />
+        )}
+        {resolvedDescription && (
+            <meta name='description' content={resolvedDescription} />
+            <meta property='og:description' content={resolvedDescription} />
+            <meta name='twitter:description' content={resolvedDescription} />
+        )}
+        {resolvedKeywords && (
+            <meta name='keywords' content={resolvedKeywords} />
+        )}
+        {resolvedImage && (
+            <meta property='og:image' content={resolvedImage} />
+            <meta name='twitter:image' content={resolvedImage} />
+        )}
+        {resolvedCanonical && (
+            <link rel='canonical' href={resolvedCanonical} />
+            <meta property='og:url' content={resolvedCanonical} />
+            <meta name='twitter:url' content={resolvedCanonical} />
+        )}
+        <meta property='og:type' content='website' />
+        <meta name='twitter:card' content='summary_large_image' />
+        <meta name='viewport' content='width=device-width,initial-scale=1.0,viewport-fit=cover' />
+        <meta name='robots' content='max-snippet:-1,max-image-preview:large,max-video-preview:-1' />
+        <link rel='sitemap' href='/sitemap-index.xml' />
+        {resolvedAnalytics && (
+            <Fragment set:html={resolvedAnalytics} />
+        )}
+        <meta name='generator' content={Astro.generator} />
+        <ClientRouter />
+    </head>
+    <body>
+        <header>
+            <h1 class='visually-hidden'>
+                {websiteTitle}
+            </h1>
+            {SUPPORTED_LANGUAGES_SORTED.map((supportedLang) => {
+                const langId = supportedLang.id;
+                const langDir = supportedLang.dir;
+                const langTitle = supportedLang.title;
+                const langProjects = groupByLanguageField(projects, langId);
+                const langWritings = groupByLanguageField(writings, langId);
+                const langHappenings = groupByLocalisedSlug(happenings, langId);
+                const langResources = groupByLocalisedSlug(resources, langId);
+                return (
+                    <section lang={langId} dir={langDir}>
+                        <nav aria-label={`${langTitle} navigation`}>
+                            <ul>
+                                {aboutPage.slug?.[langId]?.current && (
+                                    <li>
+                                        <a href={`/${LOCALE_PREFIXES[langId]}/${aboutPage.slug[langId].current}`}>
+                                            {aboutPage.title?.[langId] || UI_DICTIONARY.aboutPage[langId]}
+                                        </a>
+                                    </li>
+                                )}
+                                <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} />
+                                <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} />
+                                <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} />
+                                <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} />
+                            </ul>
+                        </nav>
+                    </section>
+                );
+            })}
+            <div>
+                <a href='/' aria-label={UI_DICTIONARY.homePage[lang]}>
+                    <Logo source={websiteSettings.logoUrl} />
+                </a>
+            </div>
+        </header>
+        <main>
+            <slot />
+        </main>
+    </body>
+</html>
+
+<script>
+    document.addEventListener('astro:page-load', () => {
+        const navExpandButtons = document.querySelectorAll(`button[data-nav-expand]`);
+        navExpandButtons.forEach((button) => button.addEventListener('click', () => {
+            const expanded = button.getAttribute('aria-expanded') === 'true';
+            const controls = button.getAttribute('aria-controls');
+            if (!controls) { return; }
+            const menu = document.getElementById(controls);
+            if (!menu) { return; }
+            navExpandButtons.forEach((otherButton) => {
+                const otherControls = otherButton.getAttribute('aria-controls');
+                if (!otherControls) { return; }
+                const otherMenu = document.getElementById(otherControls);
+                if (otherButton !== button && otherMenu) {
+                    otherButton.setAttribute('aria-expanded', 'false');
+                    otherMenu.setAttribute('aria-hidden', 'true');
+                    otherMenu.hidden = true;
+                }
+            });
+            button.setAttribute('aria-expanded', String(!expanded));
+            menu.setAttribute('aria-hidden', String(expanded));
+            menu.hidden = expanded;
+        }));
+    });
+</script>

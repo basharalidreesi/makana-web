@@ -1,0 +1,16 @@
+---
+import { Mark } from 'astro-portabletext/components';
+import type { Props as $, Mark as MarkType } from 'astro-portabletext/types';
+import PortableTextBdi from '@components/PortableText/PortableTextBdi.astro';
+
+export type Props = $<MarkType<never>>;
+const props = Astro.props;
+const markTypeIs = (markType: string) => markType === props.node.markType;
+const Cmp =
+    markTypeIs('bdi') ? (PortableTextBdi)
+    : (Mark); // fallback to `astro-portabletext`
+---
+
+<Cmp {...props}>
+	<slot />
+</Cmp>

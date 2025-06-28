@@ -1,0 +1,53 @@
+---
+import type { Language, LocalisedSlug, LocalisedString, Slug, TargetableDocument, TargetableDocumentType } from '@root/sanity/sanity.types';
+import { generateRoute } from '@lib/routingUtils';
+import { getDate, getSlug, getTitle } from '@lib/contentUtils';
+import { renderIsoDate } from '@lib/dateTimeUtils';
+
+type Props = {
+    items: TargetableDocument[];
+    lang: Language;
+    title: string;
+    type: TargetableDocumentType;
+};
+
+const {
+    items,
+    lang,
+    title,
+    type,
+} = Astro.props;
+---
+
+{items.length > 0 && (
+    <li>
+        <button type='button' data-nav-expand aria-expanded='false' aria-controls={`${type}-submenu-${lang}`}>
+            {title}
+        </button>
+        <ul id={`${type}-submenu-${lang}`} aria-hidden='true' hidden>
+            {items.map((item) => {
+                const slug = getSlug(item.slug, lang);
+                const itemTitle = getTitle(item, lang);
+                const itemDate = getDate(item);
+                return slug && (
+                    <li>
+                        <a href={generateRoute({
+                            locale: lang,
+                            documentType: type,
+                            slug: slug,
+                        })}>
+                            <span>
+                                {itemTitle}
+                            </span>
+                            <time datetime={itemDate}>
+                                {renderIsoDate(itemDate, {
+                                    withFallback: true,
+                                })}
+                            </time>
+                        </a>
+                    </li>
+                );
+            })}
+        </ul>
+    </li>
+)}

@@ -1,0 +1,74 @@
+---
+import type { GetStaticPaths } from 'astro';
+import type { Language, StaticDocument, StaticDocumentTypes } from '@root/sanity/sanity.types';
+import { LOCALE_PREFIXES } from '@lib/routingUtils';
+import sanityClient from '@root/sanity/sanity.cli';
+import { getContent, getSlug, getTitle, groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
+import Layout from '@layouts/Layout.astro';
+import PageContent from '@components/PageContent.astro';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    const documentTypes: StaticDocumentTypes[] = ['aboutPage'];
+    const languages: Language[] = Object.keys(LOCALE_PREFIXES) as Language[];
+    const paths: { params: Record<string, string>, props: Record<string, any> }[] = [];
+    for (const documentType of documentTypes) {
+        const baseQueryFields = [
+            '_type',
+            'title',
+            'slug',
+            'content',
+        ];
+        const queryFields = baseQueryFields.join(', ');
+        const documents: StaticDocument[] = await sanityClient.fetch(`
+            *[_type == '${documentType}' && defined(slug)] {
+                ${queryFields}
+            }
+        `);
+        const isSlugLocalised = documents.length > 0
+            && typeof documents[0].slug === 'object'
+            && !('current' in documents[0].slug);
+        for (const lang of languages) {
+            const localisedDocs = isSlugLocalised
+                ? groupByLocalisedSlug(documents, lang)
+                : groupByLanguageField(documents, lang);
+            for (const doc of localisedDocs) {
+                const slug = getSlug(doc.slug, lang);
+                if (!slug) { continue; }
+                paths.push({
+                    params: {
+                        locale: LOCALE_PREFIXES[lang],
+                        slug: slug,
+                    },
+                    props: {
+                        lang: lang,
+                        doc: doc,
+                    },
+                });
+            }
+        }
+    }
+    return paths;
+};
+
+type Props = {
+    lang: Language;
+    doc: StaticDocument;
+};
+
+const {
+    lang,
+    doc,
+} = Astro.props;
+
+const resolvedTitle = getTitle(doc, lang);
+const resolvedContent = getContent(doc.content, lang);
+---
+
+<Layout lang={lang} title={resolvedTitle}>
+    {resolvedTitle && (
+        <h2>{resolvedTitle}</h2>
+    )}
+    {resolvedContent && (
+        <PageContent source={resolvedContent} lang={lang} />
+    )}
+</Layout>

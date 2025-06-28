@@ -1,0 +1,44 @@
+---
+import type { Language, PageBuilder } from '@root/sanity/sanity.types';
+import PortableTextMark from '@components/PortableText/PortableTextMark.astro';
+import { PortableText } from 'astro-portabletext';
+import PortableTextBlock from './PortableText/PortableTextBlock.astro';
+
+type Props = {
+    lang: Language;
+    source: PageBuilder;
+};
+
+const {
+    lang,
+    source,
+} = Astro.props;
+
+const components = {
+    block: {
+        // normal (default)
+        heading: PortableTextBlock
+        // blockquote (default)
+    },
+    mark: {
+        // strong (default)
+        // em (default)
+        link: PortableTextMark,
+        bdi: PortableTextMark,
+    },
+    list: {
+        // bullet (default)
+        // number (default)
+    },
+    type: {
+        // imageBlock
+        // videoBlock
+        // audioBlock
+        // formBlock
+    },
+};
+---
+
+{Array.isArray(source) && source.length > 0 && (
+    <PortableText value={source} components={components} />
+)}

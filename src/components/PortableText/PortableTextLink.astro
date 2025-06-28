@@ -1,0 +1,33 @@
+---
+import { generateRoute } from '@lib/routingUtils';
+import type { Language, Link } from '@root/sanity/sanity.types';
+
+type Props = {
+    node: {
+        lang: Language;
+        markDef: any;
+    };
+};
+
+const {
+    lang,
+    markDef,
+} = Astro.props.node;
+
+const type: Link['type'] = markDef?.type;
+
+let href: string | undefined;
+
+if (type === 'external' && markDef?.externalTarget) {
+    href = markDef.externalTarget;
+} else if (type === 'internal' && markDef?.internalTarget) {
+    const target = markDef.internalTarget;
+    href = generateRoute({
+        locale: lang,
+        documentType: target._type,
+        slug: target.slug.current,
+    });
+}
+---
+
+<a href={href}><slot /></a>
