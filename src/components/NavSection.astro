@@ -1,14 +1,13 @@
 ---
-import type { Language, LocalisedSlug, LocalisedString, Slug, TargetableDocument, TargetableDocumentType } from '@root/sanity/sanity.types';
+import type { CollectionDocument, CollectionDocumentType, Language, StaticDocument, StaticDocumentType } from '@root/sanity/sanity.types';
 import { generateRoute } from '@lib/routingUtils';
-import { getDate, getSlug, getTitle } from '@lib/contentUtils';
-import { renderIsoDate } from '@lib/dateTimeUtils';
+import { getSlug, getTitle } from '@lib/contentUtils';
 
 type Props = {
-    items: TargetableDocument[];
+    items: (CollectionDocument | StaticDocument)[];
     lang: Language;
     title: string;
-    type: TargetableDocumentType;
+    type: CollectionDocumentType | StaticDocumentType;
 };
 
 const {
@@ -26,24 +25,14 @@ const {
         </button>
         <ul id={`${type}-submenu-${lang}`} aria-hidden='true' hidden>
             {items.map((item) => {
-                const slug = getSlug(item.slug, lang);
+                const slug = getSlug(item, lang);
                 const itemTitle = getTitle(item, lang);
-                const itemDate = getDate(item);
                 return slug && (
                     <li>
-                        <a href={generateRoute({
-                            locale: lang,
-                            documentType: type,
-                            slug: slug,
-                        })}>
+                        <a href={generateRoute(item, lang)}>
                             <span>
                                 {itemTitle}
                             </span>
-                            <time datetime={itemDate}>
-                                {renderIsoDate(itemDate, {
-                                    withFallback: true,
-                                })}
-                            </time>
                         </a>
                     </li>
                 );

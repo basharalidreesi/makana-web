@@ -1,32 +1,15 @@
 ---
+import { fetchSvg } from '@lib/imageUtils';
+
 type Props = {
-    source: URL | undefined;
+    source: string | undefined;
 };
 
 const {
     source,
 } = Astro.props;
 
-let svgContent = null;
-
-if (source) {
-    try {
-        const res = await fetch(source);
-        if (res.ok) {
-            const contentType = res.headers.get('content-type') || '';
-            if (contentType.includes('image/svg')) {
-                svgContent = await res.text();
-                svgContent = svgContent
-                    // remove all classes, ids, and inline styling
-                    .replace(/\s*(style|class|id)\s*=\s*(['"])[\s\S]*?\2/gi, '')
-                    // remove all <style> elements
-                    .replace(/<\s*style[^>]*>[\s\S]*?<\s*\/\s*style\s*>/gi, '');
-            }
-        }
-    } catch (err) {
-        console.error('Logo fetch failed:', err);
-    }
-}
+const svgContent = fetchSvg(source);
 ---
 
 {svgContent ? (

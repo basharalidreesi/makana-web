@@ -1,4 +1,4 @@
-import type { Language, TargetableAndStaticDocumentTypes } from '@root/sanity/sanity.types';
+import type { CollectionDocumentType, Language, StaticDocumentType } from '@root/sanity/sanity.types';
 
 type LanguageDefinition = {
     title: string;
@@ -25,14 +25,19 @@ export const SUPPORTED_LANGUAGES = Object.entries(SUPPORTED_LANGUAGES_RECORD).ma
     ([id, def]) => ({ id: id as Language, ...def })
 );
 
+export const SUPPORTED_LANGUAGES_IDS = Object.keys(SUPPORTED_LANGUAGES_RECORD);
+
 const ensureCompleteOrder = <T extends Language[]>(arr: [...T] & ([Language] extends [T[number]] ? unknown : ['Error: Missing languages in order'])) => { return arr; }
 
-const languageOrder = ensureCompleteOrder(['en', 'ar']);
+const LANGUAGE_ORDER = ensureCompleteOrder([
+    'en',
+    'ar',
+]);
 
-export const SUPPORTED_LANGUAGES_SORTED = Object.entries(SUPPORTED_LANGUAGES_RECORD)
+export const SUPPORTED_LANGUAGES_ORDERED = Object.entries(SUPPORTED_LANGUAGES_RECORD)
     .sort(([idA], [idB]) => {
-        const indexA = languageOrder.indexOf(idA as Language);
-        const indexB = languageOrder.indexOf(idB as Language);
+        const indexA = LANGUAGE_ORDER.indexOf(idA as Language);
+        const indexB = LANGUAGE_ORDER.indexOf(idB as Language);
         if (indexA === -1 && indexB === -1) return 0;
         if (indexA === -1) return 1;
         if (indexB === -1) return -1;
@@ -49,12 +54,14 @@ export const DEFAULT_LANGUAGE = (() => {
     };
 })();
 
+export const DEFAULT_LANGUAGE_ID = DEFAULT_LANGUAGE.id;
+
 type LocalisedRecord<T> = {
     [L in Language]: T;
 };
 
 type UICategoryDictionary = {
-  [K in TargetableAndStaticDocumentTypes]: LocalisedRecord<string>;
+  [K in (CollectionDocumentType | StaticDocumentType)]: LocalisedRecord<string>;
 };
 
 export const UI_DICTIONARY: UICategoryDictionary & {

@@ -1,18 +1,19 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import type { Language, TargetableDocument, TargetableDocumentType } from '@root/sanity/sanity.types';
-import { LOCALE_PREFIXES } from '@lib/routingUtils';
+import type { CollectionDocument, CollectionDocumentType, Language } from '@root/sanity/sanity.types';
+import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
+import { RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
 import { getContent, getSlug, getSummary, groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
-import { DOCUMENT_TYPE_PATHS } from '@lib/routingUtils';
+import { LOCALE_PREFIXES } from '@lib/routingUtils';
+import { DOCUMENT_COLLECTION_PATHS } from '@lib/routingUtils';
+import { getTitle } from '@lib/contentUtils';
 import Layout from '@layouts/Layout.astro';
-import { getTitle, getDate } from '@lib/contentUtils';
-import { renderIsoDate } from '@lib/dateTimeUtils';
 import PageContent from '@components/PageContent.astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
-    const documentTypes: TargetableDocumentType[] = ['project', 'writing', 'happening', 'resource'];
-    const languages: Language[] = Object.keys(LOCALE_PREFIXES) as Language[];
+    const documentTypes: CollectionDocumentType[] = ['project', 'writing', 'happening', 'resource'];
+    const languages: Language[] = SUPPORTED_LANGUAGES_IDS as Language[];
     const paths: { params: Record<string, string>, props: Record<string, any> }[] = [];
     for (const documentType of documentTypes) {
         const baseQueryFields = [
@@ -23,7 +24,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
             'date',
             'summary',
             'mainImage',
-            'content',
+            RESOLVED_CONTENT_QUERY,
         ];
         if (documentType === 'happening') {
             baseQueryFields.push(
@@ -34,7 +35,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
             );
         }
         const queryFields = baseQueryFields.join(', ');
-        const documents: TargetableDocument[] = await sanityClient.fetch(`
+        const documents: CollectionDocument[] = await sanityClient.fetch(`
             *[_type == '${documentType}' && defined(slug)] {
                 ${queryFields}
             }
@@ -47,12 +48,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
                 ? groupByLocalisedSlug(documents, lang)
                 : groupByLanguageField(documents, lang);
             for (const doc of localisedDocs) {
-                const slug = getSlug(doc.slug, lang);
+                const slug = getSlug(doc, lang);
                 if (!slug) { continue; }
                 paths.push({
                     params: {
                         locale: LOCALE_PREFIXES[lang],
-                        collection: DOCUMENT_TYPE_PATHS[documentType],
+                        collection: DOCUMENT_COLLECTION_PATHS[documentType],
                         slug: slug,
                     },
                     props: {
@@ -68,7 +69,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 type Props = {
     lang: Language;
-    doc: TargetableDocument;
+    doc: CollectionDocument;
 };
 
 const {
@@ -77,10 +78,9 @@ const {
 } = Astro.props;
 
 const resolvedTitle = getTitle(doc, lang);
-const resolvedDescription = getSummary(doc.summary, lang);
+const resolvedDescription = getSummary(doc, lang);
 const resolvedImage = doc.mainImage;
-const resolvedDate = getDate(doc);
-const resolvedContent = getContent(doc.content, lang);
+const resolvedContent = getContent(doc, lang);
 ---
 
 <Layout
@@ -91,11 +91,6 @@ const resolvedContent = getContent(doc.content, lang);
 >
     {resolvedTitle && (
         <h2>{resolvedTitle}</h2>
-    )}
-    {resolvedDate && (
-        <time datetime={resolvedDate}>
-            {renderIsoDate(resolvedDate)}
-        </time>
     )}
     {resolvedContent && (
         <PageContent source={resolvedContent} lang={lang} />

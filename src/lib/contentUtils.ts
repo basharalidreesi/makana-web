@@ -1,77 +1,93 @@
-import type { Language, LocalisedPageBuilder, LocalisedSlug, LocalisedString, LocalisedText, PageBuilder, Project, Resource, Slug, StaticDocument, TargetableDocument, Writing } from '@root/sanity/sanity.types';
-import { DEFAULT_LANGUAGE, UI_DICTIONARY } from './languageUtils';
+import type { CollectionDocument, Language, PageBuilder, Slug, StaticDocument } from '@root/sanity/sanity.types';
+import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from './languageUtils';
 
-export const groupByLanguageField = (items: any[] = [], langId: string) => {
-    return items.filter((item) => item.language === langId);
+const hasLanguage = (doc: unknown): doc is { language: Language } => {
+    return typeof doc === 'object' && doc !== null && 'language' in doc;
 };
 
-export const groupByLocalisedSlug = (items: any[] = [], langId: string) => {
-    return items.filter((item) => item.slug?.[langId])
+const hasLocalisedSlug = (
+    doc: unknown,
+    lang: Language
+): doc is { slug: Record<Language, { current: string }> } => {
+    return (
+        typeof doc === 'object'
+        && doc !== null
+        && 'slug' in doc
+        && typeof (doc as any).slug === 'object'
+        && lang in (doc as any).slug
+        && typeof (doc as any).slug?.[lang]?.current === 'string'
+    );
 };
 
-export const getSlug = (slug: Slug | LocalisedSlug | undefined, lang: Language | undefined): string | undefined => {
-    if (!slug) { return undefined; }
-    if ('current' in slug) {
-        return slug.current;
-    }
-    if (typeof slug === 'object' && lang && lang in slug) {
-        return (slug as Record<Language, Slug>)[lang]?.current;
-    }
-    return undefined;
-}
-
-export const getTitle = (doc: TargetableDocument | StaticDocument, lang: Language | undefined): string => {
-    const def = UI_DICTIONARY[doc._type][lang || DEFAULT_LANGUAGE.id];
-    if (!doc.title) {
-        return def;
-    }
-    if (typeof doc.title === 'string') {
-        return doc.title;
-    }
-    if (typeof doc.title === 'object' && lang && lang in doc.title) {
-        return (doc.title as Record<Language, string>)[lang] ?? def;
-    }
-    return def;
-}
-
-export const getSummary = (summary: string | LocalisedText | undefined, lang: Language | undefined): string | undefined => {
-    if (!summary) { return undefined; }
-    if (typeof summary === 'string') {
-        return summary;
-    }
-    if (typeof summary === 'object' && lang && lang in summary) {
-        return (summary as Record<Language, string>)[lang];
-    }
-    return undefined;
-}
-
-const hasDateField = (doc: TargetableDocument): doc is Project | Writing | Resource => {
-    return ['project', 'writing', 'resource'].includes(doc._type);
+export const groupByLanguageField = (
+    docs: (CollectionDocument | StaticDocument)[] = [],
+    lang: Language
+) => {
+    return docs.filter((doc) => hasLanguage(doc) && doc.language === lang);
 };
 
-export const getDate = (doc: TargetableDocument) => {
-    return hasDateField(doc) ? doc.date : undefined;
-}
+export const groupByLocalisedSlug = (
+    docs: (CollectionDocument | StaticDocument)[] = [],
+    lang: Language
+) => {
+    return docs.filter((doc) => hasLocalisedSlug(doc, lang));
+};
 
-export const getContent = (content: PageBuilder | LocalisedPageBuilder | undefined, lang: Language | undefined): PageBuilder | undefined => {
-    if (!content) { return undefined; }
-    if (Array.isArray(content)) {
-        return content;
-    }
-    if (typeof content === 'object' && lang && lang in content) {
-        return (content as Record<Language, PageBuilder>)[lang];
+const getFromLocalisedField = <T>(
+    doc: Record<string, any> | undefined,
+    field: string,
+    lang: Language | undefined,
+    fallbackLang: Language = DEFAULT_LANGUAGE_ID,
+): T | undefined => {
+    if (!doc || !field || !(field in doc)) return undefined;
+    const value = doc[field];
+    if (!value) return undefined;
+    if (Array.isArray(value)) return value as T;
+    if (typeof value === 'object') {
+        if (lang && lang in value) return value[lang] as T;
+        if (fallbackLang && fallbackLang in value) return value[fallbackLang] as T;
     }
     return undefined;
-}
+};
 
-export async function fetchSvgContent(url: URL): Promise<string | undefined> {
-    try {
-        if (!url) { throw new Error('No URL to fetch SVG from'); }
-        const response = await fetch(url);
-        if (!response.ok) { throw new Error('Failed to fetch SVG'); }
-        const svg = await response.text();
-        return svg;
-    } catch {
-        return undefined;
-    }
-}
+export const getSlug = (
+    doc: CollectionDocument | StaticDocument,
+    lang: Language | undefined
+): string | undefined => {
+    const slug = doc.slug;
+    if (!slug) return undefined;
+    if ('current' in slug) return slug.current;
+    return getFromLocalisedField<Slug>(doc, 'slug', lang)?.current;
+};
+
+export const getTitle = (
+    doc: CollectionDocument | StaticDocument,
+    lang: Language | undefined
+): string | undefined => {
+    const fallbackTitle = UI_DICTIONARY.untitled[lang ?? DEFAULT_LANGUAGE_ID]
+    const title = doc.title;
+    if (!title) return fallbackTitle;
+    if (typeof title === 'string') return title;
+    return getFromLocalisedField<string>(doc, 'title', lang) ?? fallbackTitle;
+};
+
+export const getSummary = (
+    doc: CollectionDocument | StaticDocument,
+    lang: Language | undefined
+): string | undefined => {
+    if (!('summary' in doc)) return undefined;
+    const summary = doc.summary;
+    if (!summary) return undefined;
+    if (typeof summary === 'string') return summary;
+    return getFromLocalisedField<string>(doc, 'summary', lang);
+};
+
+export const getContent = (
+    doc: CollectionDocument | StaticDocument,
+    lang: Language | undefined
+): PageBuilder | undefined => {
+    const content = doc.content;
+    if (!content) return undefined;
+    if (Array.isArray(content)) return content;
+    return getFromLocalisedField<PageBuilder>(doc, 'content', lang);
+};

@@ -1,15 +1,15 @@
 ---
 import sanityClient from '@root/sanity/sanity.cli';
-import type { BasicAboutPage, BasicHappening, BasicProject, BasicResource, BasicWebsite, BasicWriting, Language, SanityImageObject } from '@root/sanity/sanity.types';
-import { DEFAULT_LANGUAGE, UI_DICTIONARY, SUPPORTED_LANGUAGES_SORTED } from '@lib/languageUtils';
+import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject } from '@root/sanity/sanity.types';
+import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED } from '@lib/languageUtils';
 import { generateOgImage } from '@lib/imageUtils';
 import { ClientRouter } from 'astro:transitions';
 import { groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
-import { LOCALE_PREFIXES } from '@lib/routingUtils';
+import { generateRoute } from '@lib/routingUtils';
 import NavSection from '@components/NavSection.astro';
 import Logo from '@components/Logo.astro';
 
-const websiteSettings: BasicWebsite & { logoUrl: URL; } = await sanityClient.fetch(`
+const websiteSettings: Website & { logoUrl: string; } = await sanityClient.fetch(`
     *[_id == 'website'][0] {
         _type,
         title,
@@ -21,7 +21,7 @@ const websiteSettings: BasicWebsite & { logoUrl: URL; } = await sanityClient.fet
     }
 `);
 
-const aboutPage: BasicAboutPage = await sanityClient.fetch(`
+const aboutPage: AboutPage = await sanityClient.fetch(`
     *[_id == 'aboutPage'][0] {
         _type,
         title,
@@ -29,7 +29,7 @@ const aboutPage: BasicAboutPage = await sanityClient.fetch(`
     }
 `);
 
-const projects: BasicProject[] = await sanityClient.fetch(`
+const projects: Project[] = await sanityClient.fetch(`
     *[_type == 'project' && defined(language) && defined(slug.current)] {
         _type,
         language,
@@ -39,7 +39,7 @@ const projects: BasicProject[] = await sanityClient.fetch(`
     } | order(date desc, title asc)
 `);
 
-const writings: BasicWriting[] = await sanityClient.fetch(`
+const writings: Writing[] = await sanityClient.fetch(`
     *[_type == 'writing' && defined(language) && defined(slug.current)] {
         _type,
         language,
@@ -49,7 +49,7 @@ const writings: BasicWriting[] = await sanityClient.fetch(`
     } | order(date desc, title asc)
 `);
 
-const happenings: BasicHappening[] = await sanityClient.fetch(`
+const happenings: Happening[] = await sanityClient.fetch(`
     *[_type == 'happening' && defined(slug)] {
         _type,
         title,
@@ -62,7 +62,7 @@ const happenings: BasicHappening[] = await sanityClient.fetch(`
     } | order(startDate desc, startTime.hours desc, startTime.minutes desc, title asc)
 `);
 
-const resources: BasicResource[] = await sanityClient.fetch(`
+const resources: Resource[] = await sanityClient.fetch(`
     *[_type == 'resource' && defined(slug)] {
         _type,
         title,
@@ -77,12 +77,12 @@ type Props = {
     description?: string;
     keywords?: Array<string>;
     image?: SanityImageObject;
-    canonical?: URL;
+    canonical?: string;
     analytics?: string;
 };
 
 const {
-    lang = DEFAULT_LANGUAGE.id,
+    lang = DEFAULT_LANGUAGE_ID,
     title,
     description,
     keywords,
@@ -146,7 +146,12 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             <h1 class='visually-hidden'>
                 {websiteTitle}
             </h1>
-            {SUPPORTED_LANGUAGES_SORTED.map((supportedLang) => {
+            <div>
+                <a href='/' aria-label={UI_DICTIONARY.homePage[lang]}>
+                    <Logo source={websiteSettings.logoUrl} />
+                </a>
+            </div>
+            {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
                 const langId = supportedLang.id;
                 const langDir = supportedLang.dir;
                 const langTitle = supportedLang.title;
@@ -160,7 +165,7 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
                             <ul>
                                 {aboutPage.slug?.[langId]?.current && (
                                     <li>
-                                        <a href={`/${LOCALE_PREFIXES[langId]}/${aboutPage.slug[langId].current}`}>
+                                        <a href={generateRoute(aboutPage, langId)}>
                                             {aboutPage.title?.[langId] || UI_DICTIONARY.aboutPage[langId]}
                                         </a>
                                     </li>
@@ -174,11 +179,6 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
                     </section>
                 );
             })}
-            <div>
-                <a href='/' aria-label={UI_DICTIONARY.homePage[lang]}>
-                    <Logo source={websiteSettings.logoUrl} />
-                </a>
-            </div>
         </header>
         <main>
             <slot />

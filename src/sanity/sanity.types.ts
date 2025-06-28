@@ -1,18 +1,12 @@
 export type Language = 'ar' | 'en'
 
-export type TargetableDocument = Project | Writing | Happening | Resource
-
-export type BasicTargetableDocument = BasicProject | BasicWriting | BasicHappening | BasicResource
+export type CollectionDocument = Project | Writing | Happening | Resource
 
 export type StaticDocument = AboutPage
 
-export type TargetableAndStaticDocuments = TargetableDocument | StaticDocument
+export type CollectionDocumentType = CollectionDocument['_type']
 
-export type TargetableDocumentType = TargetableDocument['_type']
-
-export type StaticDocumentTypes = StaticDocument['_type']
-
-export type TargetableAndStaticDocumentTypes = TargetableDocumentType | StaticDocumentTypes
+export type StaticDocumentType = StaticDocument['_type']
 
 export type Project = {
   _id: string
@@ -193,46 +187,35 @@ export type Website = {
   analytics?: string
 }
 
-export type BasicProject = Pick<Project, '_type' | 'language' | 'title' | 'slug' | 'date'>
-
-export type BasicWriting = Pick<Writing, '_type' | 'language' | 'title' | 'slug' | 'date'>
-
-export type BasicHappening = Pick<Happening, '_type' | 'title' | 'slug' | 'startDate' | 'startTime'>
-
-export type BasicResource = Pick<Resource, '_type' | 'title' | 'slug' | 'date'>
-
-export type BasicAboutPage = Pick<AboutPage, '_type' | 'title' | 'slug'>
-
-export type BasicWebsite = Pick<Website, '_type' | 'title' | 'summary' | 'keywords' | 'mainImage' | 'analytics'>
-
 export type Link = {
   _type: 'link'
   type?: 'external' | 'internal'
-  internalTarget?:
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'happening'
-      }
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'project'
-      }
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'resource'
-      }
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'writing'
-      }
+  // internalTarget?:
+  //   | {
+  //       _ref: string
+  //       _type: 'reference'
+  //       _weak?: boolean
+  //       [internalGroqTypeReferenceTo]?: 'happening'
+  //     }
+  //   | {
+  //       _ref: string
+  //       _type: 'reference'
+  //       _weak?: boolean
+  //       [internalGroqTypeReferenceTo]?: 'project'
+  //     }
+  //   | {
+  //       _ref: string
+  //       _type: 'reference'
+  //       _weak?: boolean
+  //       [internalGroqTypeReferenceTo]?: 'resource'
+  //     }
+  //   | {
+  //       _ref: string
+  //       _type: 'reference'
+  //       _weak?: boolean
+  //       [internalGroqTypeReferenceTo]?: 'writing'
+  //     }
+  internalTarget?: CollectionDocument
   externalTarget?: string
 }
 
@@ -256,6 +239,8 @@ export type LocalisedText = {
 export type LocalisedPageBuilder = {
   [lang in Language]?: PageBuilder;
 }
+
+export type PortableText = BodyPortableText | AuxiliaryPortableText
 
 export type BodyPortableText = Array<{
   children?: Array<{
@@ -460,9 +445,10 @@ export type SanityAssetSourceData = {
 
 export type AllSanitySchemaTypes =
   | Language
-  | TargetableDocumentType
-  | StaticDocumentTypes
-  | TargetableAndStaticDocumentTypes
+  | CollectionDocument
+  | StaticDocument
+  | CollectionDocumentType
+  | StaticDocumentType
   | Project
   | Writing
   | Happening
@@ -472,18 +458,13 @@ export type AllSanitySchemaTypes =
   | HomePage
   | AboutPage
   | Website
-  | BasicProject
-  | BasicWriting
-  | BasicHappening
-  | BasicResource
-  | BasicAboutPage
-  | BasicWebsite
   | Link
   | Slug
   | LocalisedSlug
   | LocalisedString
   | LocalisedText
   | LocalisedPageBuilder
+  | PortableText
   | BodyPortableText
   | BodyPortableTextBlock
   | AuxiliaryPortableText

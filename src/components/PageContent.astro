@@ -1,8 +1,7 @@
 ---
-import type { Language, PageBuilder } from '@root/sanity/sanity.types';
-import PortableTextMark from '@components/PortableText/PortableTextMark.astro';
-import { PortableText } from 'astro-portabletext';
-import PortableTextBlock from './PortableText/PortableTextBlock.astro';
+import type { Language, Link, PageBuilder } from '@root/sanity/sanity.types';
+import { toHTML, uriLooksSafe, type PortableTextHtmlComponents } from '@portabletext/to-html';
+import { generateRoute } from '@lib/routingUtils';
 
 type Props = {
     lang: Language;
@@ -14,31 +13,53 @@ const {
     source,
 } = Astro.props;
 
-const components = {
-    block: {
-        // normal (default)
-        heading: PortableTextBlock
-        // blockquote (default)
-    },
-    mark: {
-        // strong (default)
-        // em (default)
-        link: PortableTextMark,
-        bdi: PortableTextMark,
-    },
-    list: {
-        // bullet (default)
-        // number (default)
-    },
-    type: {
+const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' | 'list'> = {
+    types: {
         // imageBlock
         // videoBlock
         // audioBlock
         // formBlock
     },
+    marks: {
+        // strong (default <strong>)
+        // em (default <em>)
+        link: ({ children, value }) => {
+            const {
+                type,
+                externalTarget,
+                internalTarget,
+            } = value as Link;
+            let href = '';
+            if (type === 'external' && externalTarget) {
+                if (uriLooksSafe(href)) {
+                    href = externalTarget;
+                }
+            } else if (type === 'internal' && internalTarget) {
+                href = generateRoute(internalTarget, lang);
+            }
+            const rel = href?.startsWith('/') ? undefined : 'noreferrer noopener'
+            return href ? (
+                `<a href='${href}' ${rel ? `rel='${rel}'` : ''}>${children}</a>`
+            ) : children;
+        },
+        bdi: ({ children }) => `<bdi>${children}</bdi>`,
+    },
+    block: {
+        // normal (default <p>)
+        heading: ({ children }) => `<h3>${children}</h3>`,
+        // blockquote (default <blockquote>)
+    },
+    list: {
+        // bullet (default <ul>)
+        // number (default <ol>)
+    },
 };
+
+const html = toHTML(source, {
+    components: components,
+})
 ---
 
-{Array.isArray(source) && source.length > 0 && (
-    <PortableText value={source} components={components} />
+{Array.isArray(source) && source.length > 0 && html && (
+    <Fragment set:html={html} />
 )}
