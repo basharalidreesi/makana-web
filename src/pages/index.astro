@@ -1,10 +1,15 @@
 ---
 import Layout from '@layouts/Layout.astro';
-import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_DIR, DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
 ---
 
-<Layout lang={DEFAULT_LANGUAGE_ID} title={UI_DICTIONARY.homePage[DEFAULT_LANGUAGE_ID]}>
-    <h2>
+<Layout
+    lang={DEFAULT_LANGUAGE_ID}
+    dir={DEFAULT_LANGUAGE_DIR}
+    title={UI_DICTIONARY.homePage[DEFAULT_LANGUAGE_ID]}
+    mode='flowed'
+>
+    <h2 class='sr-only'>
         Home
     </h2>
     <!-- TODO featured -->

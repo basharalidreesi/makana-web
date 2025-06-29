@@ -7,7 +7,7 @@ type LanguageDefinition = {
     default?: boolean;
 };
 
-const SUPPORTED_LANGUAGES_RECORD: Record<Language, LanguageDefinition> = {
+export const SUPPORTED_LANGUAGES_RECORD: Record<Language, LanguageDefinition> = {
     ar: {
         title: 'Arabic',
         dir: 'rtl',
@@ -55,6 +55,8 @@ export const DEFAULT_LANGUAGE = (() => {
 })();
 
 export const DEFAULT_LANGUAGE_ID = DEFAULT_LANGUAGE.id;
+
+export const DEFAULT_LANGUAGE_DIR = DEFAULT_LANGUAGE.dir;
 
 type LocalisedRecord<T> = {
     [L in Language]: T;

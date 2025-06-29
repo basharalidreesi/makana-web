@@ -1,13 +1,14 @@
 ---
 import sanityClient from '@root/sanity/sanity.cli';
 import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject } from '@root/sanity/sanity.types';
-import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED, DEFAULT_LANGUAGE_DIR } from '@lib/languageUtils';
 import { generateOgImage } from '@lib/imageUtils';
 import { ClientRouter } from 'astro:transitions';
 import { groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
 import { generateRoute } from '@lib/routingUtils';
 import Logo from '@components/Logo.astro';
 import NavSection from '@components/NavSection.astro';
+import '@styles/reset.css';
 
 const websiteSettings: Website & { logoUrl: string; } = await sanityClient.fetch(`
     *[_id == 'website'][0] {
@@ -73,22 +74,26 @@ const resources: Resource[] = await sanityClient.fetch(`
 
 type Props = {
     lang: Language | undefined;
+    dir: string;
     title: string | undefined;
     description?: string;
     keywords?: Array<string>;
     image?: SanityImageObject;
     canonical?: string;
     analytics?: string;
+    mode: 'windowed' | 'flowed' | 'covering';
 };
 
 const {
     lang = DEFAULT_LANGUAGE_ID,
+    dir = DEFAULT_LANGUAGE_DIR,
     title,
     description,
     keywords,
     image,
     canonical,
     analytics,
+    mode,
 } = Astro.props;
 
 const websiteTitle = websiteSettings.title?.[lang];
@@ -143,51 +148,65 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
     </head>
     <body>
         <header>
-            <h1 class='visually-hidden'>
+            <h1 class='sr-only'>
                 {websiteTitle}
             </h1>
-            <div>
-                <a href='/' aria-label={UI_DICTIONARY.homePage[lang]}>
-                    <Logo source={websiteSettings.logoUrl} />
-                </a>
+            <div class='logo-bar'>
+                <div>
+                    <a href='/' aria-label={UI_DICTIONARY.homePage[lang]}>
+                        <Logo source={websiteSettings.logoUrl} />
+                    </a>
+                </div>
             </div>
-            {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
-                const langId = supportedLang.id;
-                const langDir = supportedLang.dir;
-                const langTitle = supportedLang.title;
-                const langProjects = groupByLanguageField(projects, langId);
-                const langWritings = groupByLanguageField(writings, langId);
-                const langHappenings = groupByLocalisedSlug(happenings, langId);
-                const langResources = groupByLocalisedSlug(resources, langId);
-                return (
-                    <section lang={langId} dir={langDir}>
-                        <nav aria-label={`${langTitle} navigation`}>
-                            <ul>
-                                {aboutPage.slug?.[langId]?.current && (
-                                    <li>
-                                        <a href={generateRoute(aboutPage, langId)}>
-                                            {aboutPage.title?.[langId] || UI_DICTIONARY.aboutPage[langId]}
-                                        </a>
-                                    </li>
-                                )}
-                                <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} />
-                                <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} />
-                                <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} />
-                                <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} />
-                            </ul>
-                        </nav>
-                    </section>
-                );
-            })}
+            <div class='navigation-bar' transition:persist>
+                {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
+                    const langId = supportedLang.id;
+                    const langDir = supportedLang.dir;
+                    const langTitle = supportedLang.title;
+                    const langProjects = groupByLanguageField(projects, langId);
+                    const langWritings = groupByLanguageField(writings, langId);
+                    const langHappenings = groupByLocalisedSlug(happenings, langId);
+                    const langResources = groupByLocalisedSlug(resources, langId);
+                    return (
+                        <section lang={langId} dir={langDir} data-has-expanded='false'>
+                            <nav aria-label={`${langTitle} navigation`}>
+                                <ul>
+                                    {aboutPage.slug?.[langId]?.current && (
+                                        <li>
+                                            <a href={generateRoute(aboutPage, langId)}>
+                                                {aboutPage.title?.[langId] || UI_DICTIONARY.aboutPage[langId]}
+                                            </a>
+                                        </li>
+                                    )}
+                                    <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} />
+                                    <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} />
+                                    <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} />
+                                    <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} />
+                                </ul>
+                            </nav>
+                        </section>
+                    );
+                })}
+            </div>
         </header>
         <main>
-            <slot />
+            <div class={`${mode}-content-container`} dir={dir}>
+                <div class={`${mode}-content`}>
+                    {mode === 'windowed' && (
+                        <div class='windowed-content-controls'>
+                            <a href='/'>Close</a>
+                        </div>
+                    )}
+                    <slot />
+                </div>
+            </div>
         </main>
     </body>
 </html>
 
-<script>
-    document.addEventListener('astro:page-load', () => {
+<script is:inline data-astro-rerun>
+    if (!window._navInitialised) {
+        window._navInitialised = true;
         const navExpandButtons = document.querySelectorAll(`button[data-nav-expand]`);
         navExpandButtons.forEach((button) => button.addEventListener('click', () => {
             const expanded = button.getAttribute('aria-expanded') === 'true';
@@ -195,19 +214,103 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             if (!controls) { return; }
             const menu = document.getElementById(controls);
             if (!menu) { return; }
+            const section = menu.closest('section');
             navExpandButtons.forEach((otherButton) => {
                 const otherControls = otherButton.getAttribute('aria-controls');
-                if (!otherControls) { return; }
                 const otherMenu = document.getElementById(otherControls);
+                const otherSection = otherMenu?.closest('section');
+                if (!otherControls) { return; }
                 if (otherButton !== button && otherMenu) {
                     otherButton.setAttribute('aria-expanded', 'false');
                     otherMenu.setAttribute('aria-hidden', 'true');
                     otherMenu.hidden = true;
+                    otherSection.setAttribute('data-has-expanded', 'false');
                 }
             });
-            button.setAttribute('aria-expanded', String(!expanded));
-            menu.setAttribute('aria-hidden', String(expanded));
-            menu.hidden = expanded;
+            const isExpanding = !expanded;
+            button.setAttribute('aria-expanded', String(isExpanding));
+            menu.setAttribute('aria-hidden', String(!isExpanding));
+            menu.hidden = !isExpanding;
+            if (section) {
+                section.setAttribute('data-has-expanded', String(isExpanding));
+            }
         }));
-    });
+    }
 </script>
+
+<style lang='scss'>
+    :global(.sr-only:not(:focus):not(:active)) {
+        clip: rect(0 0 0 0); 
+        clip-path: inset(50%);
+        height: 1px;
+        overflow: hidden;
+        position: absolute;
+        white-space: nowrap; 
+        width: 1px;
+    }
+    header {
+        & {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: space-between;
+            row-gap: 2rem; /** TODO */
+        }
+        .logo-bar div {
+            height: 100px; /** TODO */
+            width: fit-content;
+            margin-left: auto;
+        }
+        .logo-bar :global(svg) {
+            display: block;
+            height: 100%;
+            width: auto;
+            max-width: 100%;
+        }
+        .navigation-bar {
+            display: flex;
+        }
+        .navigation-bar section {
+            background: cyan; /** TODO */
+            flex: 1 0 0;
+        }
+    }
+    main {
+        & {
+            position: relative;
+            width: 100%;
+            height: auto;
+            pointer-events: none;
+        }
+        .windowed-content-container {
+            padding-top: 2rem; /** TODO */
+            padding-bottom: 2rem; /** TODO */
+        }
+        .windowed-content {
+            width: 500px; /** TODO */
+            height: auto;
+            margin-inline-start: 5rem; /** TODO */
+            padding: 1rem; /** TODO */
+            background: palegreen; /** TODO */
+            outline: 1px solid gray; /** TODO */
+            pointer-events: all;
+        }
+        .windowed-content-controls a::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: gray; /** TODO */
+            opacity: 0.5; /** TODO */
+            z-index: -1;
+        }
+    }
+    header { z-index: 1; }
+    main { z-index: 2; }
+</style>

@@ -1,7 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import type { Language, StaticDocument, StaticDocumentType } from '@root/sanity/sanity.types';
-import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
+import { SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
 import { RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
 import { getContent, getSlug, getTitle, groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
@@ -66,8 +66,12 @@ const resolvedTitle = getTitle(doc, lang);
 const resolvedContent = getContent(doc, lang);
 ---
 
-<Layout lang={lang} title={resolvedTitle}>
-    <!-- TODO controls -->
+<Layout
+    lang={lang}
+    dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}
+    title={resolvedTitle}
+    mode='windowed'
+>
     {resolvedTitle && (
         <h2>{resolvedTitle}</h2>
     )}
