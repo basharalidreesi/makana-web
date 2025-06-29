@@ -1,7 +1,11 @@
 ---
-import type { Language, Link, PageBuilder } from '@root/sanity/sanity.types';
+import type { Language, Link, LocalisedString, PageBuilder } from '@root/sanity/sanity.types';
 import { toHTML, uriLooksSafe, type PortableTextHtmlComponents } from '@portabletext/to-html';
+import { createSanityImage } from '@lib/imageUtils';
+import { escapeHTML, normaliseAspectRatioForPadding } from '@lib/contentUtils';
+import { getFile } from '@lib/assetUtils';
 import { generateRoute } from '@lib/routingUtils';
+import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
 
 type Props = {
     lang: Language;
@@ -15,10 +19,228 @@ const {
 
 const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' | 'list'> = {
     types: {
-        // imageBlock
-        // videoBlock
-        // audioBlock
-        // formBlock
+        imageBlock: ({ value }) => {
+            const {
+                images = [],
+                caption,
+            } = value as Extract<PageBuilder[number], { _type: 'imageBlock' }>;
+            const imagesWithAssets = images?.filter(i => !!i.asset);
+            if (!Array.isArray(imagesWithAssets) || imagesWithAssets.length === 0) return '';
+            return (`
+                <figure>
+                    <div>
+                        ${imagesWithAssets.map((image) => {
+                            return createSanityImage({
+                                source: image,
+                                alt: image.altText,
+                            });
+                        }).join('\n')}
+                    </div>
+                    ${Array.isArray(caption) && caption.length > 0 ? (`
+                        <figcaption>
+                            ${toHTML(caption, {
+                                components: components,
+                            })}
+                        </figcaption>
+                    `) : ''}
+                </figure>
+            `);
+        },
+        videoBlock: ({ value }) => {
+            const {
+                url,
+                aspectRatio,
+                caption,
+            } = value as Extract<PageBuilder[number], { _type: 'videoBlock' }>;
+            if (!url) return '';
+            const padding = normaliseAspectRatioForPadding(aspectRatio) || '56.25%';
+            let embedUrl = '';
+            try {
+                const parsedUrl = new URL(url);
+                const host = parsedUrl.hostname.toLowerCase();
+                const pathname = parsedUrl.pathname;
+                if (host.includes('youtube.com') || host.includes('youtu.be')) {
+                    const videoId = host.includes('youtu.be')
+                        ? pathname.slice(1)
+                        : parsedUrl.searchParams.get('v');
+                    if (videoId) {
+                        embedUrl = `https://www.youtube-nocookie.com/embed/${escapeHTML(videoId)}?rel=0&modestbranding=1&showinfo=0&enablejsapi=1`;
+                    }
+                } else if (host.includes('vimeo.com')) {
+                    const videoId = pathname.split('/').filter(Boolean).pop();
+                    if (videoId) {
+                        embedUrl = `https://player.vimeo.com/video/${escapeHTML(videoId)}?title=0&byline=0&portrait=0&autopause=0&dnt=1`;
+                    }
+                }
+            } catch {
+                embedUrl = escapeHTML(url);
+            }
+            if (!embedUrl) return '';
+            return (`
+                <figure>
+                    <div style='position: relative; padding-bottom: ${padding}; height: 0; overflow: hidden;'>
+                        <iframe
+                            src='${embedUrl}'
+                            frameborder='0'
+                            allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
+                            allowfullscreen
+                            loading='lazy'
+                            style='position: absolute; top: 0; left: 0; width: 100%; height: 100%;'
+                        ></iframe>
+                    </div>
+                    ${Array.isArray(caption) && caption.length > 0 ? (`
+                        <figcaption>
+                            ${toHTML(caption, {
+                                components: components,
+                            })}
+                        </figcaption>
+                    `) : ''}
+                </figure>
+            `);
+        },
+        audioBlock: ({ value }) => {
+            const {
+                file,
+                caption,
+            } = value as Extract<PageBuilder[number], { _type: 'audioBlock' }>;
+            const fileAsset =
+                file
+                && file.asset
+                && file.asset._ref
+                    ? getFile(file.asset)
+                    : undefined;
+            if (!fileAsset) return '';
+            return (`
+                <figure>
+                    <div>
+                        <audio controls>
+                            <source src='${fileAsset.url}' type='audio/${fileAsset.extension === 'mp3' ? 'mpeg' : fileAsset.extension}' />
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                    ${Array.isArray(caption) && caption.length > 0 ? (`
+                        <figcaption>
+                            ${toHTML(caption, {
+                                components: components,
+                            })}
+                        </figcaption>
+                    `) : ''}
+                </figure>
+            `);
+        },
+        formBlock: ({ value }) => {
+            const {
+                form,
+            } = value as Extract<PageBuilder[number], { _type: 'formBlock' }>;
+            if (
+                form
+                && form.endpoint
+                && Array.isArray(form.fields)
+                && form.fields.length > 0
+            ) {
+                const validFormAttributes = form.attributes
+                    ?.map((attrStr) => {
+                        try {
+                            return JSON.parse(attrStr);
+                        } catch {
+                            return null;
+                        }
+                    })
+                    ?.filter((attr) => attr && attr.key && attr.key.trim())
+                    ?.map(({ key, value }) => {
+                        const attributeKey = escapeHTML(key?.trim() || '');
+                        const attributeValue = escapeHTML(value?.trim() || '');
+                        if (!attributeValue) return (`${attributeKey}`);
+                        return (`${attributeKey}='${attributeValue}'`);
+                    });
+                const formAttributesString = validFormAttributes?.join(' ');
+                const getNameFromLabel = (label: LocalisedString | undefined) => label
+                    ? label[DEFAULT_LANGUAGE_ID]?.trim()?.toLowerCase()?.replace(/\s+/g, '_')
+                    : undefined;
+                return (`
+                    <form action='${form.endpoint}' method='POST' ${formAttributesString}>
+                        ${form.fields.map((field, fieldIndex) => {
+                            const {
+                                type,
+                                label,
+                                options = [],
+                                name,
+                                value,
+                            } = field;
+                            const rawFieldName = getNameFromLabel(label) || `field_${fieldIndex}`;
+                            const fieldName = escapeHTML(rawFieldName);
+                            const rawFieldLabelText = label?.[lang]?.trim() || fieldName;
+                            const fieldLabelText = escapeHTML(rawFieldLabelText);
+                            const fieldLabelHTML = `<label for='${fieldName}'>${fieldLabelText}</label>`;
+                            const fieldAttributesString = `name='${fieldName}' id='${fieldName}'`;
+                            switch (type) {
+                                case 'text': return (`
+                                    <div>
+                                        ${fieldLabelHTML}
+                                        <input type='text' ${fieldAttributesString} />
+                                    </div>
+                                `);
+                                case 'textarea': return (`
+                                    <div>
+                                        ${fieldLabelHTML}
+                                        <textarea ${fieldAttributesString}></textarea>
+                                    </div>
+                                `);
+                                case 'select': return (`
+                                    <div>
+                                        ${fieldLabelHTML}
+                                        <select ${fieldAttributesString}>
+                                            ${options.map((option, optionIndex) => {
+                                                try {
+                                                    const parsedOption = JSON.parse(option);
+                                                    const rawOptionName = getNameFromLabel(parsedOption) || `option_${optionIndex}`;
+                                                    const optionName = escapeHTML(rawOptionName);
+                                                    const rawOptionLabel = parsedOption?.[lang]?.trim() || UI_DICTIONARY.untitled[lang];
+                                                    const optionLabel = escapeHTML(rawOptionLabel);
+                                                    return `<option value='${optionName}'>${optionLabel}</option>`;
+                                                } catch {
+                                                    return null;
+                                                }
+                                            }).filter(Boolean).join('\n')}
+                                        </select>
+                                    </div>
+                                `);
+                                case 'checkbox': return (`
+                                    <fieldset>
+                                        <legend>${fieldLabelText}</legend>
+                                        ${options.map((option, optionIndex) => {
+                                            try {
+                                                const parsedOption = JSON.parse(option);
+                                                const rawOptionName = getNameFromLabel(parsedOption) || `option_${optionIndex}`;
+                                                const optionName = escapeHTML(rawOptionName);
+                                                const rawOptionLabel = parsedOption?.[lang]?.trim() || UI_DICTIONARY.untitled[lang];
+                                                const optionLabel = escapeHTML(rawOptionLabel);
+                                                return (`
+                                                    <label>
+                                                        <input type='checkbox' name='${fieldName}' value='${optionName}' />
+                                                        ${optionLabel}
+                                                    </label>
+                                                `);
+                                            } catch {
+                                                return null;
+                                            }
+                                        }).join('\n')}
+                                    </fieldset>
+                                `);
+                                 case 'hidden': return (`
+                                    <input type='hidden' name='${escapeHTML(name?.trim() || '')}' value='${escapeHTML(value?.trim() || '')}' />
+                                `);
+                                default: return '';
+                            }
+                        }).join('\n')}
+                        <button type='submit'>
+                            ${UI_DICTIONARY.submit[lang]}
+                        </button>
+                    </form>
+                `);
+            }
+            return '';
+        },
     },
     marks: {
         // strong (default <strong>)
@@ -30,16 +252,14 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                 internalTarget,
             } = value as Link;
             let href = '';
-            if (type === 'external' && externalTarget) {
-                if (uriLooksSafe(href)) {
-                    href = externalTarget;
-                }
+            if (type === 'external' && externalTarget && uriLooksSafe(externalTarget)) {
+                href = escapeHTML(externalTarget);
             } else if (type === 'internal' && internalTarget) {
                 href = generateRoute(internalTarget, lang);
             }
             const rel = href?.startsWith('/') ? undefined : 'noreferrer noopener'
             return href ? (
-                `<a href='${href}' ${rel ? `rel='${rel}'` : ''}>${children}</a>`
+                `<a href='${href}'${rel ? ` rel='${rel}'` : ''}>${children}</a>`
             ) : children;
         },
         bdi: ({ children }) => `<bdi>${children}</bdi>`,

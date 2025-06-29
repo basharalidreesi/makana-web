@@ -6,8 +6,8 @@ import { generateOgImage } from '@lib/imageUtils';
 import { ClientRouter } from 'astro:transitions';
 import { groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
 import { generateRoute } from '@lib/routingUtils';
-import NavSection from '@components/NavSection.astro';
 import Logo from '@components/Logo.astro';
+import NavSection from '@components/NavSection.astro';
 
 const websiteSettings: Website & { logoUrl: string; } = await sanityClient.fetch(`
     *[_id == 'website'][0] {
@@ -97,7 +97,7 @@ const pageTitle = title;
 const resolvedTitle = [pageTitle, websiteTitle].filter(Boolean).join(' · ');
 const resolvedDescription = description || websiteSettings.summary?.[lang];
 const resolvedKeywords = [...(keywords || []), ...(websiteSettings.keywords || [])].join(', ');
-const resolvedImage = image?.asset?._ref ? generateOgImage(image) : websiteSettings.mainImage?.asset?._ref ? generateOgImage(websiteSettings.mainImage) : undefined;
+const resolvedImage = image?.asset ? generateOgImage(image) : websiteSettings.mainImage?.asset ? generateOgImage(websiteSettings.mainImage) : undefined;
 const resolvedCanonical = canonical || new URL(Astro.url.pathname, Astro.site);
 const resolvedAnalytics = analytics || websiteSettings.analytics;
 ---

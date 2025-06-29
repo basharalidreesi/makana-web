@@ -1,4 +1,4 @@
-import type { CollectionDocument, Language, PageBuilder, Slug, StaticDocument } from '@root/sanity/sanity.types';
+import type { CollectionDocument, CollectionDocumentStub, Language, PageBuilder, Slug, StaticDocument, StaticDocumentStub } from '@root/sanity/sanity.types';
 import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from './languageUtils';
 
 const hasLanguage = (doc: unknown): doc is { language: Language } => {
@@ -51,7 +51,7 @@ const getFromLocalisedField = <T>(
 };
 
 export const getSlug = (
-    doc: CollectionDocument | StaticDocument,
+    doc: CollectionDocumentStub | CollectionDocument | StaticDocument | StaticDocumentStub,
     lang: Language | undefined
 ): string | undefined => {
     const slug = doc.slug;
@@ -91,3 +91,58 @@ export const getContent = (
     if (Array.isArray(content)) return content;
     return getFromLocalisedField<PageBuilder>(doc, 'content', lang);
 };
+
+export const escapeHTML = (str: string = '') => str.replace(
+    /[&<>'"]/g, (c) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;',
+    }[c] || c)
+);
+
+export const normaliseAspectRatioForPadding = (ratio: string | undefined): string | undefined => {
+    if (!ratio) return undefined;
+    let numRatio: number | null = null;
+    if (ratio.includes('/')) {
+        const [w, h] = ratio.split('/').map(Number);
+        if (!isNaN(w) && !isNaN(h) && w !== 0) {
+            numRatio = h / w;
+        }
+    } else if (ratio.includes(':')) {
+        const [w, h] = ratio.split(':').map(Number);
+        if (!isNaN(w) && !isNaN(h) && w !== 0) {
+            numRatio = h / w;
+        }
+    } else {
+        const parsed = Number(ratio);
+        if (!isNaN(parsed) && parsed > 0) {
+            numRatio = 1 / parsed; // important: assume it's width/height, invert for padding
+        }
+    }
+    if (!numRatio || numRatio <= 0) {
+        numRatio = 9 / 16;
+    }
+    return (numRatio * 100) + '%'; // convert to percentage padding
+}
+
+// export const renderIsoDate = (date: string | undefined, {
+//     mode = 'full',
+//     withFallback = false,
+// }: {
+//     mode?: 'full' | 'yearAndMonth' | 'yearOnly';
+//     withFallback?: boolean;
+// } = {}) => {
+//     if (!date && !withFallback) { return; }
+//     const isValidIsoDate = /^(\d{4})-(\d{2})-(\d{2})$/.test(date || '');
+//     const safeDate = isValidIsoDate ? date : (withFallback ? '0000-00-00' : undefined);
+//     if (!safeDate) { return; }
+//     const [year, month, day] = safeDate.split('-');
+//     switch (mode) {
+//         case 'full': return `${day}_${month}_${year}`;
+//         case 'yearAndMonth': return `${month}_${year}`;
+//         case 'yearOnly': return year;
+//         default: return;
+//     }
+// };

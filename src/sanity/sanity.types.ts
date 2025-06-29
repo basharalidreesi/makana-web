@@ -8,6 +8,10 @@ export type CollectionDocumentType = CollectionDocument['_type']
 
 export type StaticDocumentType = StaticDocument['_type']
 
+export type CollectionDocumentStub = Pick<CollectionDocument, '_type' | 'slug'>
+
+export type StaticDocumentStub = Pick<StaticDocument, '_type' | 'slug'>
+
 export type Project = {
   _id: string
   _type: 'project'
@@ -80,32 +84,34 @@ export type TranslationGroup = {
   _rev: string
   type?: 'project' | 'writing'
   translations?: {
-    ar?:
-      | {
-          _ref: string
-          _type: 'reference'
-          _weak?: boolean
-          [internalGroqTypeReferenceTo]?: 'project'
-        }
-      | {
-          _ref: string
-          _type: 'reference'
-          _weak?: boolean
-          [internalGroqTypeReferenceTo]?: 'writing'
-        }
-    en?:
-      | {
-          _ref: string
-          _type: 'reference'
-          _weak?: boolean
-          [internalGroqTypeReferenceTo]?: 'project'
-        }
-      | {
-          _ref: string
-          _type: 'reference'
-          _weak?: boolean
-          [internalGroqTypeReferenceTo]?: 'writing'
-        }
+    ar?: Project | Writing
+    en?: Project | Writing
+    // ar?:
+    //   | {
+    //       _ref: string
+    //       _type: 'reference'
+    //       _weak?: boolean
+    //       [internalGroqTypeReferenceTo]?: 'project'
+    //     }
+    //   | {
+    //       _ref: string
+    //       _type: 'reference'
+    //       _weak?: boolean
+    //       [internalGroqTypeReferenceTo]?: 'writing'
+    //     }
+    // en?:
+    //   | {
+    //       _ref: string
+    //       _type: 'reference'
+    //       _weak?: boolean
+    //       [internalGroqTypeReferenceTo]?: 'project'
+    //     }
+    //   | {
+    //       _ref: string
+    //       _type: 'reference'
+    //       _weak?: boolean
+    //       [internalGroqTypeReferenceTo]?: 'writing'
+    //     }
   }
 }
 
@@ -134,32 +140,33 @@ export type HomePage = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  featuredItems?: Array<
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'happening'
-      }
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'project'
-      }
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'resource'
-      }
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'writing'
-      }
-  >
+  // featuredItems?: Array<
+  //   | {
+  //       _ref: string
+  //       _type: 'reference'
+  //       _weak?: boolean
+  //       [internalGroqTypeReferenceTo]?: 'happening'
+  //     }
+  //   | {
+  //       _ref: string
+  //       _type: 'reference'
+  //       _weak?: boolean
+  //       [internalGroqTypeReferenceTo]?: 'project'
+  //     }
+  //   | {
+  //       _ref: string
+  //       _type: 'reference'
+  //       _weak?: boolean
+  //       [internalGroqTypeReferenceTo]?: 'resource'
+  //     }
+  //   | {
+  //       _ref: string
+  //       _type: 'reference'
+  //       _weak?: boolean
+  //       [internalGroqTypeReferenceTo]?: 'writing'
+  //     }
+  // >
+  featuredItems?: Array<CollectionDocument>
 }
 
 export type AboutPage = {
@@ -215,7 +222,7 @@ export type Link = {
   //       _weak?: boolean
   //       [internalGroqTypeReferenceTo]?: 'writing'
   //     }
-  internalTarget?: CollectionDocument
+  internalTarget?: CollectionDocumentStub
   externalTarget?: string
 }
 
@@ -277,7 +284,23 @@ export type AuxiliaryPortableText = Array<{
 export type PageBuilder = Array<
   | BodyPortableTextBlock
   | {
-      images?: Array<SanityImageObject>
+      // images?: Array<{
+      //   asset?: {
+      //     _ref: string
+      //     _type: 'reference'
+      //     _weak?: boolean
+      //     [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
+      //   }
+      //   media?: unknown
+      //   hotspot?: SanityImageHotspot
+      //   crop?: SanityImageCrop
+      //   altText?: string
+      //   _type: 'image'
+      //   _key: string
+      // }>
+      images?: Array<SanityImageObject & {
+        altText?: string
+      }>
       caption?: AuxiliaryPortableText
       _type: 'imageBlock'
       _key: string
@@ -296,12 +319,13 @@ export type PageBuilder = Array<
       _key: string
     }
   | {
-      form?: {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'form'
-      }
+      // form?: {
+      //   _ref: string
+      //   _type: 'reference'
+      //   _weak?: boolean
+      //   [internalGroqTypeReferenceTo]?: 'form'
+      // }
+      form?: Form
       _type: 'formBlock'
       _key: string
     }
@@ -372,8 +396,8 @@ export type SanityImageObject = {
     _ref: string
     _type: 'reference'
     _weak?: boolean
-    [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
-  }
+    // [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
+  } | SanityImageAsset
   media?: unknown
   hotspot?: SanityImageHotspot
   crop?: SanityImageCrop
@@ -449,6 +473,8 @@ export type AllSanitySchemaTypes =
   | StaticDocument
   | CollectionDocumentType
   | StaticDocumentType
+  | CollectionDocumentStub
+  | StaticDocumentStub
   | Project
   | Writing
   | Happening

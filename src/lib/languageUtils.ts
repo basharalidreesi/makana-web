@@ -67,6 +67,7 @@ type UICategoryDictionary = {
 export const UI_DICTIONARY: UICategoryDictionary & {
     untitled: LocalisedRecord<string>;
     homePage: LocalisedRecord<string>;
+    submit: LocalisedRecord<string>;
 } = {
     untitled: {
         ar: 'بلا عنوان',
@@ -75,6 +76,10 @@ export const UI_DICTIONARY: UICategoryDictionary & {
     homePage: {
         ar: 'الصفحة الرئيسة',
         en: 'Home',
+    },
+    submit: {
+        ar: 'إرسال',
+        en: 'Submit',
     },
     aboutPage: {
         ar: 'عن مكانة',

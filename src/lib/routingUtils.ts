@@ -1,4 +1,4 @@
-import type { CollectionDocument, CollectionDocumentType, Language, StaticDocument } from '@root/sanity/sanity.types';
+import type { CollectionDocument, CollectionDocumentStub, CollectionDocumentType, Language, StaticDocument, StaticDocumentStub } from '@root/sanity/sanity.types';
 import { getSlug } from './contentUtils';
 
 export const LOCALE_PREFIXES: Record<Language, string> = {
@@ -13,12 +13,12 @@ export const DOCUMENT_COLLECTION_PATHS: Record<CollectionDocumentType, string> =
     resource: 'resources',
 };
 
-const isCollectionDocument = (doc: CollectionDocument | StaticDocument): doc is CollectionDocument => {
+const isCollectionDocument = (doc: CollectionDocumentStub | CollectionDocument | StaticDocumentStub | StaticDocument): doc is CollectionDocument => {
     return doc._type in DOCUMENT_COLLECTION_PATHS;
 };
 
 export const generateRoute = (
-    doc: CollectionDocument | StaticDocument,
+    doc: CollectionDocumentStub | CollectionDocument | StaticDocument | StaticDocumentStub,
     lang: Language,
 ) => {
     const localePath = LOCALE_PREFIXES[lang];
