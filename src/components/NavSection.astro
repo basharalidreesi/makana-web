@@ -8,6 +8,7 @@ type Props = {
     lang: Language;
     title: string;
     type: CollectionDocumentType | StaticDocumentType;
+    min: number;
 };
 
 const {
@@ -15,26 +16,35 @@ const {
     lang,
     title,
     type,
+    min,
 } = Astro.props;
+
+const delta = min - items.length;
 ---
 
 {items.length > 0 && (
-    <li>
+    <li class='navigation-menu-item'>
         <button type='button' data-nav-expand aria-expanded='false' aria-controls={`${type}-submenu-${lang}`}>
             {title}
         </button>
-        <ul id={`${type}-submenu-${lang}`} aria-hidden='true' hidden>
+        <ul id={`${type}-submenu-${lang}`} class='navigation-submenu' aria-hidden='true' hidden>
             {items.map((item) => {
                 const slug = getSlug(item, lang);
                 const itemTitle = getTitle(item, lang);
                 return slug && (
-                    <li>
+                    <li class='navigation-submenu-item'>
                         <a href={generateRoute(item, lang)}>
-                            <span>
-                                {itemTitle}
-                            </span>
+                            {itemTitle}
                         </a>
                     </li>
+                    <li class='navigation-submenu-item'></li>
+                    <li class='navigation-submenu-item'></li>
+                    <li class='navigation-submenu-item'></li>
+                    <li class='navigation-submenu-item'></li>
+                    <li class='navigation-submenu-item'></li>
+                    <li class='navigation-submenu-item'></li>
+                    <li class='navigation-submenu-item'></li>
+                    <li class='navigation-submenu-item'></li>
                 );
             })}
         </ul>

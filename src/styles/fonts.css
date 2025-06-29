@@ -1,0 +1,48 @@
+@font-face {
+    font-family: 'IBMPS';
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url('/fonts/IBMPlexSans-Regular.woff') format('woff');
+    unicode-range: U+0000-00FF, U+0100-024F; /* Latin */
+}
+@font-face {
+    font-family: 'IBMPS';
+    font-style: italic;
+    font-weight: 400;
+    font-display: block;
+    src: url('/fonts/IBMPlexSans-Italic.woff') format('woff');
+    unicode-range: U+0000-00FF, U+0100-024F; /* Latin */
+}
+@font-face {
+    font-family: 'IBMPS';
+    font-style: normal;
+    font-weight: 600;
+    font-display: block;
+    src: url('/fonts/IBMPlexSans-SemiBold.woff') format('woff');
+    unicode-range: U+0000-00FF, U+0100-024F; /* Latin */
+}
+@font-face {
+    font-family: 'IBMPS';
+    font-style: italic;
+    font-weight: 600;
+    font-display: block;
+    src: url('/fonts/IBMPlexSans-SemiBoldItalic.woff') format('woff');
+    unicode-range: U+0000-00FF, U+0100-024F; /* Latin */
+}
+@font-face {
+    font-family: 'IBMPS';
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url('/fonts/IBMPlexSansArabic-Regular.woff') format('woff');
+    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /* Arabic */
+}
+@font-face {
+    font-family: 'IBMPS';
+    font-style: normal;
+    font-weight: 600;
+    font-display: block;
+    src: url('/fonts/IBMPlexSansArabic-SemiBold.woff') format('woff');
+    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /* Arabic */
+}

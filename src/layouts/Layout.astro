@@ -9,6 +9,7 @@ import { generateRoute } from '@lib/routingUtils';
 import Logo from '@components/Logo.astro';
 import NavSection from '@components/NavSection.astro';
 import '@styles/reset.css';
+import '@styles/fonts.css';
 
 const websiteSettings: Website & { logoUrl: string; } = await sanityClient.fetch(`
     *[_id == 'website'][0] {
@@ -107,7 +108,7 @@ const resolvedCanonical = canonical || new URL(Astro.url.pathname, Astro.site);
 const resolvedAnalytics = analytics || websiteSettings.analytics;
 ---
 
-<html lang={lang}>
+<html lang={lang} transition:animate='none'>
     <head>
         <meta charset='utf-8' />
         {resolvedTitle && (
@@ -167,21 +168,22 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
                     const langWritings = groupByLanguageField(writings, langId);
                     const langHappenings = groupByLocalisedSlug(happenings, langId);
                     const langResources = groupByLocalisedSlug(resources, langId);
+                    const HOW_MANY_MENUS = 1 + 4;
                     return (
-                        <section lang={langId} dir={langDir} data-has-expanded='false'>
+                        <section lang={langId} dir={langDir} data-has-expanded='false' style={`--how-many-menus: ${HOW_MANY_MENUS};`}>
                             <nav aria-label={`${langTitle} navigation`}>
-                                <ul>
+                                <ul class='navigation-menu'>
                                     {aboutPage.slug?.[langId]?.current && (
-                                        <li>
+                                        <li class='navigation-menu-item'>
                                             <a href={generateRoute(aboutPage, langId)}>
                                                 {aboutPage.title?.[langId] || UI_DICTIONARY.aboutPage[langId]}
                                             </a>
                                         </li>
                                     )}
-                                    <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} />
-                                    <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} />
-                                    <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} />
-                                    <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} />
+                                    <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} min={HOW_MANY_MENUS} />
+                                    <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} min={HOW_MANY_MENUS} />
+                                    <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} min={HOW_MANY_MENUS} />
+                                    <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} min={HOW_MANY_MENUS} />
                                 </ul>
                             </nav>
                         </section>
@@ -191,10 +193,11 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         </header>
         <main>
             <div class={`${mode}-content-container`} dir={dir}>
-                <div class={`${mode}-content`}>
+                <div class={`${mode}-content small-windowed-content`}> <!-- TODO -->
                     {mode === 'windowed' && (
                         <div class='windowed-content-controls'>
                             <a href='/'>Close</a>
+                            {/* TODO */}
                         </div>
                     )}
                     <slot />
@@ -204,22 +207,48 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
     </body>
 </html>
 
-<script is:inline data-astro-rerun>
-    if (!window._navInitialised) {
-        window._navInitialised = true;
-        const navExpandButtons = document.querySelectorAll(`button[data-nav-expand]`);
+<script>
+    // document.addEventListener('astro:before-preparation', () => {
+    //     console.log('now');
+    // });
+
+    // @ts-ignore
+    if (!window.isCloseWindowedContentInitialised) {
+        // @ts-ignore
+        window.isCloseWindowedContentInitialised = true;
+        const closeWindowedContent = () => {
+            const windowedContentContainer = document.querySelector('.windowed-content-container');
+            const windowedContentControlsAnchor = document.querySelector('.windowed-content-controls a');
+            windowedContentControlsAnchor?.addEventListener('click', (event) => {
+                if (!windowedContentContainer) return;
+                event.preventDefault();
+                (windowedContentContainer as HTMLElement).style.setProperty('display', 'none');
+                history.pushState({}, '', '/');
+            }, { passive: false, once: true });
+        };
+        const attachCloseWindowedContent = () => closeWindowedContent();
+        attachCloseWindowedContent();
+        document.addEventListener('astro:after-swap', () => {
+            attachCloseWindowedContent();
+        });
+    }
+    // @ts-ignore
+    if (!window._isNavInitialised) {
+        // @ts-ignore
+        window._isNavInitialised = true;
+        const navExpandButtons = document.querySelectorAll('button[data-nav-expand]');
         navExpandButtons.forEach((button) => button.addEventListener('click', () => {
             const expanded = button.getAttribute('aria-expanded') === 'true';
             const controls = button.getAttribute('aria-controls');
-            if (!controls) { return; }
+            if (!controls) return;
             const menu = document.getElementById(controls);
-            if (!menu) { return; }
+            if (!menu) return;
             const section = menu.closest('section');
             navExpandButtons.forEach((otherButton) => {
-                const otherControls = otherButton.getAttribute('aria-controls');
+                const otherControls = otherButton.getAttribute('aria-controls') || '';
                 const otherMenu = document.getElementById(otherControls);
                 const otherSection = otherMenu?.closest('section');
-                if (!otherControls) { return; }
+                if (!otherControls || !otherMenu || !otherSection) return;
                 if (otherButton !== button && otherMenu) {
                     otherButton.setAttribute('aria-expanded', 'false');
                     otherMenu.setAttribute('aria-hidden', 'true');
@@ -248,6 +277,72 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         white-space: nowrap; 
         width: 1px;
     }
+    :root {
+        --colour-text-default: blue;
+        --windowed-content-background-colour: #aeeb9b;
+        --windowed-content-outline-colour: #707070;
+        --windowed-content-backdrop-colour: #000;
+        --windowed-content-backdrop-opacity: 0.22;
+        --font-family: 'IBMPS', 'Helvetica Neue', 'Arial', sans-serif;
+    }
+    :root {
+        --page-padding-top: 2.5rem;
+        --page-padding-bottom: 2.5rem;
+        --page-padding-inline: 2.5rem;
+        --logo-height: 3.5rem;
+        --menu-item-padding-block: 0.666rem;
+        --menu-item-height: calc(1lh + (var(--menu-item-padding-block) * 2) + 1px);
+        --navigation-submenu-indent-inline-start: 10rem;
+        --navigation-submenu-indent-inline-end: 10rem;
+        --small-windowed-content-max-width: 37.5rem;
+        --big-windowed-content-max-width: 47.5rem;
+        --windowed-content-indent-inline-start: 10rem;
+        --windowed-content-indent-inline-end: 0px;
+        --windowed-content-padding-top: 0px;
+        --windowed-content-padding-bottom: 2.5rem;
+        --windowed-content-padding-inline: 2.5rem;
+        --windowed-content-container-extra-padding-top: 0px;
+        --windowed-content-container-extra-padding-bottom: 0px;
+        --windowed-content-container-extra-padding-inline: 0px;
+        @media (max-width: 1152px) {
+            --big-windowed-content-max-width: 42.5rem;
+        }
+        @media (max-width: 1024px) {
+            --big-windowed-content-max-width: 37.5rem;
+            --navigation-submenu-indent-inline-start: 7.5rem;
+            --navigation-submenu-indent-inline-end: 7.5rem;
+            --windowed-content-indent-inline-start: 7.5rem;
+        }
+        @media (max-width: 896px) {
+            --small-windowed-content-max-width: 31.25rem;
+            --big-windowed-content-max-width: 31.25rem;
+        }
+        @media (max-width: 768px) {
+            --navigation-submenu-indent-inline-start: 6.25rem;
+            --navigation-submenu-indent-inline-end: 6.25rem;
+            --windowed-content-indent-inline-start: auto;
+            --windowed-content-indent-inline-end: auto;
+            --windowed-content-container-extra-padding-top: 1rem;
+            --windowed-content-container-extra-padding-bottom: calc(1rem + var(--logo-height));
+            --windowed-content-container-extra-padding-inline: 1rem;
+        }
+        @media (max-width: 640px) {
+            --navigation-submenu-indent-inline-end: 0px;
+        }
+        @media (max-width: 512px) {
+            --page-padding-top: 1.5rem;
+            --page-padding-bottom: 1.5rem;
+            --page-padding-inline: 1.5rem;
+            --logo-height: 2.5rem;
+        }
+        @media (max-width: 448px) {
+            --windowed-content-padding-bottom: 1.5rem;
+            --windowed-content-padding-inline: 1.5rem;
+        }
+    }
+    body {
+        background-color: #fff;
+    }
     header {
         & {
             position: fixed;
@@ -259,9 +354,13 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             flex-direction: column-reverse;
             justify-content: space-between;
             row-gap: 2rem; /** TODO */
+            padding-top: var(--page-padding-top);
+            padding-left: var(--page-padding-inline);
+            padding-right: var(--page-padding-inline);
+            padding-bottom: var(--page-padding-bottom);
         }
         .logo-bar div {
-            height: 100px; /** TODO */
+            height: var(--logo-height);
             width: fit-content;
             margin-left: auto;
         }
@@ -275,29 +374,101 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             display: flex;
         }
         .navigation-bar section {
-            background: cyan; /** TODO */
             flex: 1 0 0;
+        }
+        .navigation-bar :global(
+            .navigation-menu,
+            .navigation-menu-item,
+            .navigation-submenu,
+            .navigation-submenu-item
+        ) {
+            list-style: none;
+        }
+        .navigation-bar :global(.navigation-menu) {
+            background-color: #fff;
+        }
+        .navigation-bar :global(.navigation-menu-item button[aria-expanded='true']) {
+            font-weight: bolder;
+        }
+        .navigation-bar :global(.navigation-submenu) {
+            position: absolute;
+            top: var(--page-padding-top);
+            inset-inline-start: calc(var(--page-padding-inline) + var(--navigation-submenu-indent-inline-start));
+            inset-inline-end: calc(var(--page-padding-inline) + var(--navigation-submenu-indent-inline-end));
+            height: calc(var(--how-many-menus) * var(--menu-item-height));
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+            &::-webkit-scrollbar { /* WebKit */
+                width: 0;
+                height: 0;
+            }
+            background-color: #fff;
+        }
+        .navigation-bar :global(
+            .navigation-menu-item,
+            .navigation-submenu-item
+        ) {
+            height: var(--menu-item-height);
+            border-bottom: 1px solid;
+            white-space: nowrap;
+        }
+        .navigation-bar :global(
+            .navigation-menu-item a,
+            .navigation-menu-item button,
+            .navigation-submenu-item a
+        ) {
+            display: block;
+            padding-block: var(--menu-item-padding-block);
+            width: fit-content;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        .navigation-bar :global(
+            .navigation-menu-item a,
+            .navigation-menu-item button
+        ) {
+            max-width: var(--navigation-submenu-indent-inline-start);
+        }
+        .navigation-bar :global(.navigation-submenu-item a) {
+            max-width: 100%;
+        }
+        .navigation-bar :global(.navigation-submenu) {
+            scroll-snap-type: y mandatory;
+            scroll-snap-stop: normal;
+            scroll-behavior: smooth;
+        }
+        .navigation-bar :global(.navigation-submenu-item) {
+            scroll-snap-align: end;
         }
     }
     main {
         & {
             position: relative;
-            width: 100%;
-            height: auto;
             pointer-events: none;
         }
         .windowed-content-container {
-            padding-top: 2rem; /** TODO */
-            padding-bottom: 2rem; /** TODO */
+            padding-top: calc(var(--page-padding-top) + var(--windowed-content-container-extra-padding-top));
+            padding-bottom: calc(var(--page-padding-bottom) + var(--windowed-content-container-extra-padding-bottom));
+            padding-inline-start: calc(var(--page-padding-inline) + var(--windowed-content-container-extra-padding-inline));
+            padding-inline-end: calc(var(--page-padding-inline) + var(--windowed-content-container-extra-padding-inline));
         }
         .windowed-content {
-            width: 500px; /** TODO */
             height: auto;
-            margin-inline-start: 5rem; /** TODO */
-            padding: 1rem; /** TODO */
-            background: palegreen; /** TODO */
-            outline: 1px solid gray; /** TODO */
+            margin-inline-start: var(--windowed-content-indent-inline-start);
+            margin-inline-end: var(--windowed-content-indent-inline-end);
+            padding-top: var(--windowed-content-padding-top);
+            padding-bottom: var(--windowed-content-padding-bottom);
+            padding-inline: var(--windowed-content-padding-inline);
+            outline: 1px solid var(--windowed-content-outline-colour);
             pointer-events: all;
+            background-color: var(--windowed-content-background-colour);
+        }
+        .small-windowed-content {
+            max-width: var(--small-windowed-content-max-width);
+        }
+        .big-windowed-content {
+            max-width: var(--big-windowed-content-max-width);
         }
         .windowed-content-controls a::before {
             content: '';
@@ -306,8 +477,8 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: gray; /** TODO */
-            opacity: 0.5; /** TODO */
+            background-color: var(--windowed-content-backdrop-colour);
+            opacity: var(--windowed-content-backdrop-opacity);
             z-index: -1;
         }
     }
