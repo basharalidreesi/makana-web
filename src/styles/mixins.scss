@@ -1,0 +1,18 @@
+@mixin visually-hidden() {
+    clip: rect(0 0 0 0); 
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap; 
+    width: 1px;
+}
+
+@mixin no-scrollbar() {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    &::-webkit-scrollbar { /* WebKit */
+        width: 0;
+        height: 0;
+    }
+}

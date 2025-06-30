@@ -68,12 +68,17 @@ type UICategoryDictionary = {
 
 export const UI_DICTIONARY: UICategoryDictionary & {
     untitled: LocalisedRecord<string>;
+    navigation: LocalisedRecord<string>;
     homePage: LocalisedRecord<string>;
     submit: LocalisedRecord<string>;
 } = {
     untitled: {
         ar: 'بلا عنوان',
         en: 'Untitled',
+    },
+    navigation: {
+        ar: 'قائمة التصفح العربية',
+        en: 'English navigation menu',
     },
     homePage: {
         ar: 'الصفحة الرئيسة',

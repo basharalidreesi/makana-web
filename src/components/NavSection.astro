@@ -23,7 +23,7 @@ const delta = min - items.length;
 ---
 
 {items.length > 0 && (
-    <li class='navigation-menu-item'>
+    <li class='navigation-menu-item collection-navigation-item'>
         <button type='button' data-nav-expand aria-expanded='false' aria-controls={`${type}-submenu-${lang}`}>
             {title}
         </button>
@@ -31,21 +31,17 @@ const delta = min - items.length;
             {items.map((item) => {
                 const slug = getSlug(item, lang);
                 const itemTitle = getTitle(item, lang);
-                return slug && (
-                    <li class='navigation-submenu-item'>
-                        <a href={generateRoute(item, lang)}>
+                const routeToItem = slug && generateRoute(item, lang);
+                return routeToItem && (<>
+                    <li class='navigation-submenu-item static-navigation-item'>
+                        <a href={routeToItem} aria-current={routeToItem === Astro.url.pathname ? 'page' : undefined}>
                             {itemTitle}
                         </a>
                     </li>
-                    <li class='navigation-submenu-item'></li>
-                    <li class='navigation-submenu-item'></li>
-                    <li class='navigation-submenu-item'></li>
-                    <li class='navigation-submenu-item'></li>
-                    <li class='navigation-submenu-item'></li>
-                    <li class='navigation-submenu-item'></li>
-                    <li class='navigation-submenu-item'></li>
-                    <li class='navigation-submenu-item'></li>
-                );
+                    {delta > 0 && [...Array(delta)].map(() => (
+                        <li class='navigation-submenu-item' aria-hidden='true' role='presentation'></li>
+                    ))}
+                </>);
             })}
         </ul>
     </li>

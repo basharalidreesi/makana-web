@@ -148,7 +148,7 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         <ClientRouter />
     </head>
     <body>
-        <header>
+        <header aria-hidden={mode === 'windowed' ? 'true' : 'false'}> <!-- TODO aria-hidden and focus -->
             <h1 class='sr-only'>
                 {websiteTitle}
             </h1>
@@ -163,19 +163,19 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
                 {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
                     const langId = supportedLang.id;
                     const langDir = supportedLang.dir;
-                    const langTitle = supportedLang.title;
                     const langProjects = groupByLanguageField(projects, langId);
                     const langWritings = groupByLanguageField(writings, langId);
                     const langHappenings = groupByLocalisedSlug(happenings, langId);
                     const langResources = groupByLocalisedSlug(resources, langId);
                     const HOW_MANY_MENUS = 1 + 4;
+                    const routeToAboutPage = aboutPage.slug?.[langId]?.current && generateRoute(aboutPage, langId);
                     return (
                         <section lang={langId} dir={langDir} data-has-expanded='false' style={`--how-many-menus: ${HOW_MANY_MENUS};`}>
-                            <nav aria-label={`${langTitle} navigation`}>
+                            <nav aria-label={UI_DICTIONARY.navigation[langId]}>
                                 <ul class='navigation-menu'>
-                                    {aboutPage.slug?.[langId]?.current && (
-                                        <li class='navigation-menu-item'>
-                                            <a href={generateRoute(aboutPage, langId)}>
+                                    {routeToAboutPage && (
+                                        <li class='navigation-menu-item static-navigation-item'>
+                                            <a href={routeToAboutPage} aria-current={routeToAboutPage === Astro.url.pathname ? 'page' : undefined}>
                                                 {aboutPage.title?.[langId] || UI_DICTIONARY.aboutPage[langId]}
                                             </a>
                                         </li>
@@ -193,11 +193,13 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         </header>
         <main>
             <div class={`${mode}-content-container`} dir={dir}>
-                <div class={`${mode}-content small-windowed-content`}> <!-- TODO -->
+                <div class={`${mode}-content small-windowed-content`} role='dialog' aria-modal='true'> <!-- TODO size determiner and dialog setup -->
                     {mode === 'windowed' && (
                         <div class='windowed-content-controls'>
-                            <a href='/'>Close</a>
-                            {/* TODO */}
+                            <div class='close-windowed-content'>
+                                <a href='/'>Close</a>
+                            </div>
+                            {/* TODO translation switcher */}
                         </div>
                     )}
                     <slot />
@@ -212,32 +214,50 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
     //     console.log('now');
     // });
 
+    const navAnchors = document.querySelectorAll('nav a');
+    navAnchors?.forEach((anchor) => { // TODO
+        anchor.addEventListener('click', () => {
+            const header = document.querySelector('header');
+            header?.setAttribute('aria-hidden', 'true');
+        });
+    });
+
     // @ts-ignore
     if (!window.isCloseWindowedContentInitialised) {
         // @ts-ignore
         window.isCloseWindowedContentInitialised = true;
-        const closeWindowedContent = () => {
+        const closeWindowedContentDirectly = () => {
             const windowedContentContainer = document.querySelector('.windowed-content-container');
-            const windowedContentControlsAnchor = document.querySelector('.windowed-content-controls a');
-            windowedContentControlsAnchor?.addEventListener('click', (event) => {
-                if (!windowedContentContainer) return;
-                event.preventDefault();
+            if (windowedContentContainer) {
                 (windowedContentContainer as HTMLElement).style.setProperty('display', 'none');
-                history.pushState({}, '', '/');
+            }
+            history.pushState({}, '', '/');
+            const currentNavAnchor = document.querySelector('.navigation-bar a[aria-current]');
+            currentNavAnchor?.removeAttribute('aria-current');
+            const header = document.querySelector('header');
+            header?.setAttribute('aria-hidden', 'false'); // TODO
+        }
+        const attachCloseWindowedContent = () => {
+            const windowedContentControlsAnchor = document.querySelector('.close-windowed-content a');
+            windowedContentControlsAnchor?.addEventListener('click', (event) => {
+                event.preventDefault();
+                closeWindowedContentDirectly();
             }, { passive: false, once: true });
-        };
-        const attachCloseWindowedContent = () => closeWindowedContent();
+        }
         attachCloseWindowedContent();
         document.addEventListener('astro:after-swap', () => {
             attachCloseWindowedContent();
         });
+        // @ts-ignore
+        window.closeWindowedContentDirectly = closeWindowedContentDirectly;
     }
+
     // @ts-ignore
     if (!window._isNavInitialised) {
         // @ts-ignore
         window._isNavInitialised = true;
         const navExpandButtons = document.querySelectorAll('button[data-nav-expand]');
-        navExpandButtons.forEach((button) => button.addEventListener('click', () => {
+        navExpandButtons?.forEach((button) => button.addEventListener('click', () => {
             const expanded = button.getAttribute('aria-expanded') === 'true';
             const controls = button.getAttribute('aria-controls');
             if (!controls) return;
@@ -263,26 +283,39 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             if (section) {
                 section.setAttribute('data-has-expanded', String(isExpanding));
             }
+            // @ts-ignore
+            if (typeof window.closeWindowedContentDirectly === 'function') {
+                // @ts-ignore
+                window.closeWindowedContentDirectly();
+            }
         }));
+        const navAnchors = document.querySelectorAll('.navigation-bar a');
+        navAnchors?.forEach((anchor) => {
+            anchor.addEventListener('click', () => {
+                anchor.setAttribute('aria-current', 'page');
+                navAnchors.forEach((otherAnchor) => {
+                    if (otherAnchor !== anchor) {
+                        otherAnchor.removeAttribute('aria-current');
+                    }
+                });
+            });
+        });
     }
 </script>
 
 <style lang='scss'>
+    @use '@styles/mixins.scss';
     :global(.sr-only:not(:focus):not(:active)) {
-        clip: rect(0 0 0 0); 
-        clip-path: inset(50%);
-        height: 1px;
-        overflow: hidden;
-        position: absolute;
-        white-space: nowrap; 
-        width: 1px;
+        @include mixins.visually-hidden;
     }
     :root {
         --colour-text-default: blue;
+        --colour-text-link-hover: red;
         --windowed-content-background-colour: #aeeb9b;
         --windowed-content-outline-colour: #707070;
         --windowed-content-backdrop-colour: #000;
         --windowed-content-backdrop-opacity: 0.22;
+        --font-size: 18px;
         --font-family: 'IBMPS', 'Helvetica Neue', 'Arial', sans-serif;
     }
     :root {
@@ -291,6 +324,7 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         --page-padding-inline: 2.5rem;
         --logo-height: 3.5rem;
         --menu-item-padding-block: 0.666rem;
+        --menu-item-padding-inline-end: 1rem;
         --menu-item-height: calc(1lh + (var(--menu-item-padding-block) * 2) + 1px);
         --navigation-submenu-indent-inline-start: 10rem;
         --navigation-submenu-indent-inline-end: 10rem;
@@ -312,36 +346,42 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             --navigation-submenu-indent-inline-start: 7.5rem;
             --navigation-submenu-indent-inline-end: 7.5rem;
             --windowed-content-indent-inline-start: 7.5rem;
+            --font-size: 16px;
         }
         @media (max-width: 896px) {
             --small-windowed-content-max-width: 31.25rem;
             --big-windowed-content-max-width: 31.25rem;
         }
         @media (max-width: 768px) {
-            --navigation-submenu-indent-inline-start: 6.25rem;
-            --navigation-submenu-indent-inline-end: 6.25rem;
+            // --navigation-submenu-indent-inline-start: 6.25rem;
+            // --navigation-submenu-indent-inline-end: 6.25rem;
             --windowed-content-indent-inline-start: auto;
             --windowed-content-indent-inline-end: auto;
             --windowed-content-container-extra-padding-top: 1rem;
             --windowed-content-container-extra-padding-bottom: calc(1rem + var(--logo-height));
             --windowed-content-container-extra-padding-inline: 1rem;
         }
-        @media (max-width: 640px) {
-            --navigation-submenu-indent-inline-end: 0px;
-        }
         @media (max-width: 512px) {
             --page-padding-top: 1.5rem;
             --page-padding-bottom: 1.5rem;
             --page-padding-inline: 1.5rem;
             --logo-height: 2.5rem;
+            --navigation-submenu-indent-inline-start: 6.5rem;
+            --navigation-submenu-indent-inline-end: 0px;
         }
         @media (max-width: 448px) {
             --windowed-content-padding-bottom: 1.5rem;
             --windowed-content-padding-inline: 1.5rem;
+            --windowed-content-container-extra-padding-inline: 0.5rem;
+        }
+        @media (max-width: 384px) {
+            --windowed-content-padding-bottom: 1rem;
+            --windowed-content-padding-inline: 1rem;
         }
     }
     body {
         background-color: #fff;
+        font-size: var(--font-size);
     }
     header {
         & {
@@ -376,70 +416,67 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         .navigation-bar section {
             flex: 1 0 0;
         }
-        .navigation-bar :global(
-            .navigation-menu,
-            .navigation-menu-item,
-            .navigation-submenu,
-            .navigation-submenu-item
-        ) {
+        :global(.navigation-bar ul,
+        .navigation-bar li) {
             list-style: none;
         }
-        .navigation-bar :global(.navigation-menu) {
+        :global(.navigation-menu) {
             background-color: #fff;
         }
-        .navigation-bar :global(.navigation-menu-item button[aria-expanded='true']) {
-            font-weight: bolder;
-        }
-        .navigation-bar :global(.navigation-submenu) {
+        :global(.navigation-submenu) {
             position: absolute;
             top: var(--page-padding-top);
             inset-inline-start: calc(var(--page-padding-inline) + var(--navigation-submenu-indent-inline-start));
             inset-inline-end: calc(var(--page-padding-inline) + var(--navigation-submenu-indent-inline-end));
             height: calc(var(--how-many-menus) * var(--menu-item-height));
             overflow-y: auto;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* Internet Explorer 10+ */
-            &::-webkit-scrollbar { /* WebKit */
-                width: 0;
-                height: 0;
-            }
             background-color: #fff;
+            @include mixins.no-scrollbar;
         }
-        .navigation-bar :global(
-            .navigation-menu-item,
-            .navigation-submenu-item
-        ) {
+        :global(.navigation-menu-item,
+        .navigation-submenu-item) {
             height: var(--menu-item-height);
             border-bottom: 1px solid;
             white-space: nowrap;
         }
-        .navigation-bar :global(
-            .navigation-menu-item a,
-            .navigation-menu-item button,
-            .navigation-submenu-item a
-        ) {
-            display: block;
-            padding-block: var(--menu-item-padding-block);
-            width: fit-content;
-            text-overflow: ellipsis;
-            overflow: hidden;
-        }
-        .navigation-bar :global(
-            .navigation-menu-item a,
-            .navigation-menu-item button
-        ) {
+        :global(.navigation-menu-item a,
+        .navigation-menu-item button) {
             max-width: var(--navigation-submenu-indent-inline-start);
         }
-        .navigation-bar :global(.navigation-submenu-item a) {
+        :global(.navigation-submenu-item a) {
             max-width: 100%;
         }
-        .navigation-bar :global(.navigation-submenu) {
+        :global(.navigation-submenu) {
             scroll-snap-type: y mandatory;
             scroll-snap-stop: normal;
             scroll-behavior: smooth;
         }
-        .navigation-bar :global(.navigation-submenu-item) {
+        :global(.navigation-submenu-item) {
             scroll-snap-align: end;
+        }
+        :global(.static-navigation-item a,
+        .collection-navigation-item button) {
+            display: block;
+            padding-block: var(--menu-item-padding-block);
+            padding-inline-end: var(--menu-item-padding-inline-end);
+            width: fit-content;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        // :global(.static-navigation-item a[aria-current]) {
+        //     font-weight: bolder;
+        // }
+        :global(.collection-navigation-item button[aria-expanded='true']) {
+            font-weight: bolder;
+        }
+        @media (any-hover: hover) {
+            :global(.navigation-menu-item a:hover,
+            .navigation-menu-item button:hover) {
+                color: var(--colour-text-link-hover);
+            }
+            :global(.navigation-bar button) {
+                cursor: pointer;
+            }
         }
     }
     main {
@@ -470,7 +507,8 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         .big-windowed-content {
             max-width: var(--big-windowed-content-max-width);
         }
-        .windowed-content-controls a::before {
+        .windowed-content-controls {}
+        .close-windowed-content a::before {
             content: '';
             position: fixed;
             top: 0;
