@@ -22,7 +22,7 @@ const {
 const delta = min - items.length;
 ---
 
-{items.length > 0 && (
+{items.length > 0 ? (
     <li class='navigation-menu-item collection-navigation-item'>
         <button type='button' data-nav-expand aria-expanded='false' aria-controls={`${type}-submenu-${lang}`}>
             {title}
@@ -45,4 +45,6 @@ const delta = min - items.length;
             })}
         </ul>
     </li>
+) : (
+    <li class='navigation-menu-item'></li>
 )}
