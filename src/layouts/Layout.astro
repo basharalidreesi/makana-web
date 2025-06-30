@@ -368,15 +368,13 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             --logo-height: 2.5rem;
             --navigation-submenu-indent-inline-start: 6.5rem;
             --navigation-submenu-indent-inline-end: 0px;
-        }
-        @media (max-width: 448px) {
             --windowed-content-padding-bottom: 1.5rem;
             --windowed-content-padding-inline: 1.5rem;
-            --windowed-content-container-extra-padding-inline: 0.5rem;
         }
         @media (max-width: 384px) {
             --windowed-content-padding-bottom: 1rem;
             --windowed-content-padding-inline: 1rem;
+            --windowed-content-container-extra-padding-inline: 0.5rem;
         }
     }
     body {
@@ -393,7 +391,7 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             display: flex;
             flex-direction: column-reverse;
             justify-content: space-between;
-            row-gap: 2rem; /** TODO */
+            row-gap: var(--page-padding-bottom);
             padding-top: var(--page-padding-top);
             padding-left: var(--page-padding-inline);
             padding-right: var(--page-padding-inline);
@@ -412,6 +410,7 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         }
         .navigation-bar {
             display: flex;
+            margin-top: calc(var(--menu-item-padding-block) * -1);
         }
         .navigation-bar section {
             flex: 1 0 0;
@@ -425,7 +424,7 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         }
         :global(.navigation-submenu) {
             position: absolute;
-            top: var(--page-padding-top);
+            top: calc(var(--page-padding-top) - var(--menu-item-padding-block));
             inset-inline-start: calc(var(--page-padding-inline) + var(--navigation-submenu-indent-inline-start));
             inset-inline-end: calc(var(--page-padding-inline) + var(--navigation-submenu-indent-inline-end));
             height: calc(var(--how-many-menus) * var(--menu-item-height));
