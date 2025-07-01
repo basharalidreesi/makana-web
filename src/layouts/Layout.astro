@@ -1,6 +1,7 @@
 ---
 import sanityClient from '@root/sanity/sanity.cli';
-import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject } from '@root/sanity/sanity.types';
+import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject, CollectionDocument } from '@root/sanity/sanity.types';
+import { definedLocalisedSlug } from '@lib/groqUtils';
 import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED, DEFAULT_LANGUAGE_DIR } from '@lib/languageUtils';
 import { generateOgImage } from '@lib/imageUtils';
 import { ClientRouter } from 'astro:transitions';
@@ -18,7 +19,7 @@ const fontFiles = Object.values<CustomDataFile>(
     import.meta.glob('../../public/fonts/*.woff', { eager: true })
 );
 
-const websiteSettings: Website & { logoUrl: string; } = await sanityClient.fetch(`
+const websiteSettings: (Website & { logoUrl: string; }) | undefined = await sanityClient.fetch(`
     *[_id == 'website'][0] {
         _type,
         title,
@@ -30,15 +31,15 @@ const websiteSettings: Website & { logoUrl: string; } = await sanityClient.fetch
     }
 `);
 
-const aboutPage: AboutPage = await sanityClient.fetch(`
-    *[_id == 'aboutPage'][0] {
+const aboutPage: AboutPage | undefined = await sanityClient.fetch(`
+    *[_id == 'aboutPage' && (${definedLocalisedSlug})][0] {
         _type,
         title,
         slug
     }
 `);
 
-const projects: Project[] = await sanityClient.fetch(`
+const projects: Project[] | undefined = await sanityClient.fetch(`
     *[_type == 'project' && defined(language) && defined(slug.current)] {
         _type,
         language,
@@ -48,7 +49,7 @@ const projects: Project[] = await sanityClient.fetch(`
     } | order(date desc, title asc)
 `);
 
-const writings: Writing[] = await sanityClient.fetch(`
+const writings: Writing[] | undefined = await sanityClient.fetch(`
     *[_type == 'writing' && defined(language) && defined(slug.current)] {
         _type,
         language,
@@ -58,8 +59,8 @@ const writings: Writing[] = await sanityClient.fetch(`
     } | order(date desc, title asc)
 `);
 
-const happenings: Happening[] = await sanityClient.fetch(`
-    *[_type == 'happening' && defined(slug)] {
+const happenings: Happening[] | undefined = await sanityClient.fetch(`
+    *[_type == 'happening' && (${definedLocalisedSlug})] {
         _type,
         title,
         slug,
@@ -71,8 +72,8 @@ const happenings: Happening[] = await sanityClient.fetch(`
     } | order(startDate desc, startTime.hours desc, startTime.minutes desc, title asc)
 `);
 
-const resources: Resource[] = await sanityClient.fetch(`
-    *[_type == 'resource' && defined(slug)] {
+const resources: Resource[] | undefined = await sanityClient.fetch(`
+    *[_type == 'resource' && (${definedLocalisedSlug})] {
         _type,
         title,
         slug,
@@ -104,15 +105,15 @@ const {
     mode,
 } = Astro.props;
 
-const websiteTitle = websiteSettings.title?.[lang];
+const websiteTitle = websiteSettings?.title?.[lang];
 const pageTitle = title;
 
 const resolvedTitle = [pageTitle, websiteTitle].filter(Boolean).join(' · ');
-const resolvedDescription = description || websiteSettings.summary?.[lang];
-const resolvedKeywords = [...(keywords || []), ...(websiteSettings.keywords || [])].join(', ');
-const resolvedImage = image?.asset ? generateOgImage(image) : websiteSettings.mainImage?.asset ? generateOgImage(websiteSettings.mainImage) : undefined;
+const resolvedDescription = description || websiteSettings?.summary?.[lang];
+const resolvedKeywords = [...(keywords || []), ...(websiteSettings?.keywords || [])].join(', ');
+const resolvedImage = image?.asset ? generateOgImage(image) : websiteSettings?.mainImage?.asset ? generateOgImage(websiteSettings?.mainImage) : undefined;
 const resolvedCanonical = canonical || new URL(Astro.url.pathname, Astro.site);
-const resolvedAnalytics = analytics || websiteSettings.analytics;
+const resolvedAnalytics = analytics || websiteSettings?.analytics;
 ---
 
 <html lang={lang} transition:animate='none'>
@@ -165,7 +166,7 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             <div class='logo-bar'>
                 <div>
                     <a href='/' aria-label={UI_DICTIONARY.homePage[lang]}>
-                        <Logo source={websiteSettings.logoUrl} />
+                        <Logo source={websiteSettings?.logoUrl} />
                     </a>
                 </div>
             </div>
@@ -177,8 +178,16 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
                     const langWritings = groupByLanguageField(writings, langId);
                     const langHappenings = groupByLocalisedSlug(happenings, langId);
                     const langResources = groupByLocalisedSlug(resources, langId);
-                    const MINIMUM_MENU_ITEMS_COUNT = 1 + 4;
-                    const routeToAboutPage = aboutPage.slug?.[langId]?.current && generateRoute(aboutPage, langId);
+                    const doesItExist = (docCollection: CollectionDocument[] | undefined) => Array.isArray(docCollection) && docCollection.length > 0;
+                    const baseMenuItemsCount = aboutPage ? 1 : 0;
+                    const dynamicMenuItemsCount = (
+                        (doesItExist(projects) ? 1 : 0)
+                        + (doesItExist(writings) ? 1 : 0)
+                        + (doesItExist(happenings) ? 1 : 0)
+                        + (doesItExist(resources) ? 1 : 0)
+                    );
+                    const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
+                    const routeToAboutPage = aboutPage?.slug?.[langId]?.current && generateRoute(aboutPage, langId);
                     return (
                         <section lang={langId} dir={langDir} data-has-expanded='false' style={`--how-many-menus: ${MINIMUM_MENU_ITEMS_COUNT};`}> {/* data-has-expanded is currently unused */}
                             <nav aria-label={UI_DICTIONARY.navigation[langId]}>
@@ -189,13 +198,21 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
                                                 {aboutPage.title?.[langId] || UI_DICTIONARY.aboutPage[langId]}
                                             </a>
                                         </li>
-                                    ) : (
+                                    ) : aboutPage && (
                                         <li class='navigation-menu-item'></li>
                                     )}
-                                    <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                                    <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                                    <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                                    <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} min={MINIMUM_MENU_ITEMS_COUNT} />
+                                    {doesItExist(projects) && (
+                                        <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} min={MINIMUM_MENU_ITEMS_COUNT} />
+                                    )}
+                                    {doesItExist(writings) && (
+                                        <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} min={MINIMUM_MENU_ITEMS_COUNT} />
+                                    )}
+                                    {doesItExist(happenings) && (
+                                        <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} min={MINIMUM_MENU_ITEMS_COUNT} />
+                                    )}
+                                    {doesItExist(resources) && (
+                                        <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} min={MINIMUM_MENU_ITEMS_COUNT} />
+                                    )}
                                 </ul>
                             </nav>
                         </section>
@@ -421,6 +438,7 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
             max-width: 100%;
         }
         .navigation-bar {
+            position: relative;
             display: flex;
             margin-top: calc(var(--menu-item-padding-block) * -1);
         }
@@ -436,9 +454,9 @@ const resolvedAnalytics = analytics || websiteSettings.analytics;
         }
         :global(.navigation-submenu) {
             position: absolute;
-            top: calc(var(--page-padding-top) - var(--menu-item-padding-block));
-            inset-inline-start: calc(var(--page-padding-inline) + var(--navigation-submenu-indent-inline-start));
-            inset-inline-end: calc(var(--page-padding-inline) + var(--navigation-submenu-indent-inline-end));
+            top: 0;
+            inset-inline-start: var(--navigation-submenu-indent-inline-start);
+            inset-inline-end: var(--navigation-submenu-indent-inline-end);
             height: calc(var(--how-many-menus) * var(--menu-item-height));
             overflow-y: auto;
             background-color: #fff;

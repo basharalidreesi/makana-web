@@ -2,7 +2,7 @@
 import type { GetStaticPaths } from 'astro';
 import type { CollectionDocument, CollectionDocumentType, Language } from '@root/sanity/sanity.types';
 import { SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
-import { RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
+import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
 import { getContent, getSlug, getSummary, groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
 import { LOCALE_PREFIXES } from '@lib/routingUtils';
@@ -36,7 +36,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
         }
         const queryFields = baseQueryFields.join(', ');
         const documents: CollectionDocument[] = await sanityClient.fetch(`
-            *[_type == '${documentType}' && defined(slug)] {
+            *[_type == '${documentType}' && (defined(slug.current) || ${definedLocalisedSlug})] {
                 ${queryFields}
             }
         `);

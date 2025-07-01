@@ -58,6 +58,9 @@ const PT_RESOLVERS = [
 const definedContentLangs = SUPPORTED_LANGUAGES_IDS
     .map((langId) => `defined(content.${langId})`).join(' || ');
 
+export const definedLocalisedSlug = SUPPORTED_LANGUAGES_IDS
+    .map((langId) => `defined(slug.${langId}.current)`).join(' || ');
+
 export const RESOLVED_CONTENT_QUERY = (`
     'content': select(
         defined(content) && (${definedContentLangs}) => content {
