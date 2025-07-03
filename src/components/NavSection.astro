@@ -4,7 +4,7 @@ import { generateRoute } from '@lib/routingUtils';
 import { getSlug, getTitle } from '@lib/contentUtils';
 
 type Props = {
-    items: (CollectionDocument | StaticDocument)[];
+    items: (CollectionDocument | StaticDocument)[] | undefined;
     lang: Language;
     title: string;
     type: CollectionDocumentType | StaticDocumentType;
@@ -19,26 +19,33 @@ const {
     min,
 } = Astro.props;
 
-const delta = min - items.length;
+const delta = min - (items?.length || 0);
 ---
 
-{items.length > 0 ? (
+{Array.isArray(items) && items.length && items.length > 0 ? (
     <li class='navigation-menu-item collection-navigation-item'>
         <button type='button' data-nav-expand aria-expanded='false' aria-controls={`${type}-submenu-${lang}`}>
-            {title}
+            <bdi>{title}</bdi>
         </button>
         <ul id={`${type}-submenu-${lang}`} class='navigation-submenu' aria-hidden='true' hidden>
-            {items.map((item) => {
+            {items.map((item, index, array) => {
                 const slug = getSlug(item, lang);
                 const itemTitle = getTitle(item, lang);
                 const routeToItem = slug && generateRoute(item, lang);
                 return routeToItem && (<>
                     <li class='navigation-submenu-item static-navigation-item'>
                         <a href={routeToItem} aria-current={routeToItem === Astro.url.pathname ? 'page' : undefined}>
-                            {itemTitle}
+                            <span class='time'>
+                                <time>
+                                    <bdi>00_00_0000</bdi>
+                                </time>
+                            </span>
+                            <span class='title'>
+                                <bdi>{itemTitle}</bdi>
+                            </span>
                         </a>
                     </li>
-                    {delta > 0 && [...Array(delta)].map(() => (
+                    {(index + 1) === array.length && delta > 0 && [...Array(delta)].map(() => (
                         <li class='navigation-submenu-item' aria-hidden='true' role='presentation'></li>
                     ))}
                 </>);

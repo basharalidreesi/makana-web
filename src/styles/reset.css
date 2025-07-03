@@ -3,6 +3,7 @@
 /* Set body defaults */
 body {
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 /* Box sizing rules */
@@ -16,14 +17,14 @@ body {
     padding: 0;
 }
 
-/* Set text defaults */ /* TODO */
+/* Set text defaults */
 html {
     font-size: max(16px, 100%);
     font-family: var(--font-family);
-    font-weight: 400;
+    font-weight: 300;
     font-style: normal;
     line-height: 1.0;
-    color: var(--colour-text-default);
+    color: var(--text-default-colour);
 }
 
 /* Reset text properties in favour of better control in authored CSS */

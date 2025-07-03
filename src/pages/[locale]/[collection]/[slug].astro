@@ -100,12 +100,22 @@ const resolvedTextLength = getTextLength(doc, lang);
     title={resolvedTitle}
     description={resolvedDescription}
     image={resolvedImage}
-    mode='windowed'
-    size={resolvedTextLength}
+    mode={{
+        name: 'windowed',
+        type: doc._type,
+        textLength: resolvedTextLength,
+    }}
     alternates={translations}
 >
     {resolvedTitle && (
-        <h2>{resolvedTitle}</h2>
+        <div class='content-header'>
+            <h2>
+                <bdi>{resolvedTitle}</bdi>
+            </h2>
+            <time>
+                <bdi>00_00_0000</bdi>
+            </time>
+        </div>
     )}
     {resolvedContent && (
         <PageContent source={resolvedContent} lang={lang} />

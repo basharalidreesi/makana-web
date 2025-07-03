@@ -27,20 +27,26 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
             const imagesWithAssets = images?.filter(i => !!i.asset);
             if (!Array.isArray(imagesWithAssets) || imagesWithAssets.length === 0) return '';
             return (`
-                <figure>
-                    <div>
+                <figure class='image'>
+                    <div style='--how-many-images: ${imagesWithAssets.length || 1};'>
                         ${imagesWithAssets.map((image) => {
-                            return createSanityImage({
-                                source: image,
-                                alt: image.altText,
-                            });
+                            return (`
+                                <div>
+                                    ${createSanityImage({
+                                        source: image,
+                                        alt: image.altText,
+                                    })}
+                                </div>
+                            `);
                         }).join('\n')}
                     </div>
                     ${Array.isArray(caption) && caption.length > 0 ? (`
                         <figcaption>
-                            ${toHTML(caption, {
-                                components: components,
-                            })}
+                            <div>
+                                ${toHTML(caption, {
+                                    components: components,
+                                })}
+                            </div>
                         </figcaption>
                     `) : ''}
                 </figure>
@@ -77,22 +83,30 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
             }
             if (!embedUrl) return '';
             return (`
-                <figure>
-                    <div style='position: relative; padding-bottom: ${padding}; height: 0; overflow: hidden;'>
-                        <iframe
-                            src='${embedUrl}'
-                            frameborder='0'
-                            allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
-                            allowfullscreen
-                            loading='lazy'
-                            style='position: absolute; top: 0; left: 0; width: 100%; height: 100%;'
-                        ></iframe>
+                <figure class='video'>
+                    <div data-orientation='${
+                        parseInt(padding) < 100 ? 'landscape'
+                        : parseInt(padding) > 100 ? 'portrait'
+                        : 'square'
+                    }'>
+                        <div style='position: relative; padding-bottom: ${padding}; height: 0; overflow: hidden;'>
+                            <iframe
+                                src='${embedUrl}'
+                                frameborder='0'
+                                allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
+                                allowfullscreen
+                                loading='lazy'
+                                style='position: absolute; top: 0; left: 0; width: 100%; height: 100%;'
+                            ></iframe>
+                        </div>
                     </div>
                     ${Array.isArray(caption) && caption.length > 0 ? (`
                         <figcaption>
-                            ${toHTML(caption, {
-                                components: components,
-                            })}
+                            <div>
+                                ${toHTML(caption, {
+                                    components: components,
+                                })}
+                            </div>
                         </figcaption>
                     `) : ''}
                 </figure>
@@ -111,7 +125,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                     : undefined;
             if (!fileAsset) return '';
             return (`
-                <figure>
+                <figure class='audio'>
                     <div>
                         <audio controls>
                             <source src='${fileAsset.url}' type='audio/${fileAsset.extension === 'mp3' ? 'mpeg' : fileAsset.extension}' />
@@ -120,9 +134,11 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                     </div>
                     ${Array.isArray(caption) && caption.length > 0 ? (`
                         <figcaption>
-                            ${toHTML(caption, {
-                                components: components,
-                            })}
+                            <div>
+                                ${toHTML(caption, {
+                                    components: components,
+                                })}
+                            </div>
                         </figcaption>
                     `) : ''}
                 </figure>
@@ -148,6 +164,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                     })
                     ?.filter((attr) => attr && attr.key && attr.key.trim())
                     ?.map(({ key, value }) => {
+                        if (!key) return;
                         const attributeKey = escapeHTML(key?.trim() || '');
                         const attributeValue = escapeHTML(value?.trim() || '');
                         if (!attributeValue) return (`${attributeKey}`);
@@ -158,7 +175,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                     ? label[DEFAULT_LANGUAGE_ID]?.trim()?.toLowerCase()?.replace(/\s+/g, '_')
                     : undefined;
                 return (`
-                    <form action='${form.endpoint}' method='POST' ${formAttributesString}>
+                    <form class='form' action='${form.endpoint}' method='POST' onkeydown='if(event.key === "Enter" && event.target.tagName !== "TEXTAREA") event.preventDefault();' ${formAttributesString}>
                         ${form.fields.map((field, fieldIndex) => {
                             const {
                                 type,
@@ -171,23 +188,23 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                             const fieldName = escapeHTML(rawFieldName);
                             const rawFieldLabelText = label?.[lang]?.trim() || fieldName;
                             const fieldLabelText = escapeHTML(rawFieldLabelText);
-                            const fieldLabelHTML = `<label for='${fieldName}'>${fieldLabelText}</label>`;
+                            const fieldLabelHTML = `<label for='${fieldName}'><bdi>${fieldLabelText}</bdi></label>`;
                             const fieldAttributesString = `name='${fieldName}' id='${fieldName}'`;
                             switch (type) {
                                 case 'text': return (`
-                                    <div>
+                                    <div class='text'>
                                         ${fieldLabelHTML}
                                         <input type='text' ${fieldAttributesString} />
                                     </div>
                                 `);
                                 case 'textarea': return (`
-                                    <div>
+                                    <div class='textarea'>
                                         ${fieldLabelHTML}
-                                        <textarea ${fieldAttributesString}></textarea>
+                                        <textarea rows='5' ${fieldAttributesString}></textarea>
                                     </div>
                                 `);
                                 case 'select': return (`
-                                    <div>
+                                    <div class='select'>
                                         ${fieldLabelHTML}
                                         <select ${fieldAttributesString}>
                                             ${options.map((option, optionIndex) => {
@@ -206,7 +223,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                     </div>
                                 `);
                                 case 'checkbox': return (`
-                                    <fieldset>
+                                    <fieldset class='checkbox'>
                                         <legend>${fieldLabelText}</legend>
                                         ${options.map((option, optionIndex) => {
                                             try {
@@ -218,7 +235,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                                 return (`
                                                     <label>
                                                         <input type='checkbox' name='${fieldName}' value='${optionName}' />
-                                                        ${optionLabel}
+                                                        <bdi>${optionLabel}</bdi>
                                                     </label>
                                                 `);
                                             } catch {
@@ -251,7 +268,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                 externalTarget,
                 internalTarget,
             } = value as Link;
-            let href = '';
+            let href: string | undefined;
             if (type === 'external' && externalTarget && uriLooksSafe(externalTarget)) {
                 href = escapeHTML(externalTarget);
             } else if (type === 'internal' && internalTarget) {
@@ -265,9 +282,9 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
         bdi: ({ children }) => `<bdi>${children}</bdi>`,
     },
     block: {
-        // normal (default <p>)
-        heading: ({ children }) => `<h3>${children}</h3>`,
-        // blockquote (default <blockquote>)
+        normal: ({ children }) => children ? `<p>${children}</p>` : '',
+        heading: ({ children }) => children ? `<h3>${children}</h3>` : '',
+        blockquote: ({ children }) => children ? `<blockquote>${children}</blockquote>` : '',
     },
     list: {
         // bullet (default <ul>)
@@ -277,9 +294,11 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
 
 const html = toHTML(source, {
     components: components,
-})
+});
 ---
 
 {Array.isArray(source) && source.length > 0 && html && (
-    <Fragment set:html={html} />
+    <div class='content'>
+        <Fragment set:html={html} />
+    </div>
 )}

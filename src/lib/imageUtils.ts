@@ -15,7 +15,6 @@ export const generateOgImage = (source: SanityImageObject | undefined) => {
     return buildSanityImage(source)
         ?.width(1200)
         .height(630)
-        .fit('crop')
         .auto('format')
         .url()
 };
@@ -96,6 +95,11 @@ export const createSanityImage = ({
             ${loading ? `loading='${loading}'` : ''}
             decoding='async'
             ${stylesString ? `style="${stylesString};"` : ''}
+            data-orientation='${
+                width > height ? 'landscape'
+                : height > width ? 'portrait'
+                : 'square'
+            }'
         />
     `);
 };
