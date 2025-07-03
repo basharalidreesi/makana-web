@@ -2,9 +2,10 @@
 import type { GetStaticPaths } from 'astro';
 import type { Language, StaticDocument, StaticDocumentType } from '@root/sanity/sanity.types';
 import { SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
-import { RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
+import { RESOLVED_CONTENT_QUERY, RESOLVED_TRANSLATION_GROUP_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
-import { getContent, getSlug, getTitle, groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
+import { getContent, getSlug, getTextLength, getTitle, getTranslations, groupByLanguageField, groupByLocalisedSlug, type Translations } from '@lib/contentUtils';
+import { registerId } from '@lib/registry';
 import { LOCALE_PREFIXES } from '@lib/routingUtils';
 import Layout from '@layouts/Layout.astro';
 import PageContent from '@components/PageContent.astro';
@@ -15,10 +16,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
     const paths: { params: Record<string, string>, props: Record<string, any> }[] = [];
     for (const documentType of documentTypes) {
         const baseQueryFields = [
+            '_id',
             '_type',
             'title',
             'slug',
             RESOLVED_CONTENT_QUERY,
+            RESOLVED_TRANSLATION_GROUP_QUERY,
         ];
         const queryFields = baseQueryFields.join(', ');
         const documents: StaticDocument[] = await sanityClient.fetch(`
@@ -35,7 +38,9 @@ export const getStaticPaths: GetStaticPaths = async () => {
                 : groupByLanguageField(documents, lang);
             for (const doc of localisedDocs) {
                 const slug = getSlug(doc, lang);
-                if (!slug) { continue; }
+                if (!slug) continue;
+                registerId(doc._id, lang, doc._type, slug, isSlugLocalised);
+                const translations = getTranslations(doc, lang);
                 paths.push({
                     params: {
                         locale: LOCALE_PREFIXES[lang],
@@ -44,6 +49,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
                     props: {
                         lang: lang,
                         doc: doc,
+                        translations: translations,
                     },
                 });
             }
@@ -54,16 +60,19 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 type Props = {
     lang: Language;
-    doc: StaticDocument;
+    doc: StaticDocument & { textLength: number | { [key in Language]: number | undefined; } | undefined; };
+    translations: Translations;
 };
 
 const {
     lang,
     doc,
+    translations,
 } = Astro.props;
 
 const resolvedTitle = getTitle(doc, lang);
 const resolvedContent = getContent(doc, lang);
+const resolvedTextLength = getTextLength(doc, lang);
 ---
 
 <Layout
@@ -71,6 +80,8 @@ const resolvedContent = getContent(doc, lang);
     dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}
     title={resolvedTitle}
     mode='windowed'
+    size={resolvedTextLength}
+    alternates={translations}
 >
     {resolvedTitle && (
         <h2>{resolvedTitle}</h2>

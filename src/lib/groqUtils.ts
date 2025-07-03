@@ -6,7 +6,7 @@ const PT_LINK_MARK_RESOLVER_QUERY = (`
         type == 'internal' => {
             internalTarget->{
                 _type,
-                slug,
+                slug
             }
         },
         type == 'external' => {
@@ -64,18 +64,32 @@ export const definedLocalisedSlug = SUPPORTED_LANGUAGES_IDS
 export const RESOLVED_CONTENT_QUERY = (`
     'content': select(
         defined(content) && (${definedContentLangs}) => content {
-            ${SUPPORTED_LANGUAGES_IDS.map((langId) => {
-                return (`
-                    ${langId}[] {
-                        ...,
-                        ${PT_RESOLVERS}
-                    }
-                `);
-            })}
+            ${SUPPORTED_LANGUAGES_IDS.map((langId) => (`
+                ${langId}[] {
+                    ...,
+                    ${PT_RESOLVERS}
+                }
+            `))}
         },
         defined(content) && !(${definedContentLangs}) => content[] {
             ...,
             ${PT_RESOLVERS}
         }
+    ),
+    'textLength': select(
+        defined(content) && (${definedContentLangs}) => {
+            ${SUPPORTED_LANGUAGES_IDS.map((langId) => (`
+                '${langId}': length(pt::text(content.${langId}))
+            `)).join(',')}
+        },
+        defined(content) && !(${definedContentLangs}) => length(pt::text(content))
     )
+`);
+
+export const RESOLVED_TRANSLATION_GROUP_QUERY = (`
+    defined(slug.current) => {
+        'translationGroup': *[_type == 'translationGroup' && references(^._id)][0] {
+            translations
+        }
+    }
 `);

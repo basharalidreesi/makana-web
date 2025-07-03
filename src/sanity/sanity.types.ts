@@ -8,9 +8,15 @@ export type CollectionDocumentType = CollectionDocument['_type']
 
 export type StaticDocumentType = StaticDocument['_type']
 
-export type CollectionDocumentStub = Pick<CollectionDocument, '_type' | 'slug'>
+export type CollectionDocumentStub = {
+  _type: CollectionDocumentType
+  slug?: Slug | LocalisedSlug
+}
 
-export type StaticDocumentStub = Pick<StaticDocument, '_type' | 'slug'>
+export type StaticDocumentStub = {
+  _type: StaticDocumentType
+  slug?: Slug | LocalisedSlug
+}
 
 export type Project = {
   _id: string
@@ -84,34 +90,32 @@ export type TranslationGroup = {
   _rev: string
   type?: 'project' | 'writing'
   translations?: {
-    ar?: Project | Writing
-    en?: Project | Writing
-    // ar?:
-    //   | {
-    //       _ref: string
-    //       _type: 'reference'
-    //       _weak?: boolean
-    //       [internalGroqTypeReferenceTo]?: 'project'
-    //     }
-    //   | {
-    //       _ref: string
-    //       _type: 'reference'
-    //       _weak?: boolean
-    //       [internalGroqTypeReferenceTo]?: 'writing'
-    //     }
-    // en?:
-    //   | {
-    //       _ref: string
-    //       _type: 'reference'
-    //       _weak?: boolean
-    //       [internalGroqTypeReferenceTo]?: 'project'
-    //     }
-    //   | {
-    //       _ref: string
-    //       _type: 'reference'
-    //       _weak?: boolean
-    //       [internalGroqTypeReferenceTo]?: 'writing'
-    //     }
+    ar?:
+      | {
+          _ref: string
+          _type: 'reference'
+          _weak?: boolean
+          [internalGroqTypeReferenceTo]?: 'project'
+        }
+      | {
+          _ref: string
+          _type: 'reference'
+          _weak?: boolean
+          [internalGroqTypeReferenceTo]?: 'writing'
+        }
+    en?:
+      | {
+          _ref: string
+          _type: 'reference'
+          _weak?: boolean
+          [internalGroqTypeReferenceTo]?: 'project'
+        }
+      | {
+          _ref: string
+          _type: 'reference'
+          _weak?: boolean
+          [internalGroqTypeReferenceTo]?: 'writing'
+        }
   }
 }
 

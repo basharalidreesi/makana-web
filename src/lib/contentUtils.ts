@@ -1,5 +1,7 @@
-import type { CollectionDocument, CollectionDocumentStub, Language, PageBuilder, Slug, StaticDocument, StaticDocumentStub } from '@root/sanity/sanity.types';
-import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from './languageUtils';
+import type { CollectionDocument, CollectionDocumentStub, CollectionDocumentType, Language, LocalisedSlug, PageBuilder, Slug, StaticDocument, StaticDocumentStub, StaticDocumentType, TranslationGroup } from '@root/sanity/sanity.types';
+import { getSlugFromId, getTypeFromId } from '@lib/registry';
+import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
+import { generateRoute } from './routingUtils';
 
 const hasLanguage = (doc: unknown): doc is { language: Language } => {
     return typeof doc === 'object' && doc !== null && 'language' in doc;
@@ -32,6 +34,68 @@ export const groupByLocalisedSlug = (
 ) => {
     return docs.filter((doc) => hasLocalisedSlug(doc, lang));
 };
+
+export type Translations = Record<Language, {
+    type: CollectionDocumentType | StaticDocumentType;
+    slug: Slug;
+    route: string;
+}>;
+
+export const getTranslations = (
+    doc: CollectionDocument | StaticDocument | undefined,
+    lang: Language | undefined,
+): Partial<Translations> | undefined => {
+    if (!doc || !lang) return undefined;
+    const translations: Partial<Translations> = {};
+    const translationGroup = 'translationGroup' in doc ? (doc.translationGroup as TranslationGroup | undefined) : undefined;
+    if (translationGroup?.translations) {
+        for (const otherLang of Object.keys(translationGroup.translations) as Language[]) {
+            if (otherLang !== lang) {
+                const translatedDoc = translationGroup.translations[otherLang];
+                const translatedDocId = translatedDoc?._ref;
+                const translatedDocType = translatedDocId && getTypeFromId(translatedDocId);
+                const translatedDocSlug = translatedDocId && getSlugFromId(translatedDocId, otherLang);
+                if (translatedDocType && translatedDocSlug) {
+                    const route = generateRoute({ _type: translatedDocType, slug: { _type: 'slug', current: translatedDocSlug } }, otherLang);
+                    if (route) {
+                        translations[otherLang] = {
+                            type: translatedDocType,
+                            slug: {
+                                _type: 'slug',
+                                current: translatedDocSlug,
+                            },
+                            route: route,
+                        };
+                    }
+                }
+            }
+        }
+    } else {
+        if (hasLocalisedSlug(doc, lang)) {
+            const localisedSlug = doc.slug as LocalisedSlug;
+            for (const otherLang of Object.keys(localisedSlug) as Language[]) {
+                if (otherLang !== lang) {
+                    const otherSlug = localisedSlug[otherLang]?.current;
+                    if (otherSlug) {
+                        const route = generateRoute({ _type: doc._type, slug: doc.slug }, otherLang);
+                        if (route) {
+                            translations[otherLang] = {
+                                type: doc._type,
+                                slug: {
+                                    _type: 'slug',
+                                    current: otherSlug,
+                                },
+                                route: route,
+                            };
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return translations;
+};
+
 
 const getFromLocalisedField = <T>(
     doc: Record<string, any> | undefined,
@@ -90,6 +154,17 @@ export const getContent = (
     if (!content) return undefined;
     if (Array.isArray(content)) return content;
     return getFromLocalisedField<PageBuilder>(doc, 'content', lang);
+};
+
+export const getTextLength = (
+    doc: CollectionDocument | StaticDocument,
+    lang: Language | undefined
+): number | undefined => {
+    if (!('textLength' in doc)) return undefined;
+    const textLength = doc.textLength;
+    if (!textLength) return undefined;
+    if (typeof textLength === 'number') return textLength;
+    return getFromLocalisedField<number>(doc, 'textLength', lang);
 };
 
 export const escapeHTML = (str: string = '') => str.replace(

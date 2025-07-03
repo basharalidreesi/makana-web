@@ -2,10 +2,10 @@
 import sanityClient from '@root/sanity/sanity.cli';
 import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject, CollectionDocument } from '@root/sanity/sanity.types';
 import { definedLocalisedSlug } from '@lib/groqUtils';
-import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED, DEFAULT_LANGUAGE_DIR } from '@lib/languageUtils';
+import { groupByLanguageField, groupByLocalisedSlug, type Translations } from '@lib/contentUtils';
+import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED, DEFAULT_LANGUAGE_DIR, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
 import { generateOgImage } from '@lib/imageUtils';
 import { ClientRouter } from 'astro:transitions';
-import { groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
 import { generateRoute } from '@lib/routingUtils';
 import Logo from '@components/Logo.astro';
 import NavSection from '@components/NavSection.astro';
@@ -91,6 +91,8 @@ type Props = {
     canonical?: string;
     analytics?: string;
     mode: 'windowed' | 'flowed' | 'covering';
+    size?: number;
+    alternates?: Translations | undefined;
 };
 
 const {
@@ -103,6 +105,8 @@ const {
     canonical,
     analytics,
     mode,
+    size = 0,
+    alternates,
 } = Astro.props;
 
 const websiteTitle = websiteSettings?.title?.[lang];
@@ -114,6 +118,7 @@ const resolvedKeywords = [...(keywords || []), ...(websiteSettings?.keywords || 
 const resolvedImage = image?.asset ? generateOgImage(image) : websiteSettings?.mainImage?.asset ? generateOgImage(websiteSettings?.mainImage) : undefined;
 const resolvedCanonical = canonical || new URL(Astro.url.pathname, Astro.site);
 const resolvedAnalytics = analytics || websiteSettings?.analytics;
+const resolvedSize = size >= 1500 ? 'big' : 'small';
 ---
 
 <html lang={lang} transition:animate='none'>
@@ -144,6 +149,12 @@ const resolvedAnalytics = analytics || websiteSettings?.analytics;
             <meta property='og:url' content={resolvedCanonical} />
             <meta name='twitter:url' content={resolvedCanonical} />
         )}
+        {Object.entries(alternates || {}).map(([key, value]) => {
+            const url = new URL(value.route, Astro.site);
+            return url && (
+                <link rel='alternate' href={url} hreflang={key} />
+            );
+        })}
         <meta property='og:type' content='website' />
         <meta name='twitter:card' content='summary_large_image' />
         <meta name='viewport' content='width=device-width,initial-scale=1.0,viewport-fit=cover' />
@@ -222,13 +233,24 @@ const resolvedAnalytics = analytics || websiteSettings?.analytics;
         </header>
         <main>
             <div class={`${mode}-content-container`} dir={dir}>
-                <div class={`${mode}-content small-windowed-content`} role='dialog' aria-modal='true'> {/* TODO size determiner and dialog setup */}
+                <div class={`${mode}-content ${resolvedSize}-windowed-content`} role='dialog' aria-modal='true'> {/* TODO dialog setup */}
                     {mode === 'windowed' && (
                         <div class='windowed-content-controls'>
+                            {Object.entries(alternates || {}).map(([key, value]) => (
+                                <div class='switch-content-language'>
+                                    <a href={value.route} aria-label={UI_DICTIONARY.switch[key as Language]}>
+                                        {SUPPORTED_LANGUAGES_RECORD[key as Language].abbreviation}
+                                    </a>
+                                </div>
+                            ))}
                             <div class='close-windowed-content'>
-                                <a href='/'>Close</a>
+                                <a href='/' aria-label='Close dialog'>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                        <line x1="6" y1="18" x2="18" y2="6"/>
+                                    </svg>
+                                </a>
                             </div>
-                            {/* TODO translation switcher */}
                         </div>
                     )}
                     <slot />
@@ -339,7 +361,7 @@ const resolvedAnalytics = analytics || websiteSettings?.analytics;
     }
     :root {
         --colour-text-default: #000;
-        --colour-text-link-hover: gray;
+        --colour-text-link-hover: #808080;
         --windowed-content-background-colour: #aeeb9b;
         --windowed-content-outline-colour: #707070;
         --windowed-content-backdrop-colour: #000;
@@ -375,26 +397,26 @@ const resolvedAnalytics = analytics || websiteSettings?.analytics;
             --navigation-submenu-indent-inline-start: 7.5rem;
             --navigation-submenu-indent-inline-end: 7.5rem;
             --windowed-content-indent-inline-start: 7.5rem;
-            --font-size: 16px;
         }
         @media (max-width: 896px) {
             --small-windowed-content-max-width: 31.25rem;
             --big-windowed-content-max-width: 31.25rem;
         }
         @media (max-width: 768px) {
-            // --navigation-submenu-indent-inline-start: 6.25rem;
-            // --navigation-submenu-indent-inline-end: 6.25rem;
             --windowed-content-indent-inline-start: auto;
             --windowed-content-indent-inline-end: auto;
             --windowed-content-container-extra-padding-top: 1rem;
             --windowed-content-container-extra-padding-bottom: calc(1rem + var(--logo-height));
             --windowed-content-container-extra-padding-inline: 1rem;
+            --font-size: 16px;
         }
-        @media (max-width: 512px) {
+        @media (max-width: 640px) {
             --page-padding-top: 1.5rem;
             --page-padding-bottom: 1.5rem;
             --page-padding-inline: 1.5rem;
             --logo-height: 2.5rem;
+        }
+        @media (max-width: 512px) {
             --navigation-submenu-indent-inline-start: 6.5rem;
             --navigation-submenu-indent-inline-end: 0px;
             --windowed-content-padding-bottom: 1.5rem;
@@ -440,7 +462,7 @@ const resolvedAnalytics = analytics || websiteSettings?.analytics;
         .navigation-bar {
             position: relative;
             display: flex;
-            margin-top: calc(var(--menu-item-padding-block) * -1);
+            margin-top: calc(var(--menu-item-padding-block) * -1 / 2);
         }
         .navigation-bar section {
             flex: 1 0 0;
@@ -536,7 +558,16 @@ const resolvedAnalytics = analytics || websiteSettings?.analytics;
         .big-windowed-content {
             max-width: var(--big-windowed-content-max-width);
         }
-        .windowed-content-controls {}
+        .windowed-content-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem; /* TODO */
+            padding-top: 1rem;
+            padding-bottom: 0.5rem;
+            padding-inline: 1rem;
+            margin-inline: calc(var(--windowed-content-padding-inline) * -1);
+        }
+        .switch-content-language {}
         .close-windowed-content a::before {
             content: '';
             position: fixed;
@@ -547,6 +578,10 @@ const resolvedAnalytics = analytics || websiteSettings?.analytics;
             background-color: var(--windowed-content-backdrop-colour);
             opacity: var(--windowed-content-backdrop-opacity);
             z-index: -1;
+        }
+        .close-windowed-content svg {
+            stroke-width: 1px;
+            stroke: currentColor;
         }
     }
     header { z-index: 1; }

@@ -2,9 +2,10 @@
 import type { GetStaticPaths } from 'astro';
 import type { CollectionDocument, CollectionDocumentType, Language } from '@root/sanity/sanity.types';
 import { SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
-import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
+import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY, RESOLVED_TRANSLATION_GROUP_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
-import { getContent, getSlug, getSummary, groupByLanguageField, groupByLocalisedSlug } from '@lib/contentUtils';
+import { getContent, getSlug, getSummary, getTextLength, getTranslations, groupByLanguageField, groupByLocalisedSlug, type Translations } from '@lib/contentUtils';
+import { registerId } from '@lib/registry';
 import { LOCALE_PREFIXES } from '@lib/routingUtils';
 import { DOCUMENT_COLLECTION_PATHS } from '@lib/routingUtils';
 import { getTitle } from '@lib/contentUtils';
@@ -17,6 +18,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     const paths: { params: Record<string, string>, props: Record<string, any> }[] = [];
     for (const documentType of documentTypes) {
         const baseQueryFields = [
+            '_id',
             '_type',
             'language',
             'title',
@@ -25,6 +27,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
             'summary',
             'mainImage',
             RESOLVED_CONTENT_QUERY,
+            RESOLVED_TRANSLATION_GROUP_QUERY,
         ];
         if (documentType === 'happening') {
             baseQueryFields.push(
@@ -49,16 +52,21 @@ export const getStaticPaths: GetStaticPaths = async () => {
                 : groupByLanguageField(documents, lang);
             for (const doc of localisedDocs) {
                 const slug = getSlug(doc, lang);
-                if (!slug) { continue; }
+                if (!slug) continue;
+                const locale = LOCALE_PREFIXES[lang];
+                const collection = DOCUMENT_COLLECTION_PATHS[documentType];
+                registerId(doc._id, lang, doc._type, slug, isSlugLocalised);
+                const translations = getTranslations(doc, lang);
                 paths.push({
                     params: {
-                        locale: LOCALE_PREFIXES[lang],
-                        collection: DOCUMENT_COLLECTION_PATHS[documentType],
+                        locale: locale,
+                        collection: collection,
                         slug: slug,
                     },
                     props: {
                         lang: lang,
                         doc: doc,
+                        translations: translations,
                     },
                 });
             }
@@ -70,17 +78,20 @@ export const getStaticPaths: GetStaticPaths = async () => {
 type Props = {
     lang: Language;
     doc: CollectionDocument;
+    translations: Translations;
 };
 
 const {
     lang,
     doc,
+    translations,
 } = Astro.props;
 
 const resolvedTitle = getTitle(doc, lang);
 const resolvedDescription = getSummary(doc, lang);
 const resolvedImage = doc.mainImage;
 const resolvedContent = getContent(doc, lang);
+const resolvedTextLength = getTextLength(doc, lang);
 ---
 
 <Layout
@@ -90,6 +101,8 @@ const resolvedContent = getContent(doc, lang);
     description={resolvedDescription}
     image={resolvedImage}
     mode='windowed'
+    size={resolvedTextLength}
+    alternates={translations}
 >
     {resolvedTitle && (
         <h2>{resolvedTitle}</h2>
