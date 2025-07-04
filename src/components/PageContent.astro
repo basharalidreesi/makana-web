@@ -28,7 +28,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
             if (!Array.isArray(imagesWithAssets) || imagesWithAssets.length === 0) return '';
             return (`
                 <figure class='image'>
-                    <div style='--how-many-images: ${imagesWithAssets.length || 1};'>
+                    <div style='--how-many-images: ${Math.min(Math.max(imagesWithAssets.length, 1), 2)};'>
                         ${imagesWithAssets.map((image) => {
                             return (`
                                 <div>
@@ -173,7 +173,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                 const formAttributesString = validFormAttributes?.join(' ');
                 const getNameFromLabel = (label: LocalisedString | undefined) => label
                     ? label[DEFAULT_LANGUAGE_ID]?.trim()?.toLowerCase()?.replace(/\s+/g, '_')
-                    : undefined;
+                    : undefined; // todo
                 return (`
                     <form class='form' action='${form.endpoint}' method='POST' onkeydown='if(event.key === "Enter" && event.target.tagName !== "TEXTAREA") event.preventDefault();' ${formAttributesString}>
                         ${form.fields.map((field, fieldIndex) => {
@@ -207,6 +207,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                     <div class='select'>
                                         ${fieldLabelHTML}
                                         <select ${fieldAttributesString}>
+                                            <option disabled selected value> -- select an option -- </option>
                                             ${options.map((option, optionIndex) => {
                                                 try {
                                                     const parsedOption = JSON.parse(option);

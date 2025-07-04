@@ -1,47 +1,37 @@
-import type { CollectionDocumentType, Language, StaticDocumentType } from "@root/sanity/sanity.types";
+import type { CollectionDocumentType, Language, StaticDocumentType } from '@root/sanity/sanity.types';
+
+type DocumentId = string;
 
 type RegistryEntry = {
     [lang in Language]?: {
         type: CollectionDocumentType | StaticDocumentType;
         slug: string;
-        isLocalised: boolean;
+        route: string;
+        title: string;
     };
 };
 
-type DocumentId = string;
-
-export const idRegistry = new Map<DocumentId, RegistryEntry>();
+const idRegistry = new Map<DocumentId, RegistryEntry>();
 
 export const registerId = (
     id: DocumentId,
     lang: Language,
     type: CollectionDocumentType | StaticDocumentType,
     slug: string,
-    isLocalised: boolean,
+    route: string,
+    title: string,
 ) => {
     const existing = idRegistry.get(id) ?? {};
     existing[lang] = {
         type: type,
         slug: slug,
-        isLocalised: isLocalised,
+        route: route,
+        title: title,
     };
     idRegistry.set(id, existing);
 };
 
-export const getSlugFromId = (id: DocumentId | undefined, lang: Language | undefined): string | undefined => {
-    if (!id || !lang) return undefined;
-    const entry = idRegistry.get(id);
-    if (!entry) return undefined;
-    return entry[lang]?.slug ?? '';
-};
-
-export const getTypeFromId = (id: DocumentId | undefined): (CollectionDocumentType | StaticDocumentType) | undefined => {
+export const getFromRegistry = (id: DocumentId | undefined): RegistryEntry | undefined => {
     if (!id) return undefined;
-    const entry = idRegistry.get(id);
-    if (!entry) return undefined;
-    for (const lang of Object.keys(entry) as Language[]) {
-        const type = entry[lang]?.type;
-        if (type) return type;
-    }
-    return undefined;
+    return idRegistry.get(id) ?? undefined;
 };

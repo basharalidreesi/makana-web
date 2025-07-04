@@ -117,8 +117,8 @@ export const fetchSvg = async (source: string | undefined): Promise<string | und
             .replace(/\s*(style|class|id)\s*=\s*(['"])[\s\S]*?\2/gi, '')
             .replace(/<\s*style[^>]*>[\s\S]*?<\s*\/\s*style\s*>/gi, '');
     } catch {
-        console.error('Logo fetch failed');
-        console.error('Using fallback logo');
+        console.warn('Logo fetch failed');
+        console.warn('Using fallback logo');
         return undefined;
     }
 };

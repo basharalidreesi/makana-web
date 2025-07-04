@@ -1,0 +1,67 @@
+---
+import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
+import Logo from '@components/Logo.astro';
+---
+
+<html lang={DEFAULT_LANGUAGE_ID}>
+    <head>
+        <meta charset="UTF-8">
+        <title>404 · {SUPPORTED_LANGUAGES_IDS.map((lang) => UI_DICTIONARY.website[lang]).join(' · ')}</title>
+        <meta name='viewport' content='width=device-width,initial-scale=1.0,viewport-fit=cover' />
+        <meta name='generator' content={Astro.generator} />
+    </head>
+    <body>
+        <div class='container'>
+            {SUPPORTED_LANGUAGES_IDS.map((lang) => (
+                <div class='message' dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}>
+                    <Fragment set:html={(UI_DICTIONARY['404'][lang])?.trim()} />
+                </div>
+            ))}
+            <div class='logo'>
+                <a href='/' title={UI_DICTIONARY.website[DEFAULT_LANGUAGE_ID]}>
+                    <Logo />
+                </a>
+            </div>
+        </div>
+    </body>
+</html>
+
+<style lang='scss'>
+    :global(*) {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+    }
+    body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        row-gap: 1rem;
+    }
+    .message {
+        padding: 1rem;
+        border: 1px solid #808080;
+    }
+    .logo {
+        height: 3rem;
+    }
+    .logo :global(svg) {
+        display: block;
+        height: 100%;
+        width: auto;
+        max-width: 100%;
+        overflow: visible;
+        stroke-width: 0px;
+    }
+    .logo a {
+        color: inherit;
+    }
+</style>

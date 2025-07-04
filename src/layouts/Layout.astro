@@ -1,8 +1,8 @@
 ---
 import sanityClient from '@root/sanity/sanity.cli';
-import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject, CollectionDocument, CollectionDocumentType, StaticDocumentType } from '@root/sanity/sanity.types';
+import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject, CollectionDocument, CollectionDocumentType, StaticDocumentType, HomePage } from '@root/sanity/sanity.types';
 import { definedLocalisedSlug } from '@lib/groqUtils';
-import { groupByLanguageField, groupByLocalisedSlug, type Translations } from '@lib/contentUtils';
+import { groupByLocalisedSlug, type AlternateDocument } from '@lib/contentUtils';
 import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED, DEFAULT_LANGUAGE_DIR, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
 import { generateOgImage } from '@lib/imageUtils';
 import { ClientRouter } from 'astro:transitions';
@@ -31,6 +31,19 @@ const websiteSettings: (Website & { logoUrl: string; }) | undefined = await sani
     }
 `);
 
+const homePage: HomePage | undefined = await sanityClient.fetch(`
+    *[_id == 'homePage' && (defined(featuredItems))][0] {
+        featuredItems[] -> {
+            _id,
+            _type,
+            language,
+            title,
+            slug,
+            mainImage
+        }
+    }
+`);
+
 const aboutPage: AboutPage | undefined = await sanityClient.fetch(`
     *[_id == 'aboutPage' && (${definedLocalisedSlug})][0] {
         _type,
@@ -40,9 +53,8 @@ const aboutPage: AboutPage | undefined = await sanityClient.fetch(`
 `);
 
 const projects: Project[] | undefined = await sanityClient.fetch(`
-    *[_type == 'project' && defined(language) && defined(slug.current)] {
+    *[_type == 'project' && (${definedLocalisedSlug})] {
         _type,
-        language,
         title,
         slug,
         date
@@ -50,9 +62,8 @@ const projects: Project[] | undefined = await sanityClient.fetch(`
 `);
 
 const writings: Writing[] | undefined = await sanityClient.fetch(`
-    *[_type == 'writing' && defined(language) && defined(slug.current)] {
+    *[_type == 'writing' && (${definedLocalisedSlug})] {
         _type,
-        language,
         title,
         slug,
         date
@@ -95,7 +106,7 @@ type Props = {
         type: CollectionDocumentType | StaticDocumentType;
         textLength?: number;
     } | false;
-    alternates?: Translations | undefined;
+    alternates?: AlternateDocument[];
 };
 
 const {
@@ -154,10 +165,12 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
             <meta property='og:url' content={resolvedCanonical} />
             <meta name='twitter:url' content={resolvedCanonical} />
         )}
-        {Object.entries(alternates || {}).map(([key, value]) => {
-            const url = new URL(value.route, Astro.site);
-            return url && (
-                <link rel='alternate' href={url} hreflang={key} />
+        {Array.isArray(alternates) && alternates.length > 0 && alternates.map((alternate) => {
+            const altUrl = new URL(alternate.route, Astro.site);
+            const altLang = alternate.lang;
+            if (!altUrl || !altLang) return;
+            return (
+                <link rel='alternate' href={altUrl} hreflang={altLang} />
             );
         })}
         <meta property='og:type' content='website' />
@@ -190,8 +203,8 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
                 {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
                     const langId = supportedLang.id;
                     const langDir = supportedLang.dir;
-                    const langProjects = groupByLanguageField(projects, langId);
-                    const langWritings = groupByLanguageField(writings, langId);
+                    const langProjects = groupByLocalisedSlug(projects, langId);
+                    const langWritings = groupByLocalisedSlug(writings, langId);
                     const langHappenings = groupByLocalisedSlug(happenings, langId);
                     const langResources = groupByLocalisedSlug(resources, langId);
                     const doesItExist = (docCollection: CollectionDocument[] | undefined) => Array.isArray(docCollection) && docCollection.length > 0;
@@ -235,6 +248,9 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
                     );
                 })}
             </div>
+            {homePage && Array.isArray(homePage.featuredItems) && homePage.featuredItems.length > 0 && ( // TODO filter ones without slug
+                <div class='featured-bar'></div> // TODO
+            )}
         </header>
         <main>
             {mode && modeName && (
@@ -242,13 +258,18 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
                     <div class={`${modeName}-content ${modeType}-windowed-content ${modeSize}-windowed-content`}>
                         {modeName === 'windowed' && (
                             <div class='windowed-content-orbs'>
-                                {Object.entries(alternates || {}).map(([key, value]) => (
-                                    <div class='windowed-content-orb switch-content-language'>
-                                        <a href={value.route} title={UI_DICTIONARY.switch[key as Language]} aria-label={UI_DICTIONARY.switch[key as Language]}>
-                                            <Fragment set:html={SUPPORTED_LANGUAGES_RECORD[key as Language].symbol} />
-                                        </a>
-                                    </div>
-                                ))}
+                                {Array.isArray(alternates) && alternates.length > 0 && alternates.map((alternate) => {
+                                    const altRoute = alternate.route;
+                                    const altLang = alternate.lang;
+                                    if (!altRoute || !altLang) return;
+                                    return (
+                                        <div class='windowed-content-orb switch-content-language'>
+                                            <a href={altRoute} title={UI_DICTIONARY.switch[altLang]} aria-label={UI_DICTIONARY.switch[altLang]}>
+                                                <Fragment set:html={SUPPORTED_LANGUAGES_RECORD[altLang].symbol} />
+                                            </a>
+                                        </div>
+                                    );
+                                })}
                                 <div class='windowed-content-orb close-windowed-content'>
                                     <a href='/' title={UI_DICTIONARY.close[lang]} aria-label={UI_DICTIONARY.close[lang]}>
                                         <svg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
@@ -473,7 +494,7 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
             right: 0;
             bottom: 0;
             display: flex;
-            flex-direction: column-reverse;
+            flex-direction: column;
             justify-content: space-between;
             row-gap: var(--page-padding-bottom);
             padding-top: var(--page-padding-top);
@@ -481,6 +502,9 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
             padding-right: var(--page-padding-inline);
             padding-bottom: var(--page-padding-bottom);
         }
+        .logo-bar { order: 3; }
+        .navigation-bar { order: 1; }
+        .featured-bar { order: 2; }
         .logo-bar div {
             height: var(--logo-height);
             width: fit-content;
@@ -527,9 +551,7 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
         }
         .navigation-submenu-item .time {
             margin-inline-end: var(--navigation-submenu-date-title-gap);
-        }
-        @media (max-width: 768px) {
-            .navigation-submenu-item .time {
+            @media (max-width: 768px) {
                 display: none;
             }
         }
@@ -715,11 +737,11 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
                 text-decoration-thickness: 1px;
                 text-decoration-color: var(--text-link-underline-colour);
                 text-underline-offset: 3px;
-                @media (any-hover: hover) {
-                    &:hover {
-                        color: var(--text-link-hover-colour);
-                        text-decoration-color: var(--text-link-hover-colour);
-                    }
+            }
+            @media (any-hover: hover) {
+                a:hover {
+                    color: var(--text-link-hover-colour);
+                    text-decoration-color: var(--text-link-hover-colour);
                 }
             }
             blockquote {
@@ -740,9 +762,13 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
             }
             .image > div {
                 display: flex;
+                flex-wrap: wrap;
                 align-items: flex-end;
                 justify-content: center;
                 gap: var(--_gap);
+                @media (max-width: 512px) {
+                    flex-direction: column;
+                }
             }
             .image > div > div {
                 flex-basis: calc((100% - ((var(--how-many-images) - 1) * var(--_gap))) / var(--how-many-images));

@@ -2,11 +2,11 @@
 import type { GetStaticPaths } from 'astro';
 import type { Language, StaticDocument, StaticDocumentType } from '@root/sanity/sanity.types';
 import { SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
-import { RESOLVED_CONTENT_QUERY, RESOLVED_TRANSLATION_GROUP_QUERY } from '@lib/groqUtils';
+import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
-import { getContent, getSlug, getTextLength, getTitle, getTranslations, groupByLanguageField, groupByLocalisedSlug, type Translations } from '@lib/contentUtils';
+import { getAlternates, getContent, getSlug, getTextLength, getTitle, groupByLocalisedSlug } from '@lib/contentUtils';
 import { registerId } from '@lib/registry';
-import { LOCALE_PREFIXES } from '@lib/routingUtils';
+import { generateRoute, LOCALE_PREFIXES } from '@lib/routingUtils';
 import Layout from '@layouts/Layout.astro';
 import PageContent from '@components/PageContent.astro';
 
@@ -21,35 +21,38 @@ export const getStaticPaths: GetStaticPaths = async () => {
             'title',
             'slug',
             RESOLVED_CONTENT_QUERY,
-            RESOLVED_TRANSLATION_GROUP_QUERY,
         ];
         const queryFields = baseQueryFields.join(', ');
         const documents: StaticDocument[] = await sanityClient.fetch(`
-            *[_type == '${documentType}' && defined(slug)] {
+            *[_type == '${documentType}' && (${definedLocalisedSlug})] {
                 ${queryFields}
             }
         `);
-        const isSlugLocalised = documents.length > 0
-            && typeof documents[0].slug === 'object'
-            && !('current' in documents[0].slug);
         for (const lang of languages) {
-            const localisedDocs = isSlugLocalised
-                ? groupByLocalisedSlug(documents, lang)
-                : groupByLanguageField(documents, lang);
+            const localisedDocs = groupByLocalisedSlug(documents, lang);
+            if (!Array.isArray(localisedDocs) || localisedDocs.length === 0) continue;
             for (const doc of localisedDocs) {
                 const slug = getSlug(doc, lang);
-                if (!slug) continue;
-                registerId(doc._id, lang, doc._type, slug, isSlugLocalised);
-                const translations = getTranslations(doc, lang);
+                const title = getTitle(doc, lang);
+                const route = generateRoute(doc, lang);
+                if (!slug || !route) continue;
+                const locale = LOCALE_PREFIXES[lang];
+                registerId(
+                    doc._id,
+                    lang,
+                    doc._type,
+                    slug,
+                    route,
+                    title,
+                );
                 paths.push({
                     params: {
-                        locale: LOCALE_PREFIXES[lang],
+                        locale: locale,
                         slug: slug,
                     },
                     props: {
                         lang: lang,
                         doc: doc,
-                        translations: translations,
                     },
                 });
             }
@@ -60,19 +63,18 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 type Props = {
     lang: Language;
-    doc: StaticDocument & { textLength: number | { [key in Language]: number | undefined; } | undefined; };
-    translations: Translations;
+    doc: StaticDocument;
 };
 
 const {
     lang,
     doc,
-    translations,
 } = Astro.props;
 
 const resolvedTitle = getTitle(doc, lang);
 const resolvedContent = getContent(doc, lang);
 const resolvedTextLength = getTextLength(doc, lang);
+const resolvedAlternates = getAlternates(doc, lang);
 ---
 
 <Layout
@@ -84,7 +86,7 @@ const resolvedTextLength = getTextLength(doc, lang);
         type: doc._type,
         textLength: resolvedTextLength,
     }}
-    alternates={translations}
+    alternates={resolvedAlternates}
 >
     {resolvedTitle && (
         <div class='content-header'>

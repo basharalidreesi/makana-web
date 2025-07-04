@@ -2,14 +2,14 @@
 import { fetchSvg } from '@lib/imageUtils';
 
 type Props = {
-    source: string | undefined;
+    source?: string | undefined;
 };
 
 const {
     source,
 } = Astro.props;
 
-const svgContent = await fetchSvg(source);
+const svgContent = source && await fetchSvg(source);
 ---
 
 {svgContent ? (

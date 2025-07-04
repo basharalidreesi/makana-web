@@ -27,7 +27,7 @@ const delta = min - (items?.length || 0);
         <button type='button' data-nav-expand aria-expanded='false' aria-controls={`${type}-submenu-${lang}`}>
             <bdi>{title}</bdi>
         </button>
-        <ul id={`${type}-submenu-${lang}`} class='navigation-submenu' aria-hidden='true' hidden>
+        <ul id={`${type}-submenu-${lang}`} class='navigation-submenu' aria-hidden='true' hidden tabindex='-1'>
             {items.map((item, index, array) => {
                 const slug = getSlug(item, lang);
                 const itemTitle = getTitle(item, lang);

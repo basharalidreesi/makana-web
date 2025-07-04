@@ -18,11 +18,12 @@ const isCollectionDocument = (doc: CollectionDocumentStub | StaticDocumentStub):
 };
 
 export const generateRoute = (
-    doc: CollectionDocumentStub | StaticDocumentStub,
-    lang: Language,
+    doc: CollectionDocumentStub | StaticDocumentStub | undefined,
+    lang: Language | undefined,
 ): string | undefined => {
+    if (!doc || !lang) return undefined;
     const localePath = LOCALE_PREFIXES[lang];
-    const slug = getSlug(doc, lang);
+    const slug = typeof doc.slug === 'string' ? doc.slug : getSlug(doc, lang);
     if (!slug) return undefined;
     if (isCollectionDocument(doc)) {
         const collectionPath = DOCUMENT_COLLECTION_PATHS[doc._type];

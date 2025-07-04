@@ -10,12 +10,12 @@ export type StaticDocumentType = StaticDocument['_type']
 
 export type CollectionDocumentStub = {
   _type: CollectionDocumentType
-  slug?: Slug | LocalisedSlug
+  slug?: LocalisedSlug
 }
 
 export type StaticDocumentStub = {
   _type: StaticDocumentType
-  slug?: Slug | LocalisedSlug
+  slug?: LocalisedSlug
 }
 
 export type Project = {
@@ -24,13 +24,12 @@ export type Project = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  language?: Language
-  title?: string
-  slug?: Slug
+  title?: LocalisedString
+  slug?: LocalisedSlug
   date?: string
-  summary?: string
+  summary?: LocalisedText
   mainImage?: SanityImageObject
-  content?: PageBuilder
+  content?: LocalisedPageBuilder
 }
 
 export type Writing = {
@@ -39,13 +38,12 @@ export type Writing = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  language?: Language
-  title?: string
-  slug?: Slug
+  title?: LocalisedString
+  slug?: LocalisedSlug
   date?: string
-  summary?: string
+  summary?: LocalisedText
   mainImage?: SanityImageObject
-  content?: PageBuilder
+  content?: LocalisedPageBuilder
 }
 
 export type Happening = {
@@ -80,43 +78,6 @@ export type Resource = {
   summary?: LocalisedText
   mainImage?: SanityImageObject
   content?: LocalisedPageBuilder
-}
-
-export type TranslationGroup = {
-  _id: string
-  _type: 'translationGroup'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  type?: 'project' | 'writing'
-  translations?: {
-    ar?:
-      | {
-          _ref: string
-          _type: 'reference'
-          _weak?: boolean
-          [internalGroqTypeReferenceTo]?: 'project'
-        }
-      | {
-          _ref: string
-          _type: 'reference'
-          _weak?: boolean
-          [internalGroqTypeReferenceTo]?: 'writing'
-        }
-    en?:
-      | {
-          _ref: string
-          _type: 'reference'
-          _weak?: boolean
-          [internalGroqTypeReferenceTo]?: 'project'
-        }
-      | {
-          _ref: string
-          _type: 'reference'
-          _weak?: boolean
-          [internalGroqTypeReferenceTo]?: 'writing'
-        }
-  }
 }
 
 export type Form = {
@@ -239,6 +200,7 @@ export type Slug = {
 export type LocalisedSlug = {
   [lang in Language]?: Slug;
 }
+
 export type LocalisedString = {
   [lang in Language]?: string;
 }
@@ -483,7 +445,6 @@ export type AllSanitySchemaTypes =
   | Writing
   | Happening
   | Resource
-  | TranslationGroup
   | Form
   | HomePage
   | AboutPage
