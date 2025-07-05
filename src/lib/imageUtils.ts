@@ -1,22 +1,24 @@
 import imageUrlBuilder from '@sanity/image-url';
 import sanityClient from '@root/sanity/sanity.cli';
-import type { SanityImageObject } from '@root/sanity/sanity.types';
 import type { FitMode, SanityImageSource } from '@sanity/image-url/lib/types/types';
-import { escapeHTML } from '@lib/contentUtils';
+import type { SanityImageObject } from '@root/sanity/sanity.types';
+import { escapeHtml } from '@lib/contentUtils';
 
 const builder = imageUrlBuilder(sanityClient);
 
-export const buildSanityImage = (source: SanityImageSource | undefined) => {
+const buildSanityImage = (source: SanityImageSource | undefined) => {
     if (!source) return undefined;
     return builder.image(source);
 };
 
-export const generateOgImage = (source: SanityImageObject | undefined) => {
+export const generateOgImageUrl = (
+    source: SanityImageObject | undefined
+): string | undefined => {
     return buildSanityImage(source)
         ?.width(1200)
         .height(630)
         .auto('format')
-        .url()
+        .url();
 };
 
 const getSanityImageDimensions = (source: SanityImageObject | undefined): Record<'width' | 'height', number> | undefined => {
@@ -26,7 +28,7 @@ const getSanityImageDimensions = (source: SanityImageObject | undefined): Record
         : '_id' in source.asset ? source.asset._id
         : undefined;
     if (!id) return undefined;
-    const parts = id.split('-'); // ['image', 'abc123', '1200x800', 'jpg']
+    const parts = id.split('-'); // e.g. ['image', 'abc123', '1200x800', 'jpg']
     if (parts.length < 4) return undefined;
     const [widthStr, heightStr] = parts[2].split('x');
     const width = parseInt(widthStr, 10);
@@ -70,7 +72,7 @@ export const createSanityImage = ({
         .auto('format')
         .url() + ` ${dpr}x`
     ).join(', ');
-    const altText = escapeHTML(alt?.trim() || '');
+    const altText = escapeHtml(alt?.trim() || '');
     let hasPreview = false;
     if ('metadata' in source.asset) {
         hasPreview = !!source.asset.metadata?.isOpaque;

@@ -23,7 +23,7 @@ export const generateRoute = (
 ): string | undefined => {
     if (!doc || !lang) return undefined;
     const localePath = LOCALE_PREFIXES[lang];
-    const slug = typeof doc.slug === 'string' ? doc.slug : getSlug(doc, lang);
+    const slug = getSlug(doc, lang);
     if (!slug) return undefined;
     if (isCollectionDocument(doc)) {
         const collectionPath = DOCUMENT_COLLECTION_PATHS[doc._type];

@@ -2,7 +2,7 @@
 import type { Language, Link, LocalisedString, PageBuilder } from '@root/sanity/sanity.types';
 import { toHTML, uriLooksSafe, type PortableTextHtmlComponents } from '@portabletext/to-html';
 import { createSanityImage } from '@lib/imageUtils';
-import { escapeHTML, normaliseAspectRatioForPadding } from '@lib/contentUtils';
+import { escapeHtml, normaliseAspectRatioForPadding } from '@lib/contentUtils';
 import { getFile } from '@lib/assetUtils';
 import { generateRoute } from '@lib/routingUtils';
 import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
@@ -70,16 +70,16 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                         ? pathname.slice(1)
                         : parsedUrl.searchParams.get('v');
                     if (videoId) {
-                        embedUrl = `https://www.youtube-nocookie.com/embed/${escapeHTML(videoId)}?rel=0&modestbranding=1&showinfo=0&enablejsapi=1`;
+                        embedUrl = `https://www.youtube-nocookie.com/embed/${escapeHtml(videoId)}?rel=0&modestbranding=1&showinfo=0&enablejsapi=1`;
                     }
                 } else if (host.includes('vimeo.com')) {
                     const videoId = pathname.split('/').filter(Boolean).pop();
                     if (videoId) {
-                        embedUrl = `https://player.vimeo.com/video/${escapeHTML(videoId)}?title=0&byline=0&portrait=0&autopause=0&dnt=1`;
+                        embedUrl = `https://player.vimeo.com/video/${escapeHtml(videoId)}?title=0&byline=0&portrait=0&autopause=0&dnt=1`;
                     }
                 }
             } catch {
-                embedUrl = escapeHTML(url);
+                embedUrl = escapeHtml(url);
             }
             if (!embedUrl) return '';
             return (`
@@ -165,8 +165,8 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                     ?.filter((attr) => attr && attr.key && attr.key.trim())
                     ?.map(({ key, value }) => {
                         if (!key) return;
-                        const attributeKey = escapeHTML(key?.trim() || '');
-                        const attributeValue = escapeHTML(value?.trim() || '');
+                        const attributeKey = escapeHtml(key?.trim() || '');
+                        const attributeValue = escapeHtml(value?.trim() || '');
                         if (!attributeValue) return (`${attributeKey}`);
                         return (`${attributeKey}='${attributeValue}'`);
                     });
@@ -185,9 +185,9 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                 value,
                             } = field;
                             const rawFieldName = getNameFromLabel(label) || `field_${fieldIndex}`;
-                            const fieldName = escapeHTML(rawFieldName);
+                            const fieldName = escapeHtml(rawFieldName);
                             const rawFieldLabelText = label?.[lang]?.trim() || fieldName;
-                            const fieldLabelText = escapeHTML(rawFieldLabelText);
+                            const fieldLabelText = escapeHtml(rawFieldLabelText);
                             const fieldLabelHTML = `<label for='${fieldName}'><bdi>${fieldLabelText}</bdi></label>`;
                             const fieldAttributesString = `name='${fieldName}' id='${fieldName}'`;
                             switch (type) {
@@ -207,14 +207,14 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                     <div class='select'>
                                         ${fieldLabelHTML}
                                         <select ${fieldAttributesString}>
-                                            <option disabled selected value> -- select an option -- </option>
+                                            <option disabled selected value>${UI_DICTIONARY.select[lang]}</option>
                                             ${options.map((option, optionIndex) => {
                                                 try {
                                                     const parsedOption = JSON.parse(option);
                                                     const rawOptionName = getNameFromLabel(parsedOption) || `option_${optionIndex}`;
-                                                    const optionName = escapeHTML(rawOptionName);
+                                                    const optionName = escapeHtml(rawOptionName);
                                                     const rawOptionLabel = parsedOption?.[lang]?.trim() || UI_DICTIONARY.untitled[lang];
-                                                    const optionLabel = escapeHTML(rawOptionLabel);
+                                                    const optionLabel = escapeHtml(rawOptionLabel);
                                                     return `<option value='${optionName}'>${optionLabel}</option>`;
                                                 } catch {
                                                     return null;
@@ -230,9 +230,9 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                             try {
                                                 const parsedOption = JSON.parse(option);
                                                 const rawOptionName = getNameFromLabel(parsedOption) || `option_${optionIndex}`;
-                                                const optionName = escapeHTML(rawOptionName);
+                                                const optionName = escapeHtml(rawOptionName);
                                                 const rawOptionLabel = parsedOption?.[lang]?.trim() || UI_DICTIONARY.untitled[lang];
-                                                const optionLabel = escapeHTML(rawOptionLabel);
+                                                const optionLabel = escapeHtml(rawOptionLabel);
                                                 return (`
                                                     <label>
                                                         <input type='checkbox' name='${fieldName}' value='${optionName}' />
@@ -246,7 +246,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                     </fieldset>
                                 `);
                                  case 'hidden': return (`
-                                    <input type='hidden' name='${escapeHTML(name?.trim() || '')}' value='${escapeHTML(value?.trim() || '')}' />
+                                    <input type='hidden' name='${escapeHtml(name?.trim() || '')}' value='${escapeHtml(value?.trim() || '')}' />
                                 `);
                                 default: return '';
                             }
@@ -271,8 +271,9 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
             } = value as Link;
             let href: string | undefined;
             if (type === 'external' && externalTarget && uriLooksSafe(externalTarget)) {
-                href = escapeHTML(externalTarget);
+                href = escapeHtml(externalTarget);
             } else if (type === 'internal' && internalTarget) {
+                // todo
                 href = generateRoute(internalTarget, lang);
             }
             const rel = href?.startsWith('/') ? undefined : 'noreferrer noopener'

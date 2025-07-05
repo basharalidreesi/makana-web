@@ -72,6 +72,7 @@ export const UI_DICTIONARY: UICategoryDictionary & {
     '404': LocalisedUIDictionaryRecord<string>;
     untitled: LocalisedUIDictionaryRecord<string>;
     switch: LocalisedUIDictionaryRecord<string>;
+    select: LocalisedUIDictionaryRecord<string>;
     close: LocalisedUIDictionaryRecord<string>;
     submit: LocalisedUIDictionaryRecord<string>;
 } = {
@@ -91,7 +92,7 @@ export const UI_DICTIONARY: UICategoryDictionary & {
 قد تكون الصفحة التي تبحثون عنها قد نُقلت
   أو حُذفت، أو ربّما لم تكن موجودة أصلًا.
 
-فيما يلي خطوتان يمكنكم تحربتهما:
+فيما يلي خطوتان يمكنكم تجربتهما:
   -&gt; التحقق من الرابط بحثًا عن الأخطاء المطبعية
   -&gt; العودة إلى <a href='/'>الصفحة الرئيسة</a>
 
@@ -126,6 +127,10 @@ makāna</pre>
     switch: {
         ar: 'التطلّع بالعربية',
         en: 'View in English',
+    },
+    select: {
+        ar: '-- يرجى الاختيار --',
+        en: '-- select an option --',
     },
     close: {
         ar: 'إغلاق',

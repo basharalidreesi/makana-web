@@ -1,7 +1,6 @@
 import type { CollectionDocument, CollectionDocumentStub, CollectionDocumentType, Language, PageBuilder, StaticDocument, StaticDocumentStub, StaticDocumentType } from '@root/sanity/sanity.types';
 import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, UI_DICTIONARY } from '@lib/languageUtils';
 import { getFromRegistry } from '@lib/registry';
-import { generateRoute } from '@lib/routingUtils';
 
 const hasSlugForLang = (
     doc: CollectionDocument | StaticDocument | undefined,
@@ -72,7 +71,7 @@ export const getTextLength = (
     return textLength;
 };
 
-export const escapeHTML = (str: string = '') => str.replace(
+export const escapeHtml = (str: string = '') => str.replace(
     /[&<>'"]/g, (c) => ({
         '&': '&amp;',
         '<': '&lt;',
