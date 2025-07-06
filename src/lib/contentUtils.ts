@@ -33,7 +33,7 @@ export const getTitle = (
     doc: CollectionDocument | StaticDocument | undefined,
     lang: Language | undefined
 ): string => {
-    const fallbackTitle = UI_DICTIONARY.untitled[lang ?? DEFAULT_LANGUAGE_ID]
+    const fallbackTitle = UI_DICTIONARY.untitledLabel[lang ?? DEFAULT_LANGUAGE_ID]
     if (!doc || !lang) return fallbackTitle;
     const title = doc.title?.[lang];
     return title ?? fallbackTitle;

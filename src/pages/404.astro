@@ -6,7 +6,7 @@ import Logo from '@components/Logo.astro';
 <html lang={DEFAULT_LANGUAGE_ID}>
     <head>
         <meta charset="UTF-8">
-        <title>404 · {SUPPORTED_LANGUAGES_IDS.map((lang) => UI_DICTIONARY.website[lang]).join(' · ')}</title>
+        <title>404 · {SUPPORTED_LANGUAGES_IDS.map((lang) => UI_DICTIONARY.websiteTitle[lang]).join(' · ')}</title>
         <meta name='viewport' content='width=device-width,initial-scale=1.0,viewport-fit=cover' />
         <meta name='generator' content={Astro.generator} />
     </head>
@@ -14,11 +14,11 @@ import Logo from '@components/Logo.astro';
         <div class='container'>
             {SUPPORTED_LANGUAGES_IDS.map((lang) => (
                 <div class='message' dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}>
-                    <Fragment set:html={(UI_DICTIONARY['404'][lang])?.trim()} />
+                    <Fragment set:html={(UI_DICTIONARY.error404Message[lang])?.trim()} />
                 </div>
             ))}
             <div class='logo'>
-                <a href='/' title={UI_DICTIONARY.website[DEFAULT_LANGUAGE_ID]}>
+                <a href='/' title={UI_DICTIONARY.websiteTitle[DEFAULT_LANGUAGE_ID]}>
                     <Logo />
                 </a>
             </div>

@@ -27,11 +27,11 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
             const imagesWithAssets = images?.filter(i => !!i.asset);
             if (!Array.isArray(imagesWithAssets) || imagesWithAssets.length === 0) return '';
             return (`
-                <figure class='image'>
-                    <div style='--how-many-images: ${Math.min(Math.max(imagesWithAssets.length, 1), 2)};'>
+                <figure class='media-block image-block'>
+                    <div class='wrapper' style='--how-many-images: ${Math.min(Math.max(imagesWithAssets.length, 1), 2)};'>
                         ${imagesWithAssets.map((image) => {
                             return (`
-                                <div>
+                                <div class='image'>
                                     ${createSanityImage({
                                         source: image,
                                         alt: image.altText,
@@ -83,20 +83,19 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
             }
             if (!embedUrl) return '';
             return (`
-                <figure class='video'>
-                    <div data-orientation='${
+                <figure class='media-block video-block'>
+                    <div class='outer-wrapper' data-orientation='${
                         parseInt(padding) < 100 ? 'landscape'
                         : parseInt(padding) > 100 ? 'portrait'
                         : 'square'
                     }'>
-                        <div style='position: relative; padding-bottom: ${padding}; height: 0; overflow: hidden;'>
+                        <div class='inner-wrapper' style='padding-bottom: ${padding};'>
                             <iframe
                                 src='${embedUrl}'
                                 frameborder='0'
                                 allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
                                 allowfullscreen
                                 loading='lazy'
-                                style='position: absolute; top: 0; left: 0; width: 100%; height: 100%;'
                             ></iframe>
                         </div>
                     </div>
@@ -125,7 +124,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                     : undefined;
             if (!fileAsset) return '';
             return (`
-                <figure class='audio'>
+                <figure class='media-block audio-block'>
                     <div>
                         <audio controls>
                             <source src='${fileAsset.url}' type='audio/${fileAsset.extension === 'mp3' ? 'mpeg' : fileAsset.extension}' />
@@ -175,14 +174,17 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                     ? label[DEFAULT_LANGUAGE_ID]?.trim()?.toLowerCase()?.replace(/\s+/g, '_')
                     : undefined; // todo
                 return (`
-                    <form class='form' action='${form.endpoint}' method='POST' onkeydown='if(event.key === "Enter" && event.target.tagName !== "TEXTAREA") event.preventDefault();' ${formAttributesString}>
+                    <form
+                        class='form-block'
+                        action='${form.endpoint}'
+                        method='POST'
+                        onkeydown='if(event.key === "Enter" && event.target.tagName !== "TEXTAREA") event.preventDefault();'
+                        ${formAttributesString}
+                    >
                         ${form.fields.map((field, fieldIndex) => {
                             const {
                                 type,
                                 label,
-                                options = [],
-                                name,
-                                value,
                             } = field;
                             const rawFieldName = getNameFromLabel(label) || `field_${fieldIndex}`;
                             const fieldName = escapeHtml(rawFieldName);
@@ -192,67 +194,83 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                             const fieldAttributesString = `name='${fieldName}' id='${fieldName}'`;
                             switch (type) {
                                 case 'text': return (`
-                                    <div class='text'>
+                                    <div class='text-field'>
                                         ${fieldLabelHTML}
                                         <input type='text' ${fieldAttributesString} />
                                     </div>
                                 `);
                                 case 'textarea': return (`
-                                    <div class='textarea'>
+                                    <div class='textarea-field'>
                                         ${fieldLabelHTML}
                                         <textarea rows='5' ${fieldAttributesString}></textarea>
                                     </div>
                                 `);
-                                case 'select': return (`
-                                    <div class='select'>
-                                        ${fieldLabelHTML}
-                                        <select ${fieldAttributesString}>
-                                            <option disabled selected value>${UI_DICTIONARY.select[lang]}</option>
+                                case 'select': {
+                                    const {
+                                        options = [],
+                                    } = field;
+                                    return (`
+                                        <div class='select-field'>
+                                            ${fieldLabelHTML}
+                                            <select ${fieldAttributesString}>
+                                                <option disabled selected value>${UI_DICTIONARY.optionSelectPlaceholder[lang]}</option>
+                                                ${options.map((option, optionIndex) => {
+                                                    try {
+                                                        const parsedOption = JSON.parse(option);
+                                                        const rawOptionName = getNameFromLabel(parsedOption) || `option_${optionIndex}`;
+                                                        const optionName = escapeHtml(rawOptionName);
+                                                        const rawOptionLabel = parsedOption?.[lang]?.trim() || optionName;
+                                                        const optionLabel = escapeHtml(rawOptionLabel);
+                                                        return `<option value='${optionName}'>${optionLabel}</option>`;
+                                                    } catch {
+                                                        return null;
+                                                    }
+                                                }).filter(Boolean).join('\n')}
+                                            </select>
+                                        </div>
+                                    `);
+                                };
+                                case 'checkbox': {
+                                    const {
+                                        options = [],
+                                    } = field;
+                                    return (`
+                                        <fieldset class='checkbox-field'>
+                                            <legend>${fieldLabelText}</legend>
                                             ${options.map((option, optionIndex) => {
                                                 try {
                                                     const parsedOption = JSON.parse(option);
                                                     const rawOptionName = getNameFromLabel(parsedOption) || `option_${optionIndex}`;
                                                     const optionName = escapeHtml(rawOptionName);
-                                                    const rawOptionLabel = parsedOption?.[lang]?.trim() || UI_DICTIONARY.untitled[lang];
+                                                    const rawOptionLabel = parsedOption?.[lang]?.trim() || optionName;
                                                     const optionLabel = escapeHtml(rawOptionLabel);
-                                                    return `<option value='${optionName}'>${optionLabel}</option>`;
+                                                    return (`
+                                                        <label>
+                                                            <input type='checkbox' name='${fieldName}' value='${optionName}' />
+                                                            <bdi>${optionLabel}</bdi>
+                                                        </label>
+                                                    `);
                                                 } catch {
                                                     return null;
                                                 }
-                                            }).filter(Boolean).join('\n')}
-                                        </select>
-                                    </div>
-                                `);
-                                case 'checkbox': return (`
-                                    <fieldset class='checkbox'>
-                                        <legend>${fieldLabelText}</legend>
-                                        ${options.map((option, optionIndex) => {
-                                            try {
-                                                const parsedOption = JSON.parse(option);
-                                                const rawOptionName = getNameFromLabel(parsedOption) || `option_${optionIndex}`;
-                                                const optionName = escapeHtml(rawOptionName);
-                                                const rawOptionLabel = parsedOption?.[lang]?.trim() || UI_DICTIONARY.untitled[lang];
-                                                const optionLabel = escapeHtml(rawOptionLabel);
-                                                return (`
-                                                    <label>
-                                                        <input type='checkbox' name='${fieldName}' value='${optionName}' />
-                                                        <bdi>${optionLabel}</bdi>
-                                                    </label>
-                                                `);
-                                            } catch {
-                                                return null;
-                                            }
-                                        }).join('\n')}
-                                    </fieldset>
-                                `);
-                                 case 'hidden': return (`
-                                    <input type='hidden' name='${escapeHtml(name?.trim() || '')}' value='${escapeHtml(value?.trim() || '')}' />
-                                `);
+                                            }).join('\n')}
+                                        </fieldset>
+                                    `);
+                                };
+                                 case 'hidden': {
+                                    const {
+                                        name,
+                                        value,
+                                    } = field;
+                                    return (`
+                                        <input type='hidden' name='${escapeHtml(name?.trim() || '')}' value='${escapeHtml(value?.trim() || '')}' />
+                                    `);
+                                };
                                 default: return '';
                             }
                         }).join('\n')}
                         <button type='submit'>
-                            ${UI_DICTIONARY.submit[lang]}
+                            ${UI_DICTIONARY.submitButtonLabel[lang]}
                         </button>
                     </form>
                 `);
@@ -304,3 +322,428 @@ const html = toHTML(source, {
         <Fragment set:html={html} />
     </div>
 )}
+
+<style lang='scss' is:global>
+    .content {
+        & {
+            --body-line-height-arabic: 1.6;
+            --body-line-height-non-arabic: 1.5;
+            --caption-line-height-arabic: 1.4;
+            --caption-line-height-non-arabic: 1.3;
+            --list-padding-inline-start: 2.5rem;
+            --content-small-gap: 0.5rem;
+            --content-medium-gap: 1rem;
+            --content-big-gap: 2rem;
+            --content-landscape-max-width: 50rem;
+            --content-portrait-max-width: 22.5rem;
+        }
+        &:lang(ar) {
+            line-height: var(--body-line-height-arabic);
+        }
+        &:not(:lang(ar)) {
+            line-height: var(--body-line-height-non-arabic);
+        }
+        h3, strong {
+            font-weight: 400;
+        }
+        em {
+            font-style: italic;
+        }
+        ul, ol {
+            padding-inline-start: var(--list-padding-inline-start);
+        }
+        a {
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-decoration-color: var(--text-link-underline-colour);
+            text-underline-offset: 3px;
+            @media (any-hover: hover) {
+                &:hover {
+                    color: var(--text-link-hover-colour);
+                    text-decoration-color: var(--text-link-hover-colour);
+                }
+            }
+        }
+        blockquote {
+            position: relative;
+            padding-inline-start: 1rem;
+        }
+        blockquote::before {
+            content: '';
+            position: absolute;
+            inset-inline-start: 0;
+            top: 0.2lh;
+            bottom: 0.1lh;
+            width: 2px;
+            background: var(--blockquote-indentation-line-colour);
+        }
+        .image-block {
+            & {
+                --_gap: var(--content-small-gap);
+            }
+            .wrapper {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: flex-end;
+                justify-content: center;
+                gap: var(--_gap);
+                @media (max-width: 512px) {
+                    flex-direction: column;
+                }
+            }
+            .image {
+                flex-basis: calc((100% - ((var(--how-many-images) - 1) * var(--_gap))) / var(--how-many-images));
+            }
+            img {
+                margin-inline: auto;
+            }
+            img[data-orientation='landscape'] {
+                max-width: min(100%, var(--content-landscape-max-width));
+            }
+            img[data-orientation='portrait'],
+            img[data-orientation='square'] {
+                max-width: min(100%, var(--content-portrait-max-width));
+            }
+        }
+        .video-block {
+            .outer-wrapper {
+                margin-inline: auto;
+            }
+            .outer-wrapper[data-orientation='landscape'] {
+                max-width: min(100%, var(--content-landscape-max-width));
+            }
+            .outer-wrapper[data-orientation='portrait'],
+            .outer-wrapper[data-orientation='square'] {
+                max-width: min(100%, var(--content-portrait-max-width));
+            }
+            .inner-wrapper {
+                position: relative;
+                // padding-bottom calculated inline
+                height: 0;
+                overflow:
+                hidden;
+            }
+            iframe {
+                position: absolute;
+                display: block;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+        }
+        .audio-block {
+            audio {
+                display: block;
+                width: 100%;
+                max-width: var(--content-portrait-max-width);
+                margin-inline: auto;
+            }
+        }
+        .media-block {
+            figcaption {
+                display: flex;
+                justify-content: center;
+                margin-top: var(--content-small-gap);
+                color: var(--text-light-colour);
+            }
+            figcaption:lang(ar) {
+                line-height: var(--caption-line-height-arabic);
+            }
+            figcaption:not(:lang(ar)) {
+                line-height: var(--caption-line-height-non-arabic);
+            }
+            figcaption a {
+                @media (any-hover: hover) {
+                    &:hover {
+                        color: var(--text-default-colour);
+                        text-decoration-color: var(--text-default-colour);
+                    }
+                }
+            }
+        }
+        .form-block {
+            & {
+                --_gap: 0.75rem;
+                --_field-padding: 0.333rem;
+                --_button-block-padding: 0.75rem;
+                --_button-inline-padding: 1rem;
+            }
+            & {
+                display: flex;
+                flex-direction: column;
+                row-gap: var(--_gap);
+            }
+            .text-field, .textarea-field, .select-field, .checkbox-field {
+                display: flex;
+                flex-direction: column;
+                row-gap: calc(var(--_gap) / 2);
+            }
+            .text-field label, .textarea-field label, .select-field label, .checkbox-field legend {
+                width: fit-content;
+                max-width: 100%;
+                font-weight: 400;
+            }
+            .text-field input,
+            .textarea-field textarea,
+            .select-field select {
+                appearance: none;
+                display: block;
+                padding: var(--_field-padding);
+                border: 1px solid var(--form-field-outline-colour);
+                background-color: var(--form-field-background-default-colour);
+            }
+            .textarea-field textarea {
+                resize: vertical;
+                min-height: calc(1lh + (var(--_field-padding) * 2) + (1px * 2));
+            }
+            .select-field select {
+                cursor: pointer;
+                background-image: url("data:image/svg+xml;utf8,<svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M6 9L12 15L18 9' stroke-width='1' stroke='currentColor' vector-effect='non-scaling-stroke'/></svg>");
+                background-repeat: no-repeat;
+                background-size: 1lh;
+            }
+            .select-field select:dir(rtl) {
+                background-position: left var(--_field-padding) center;
+            }
+            .select-field select:dir(ltr) {
+                background-position: right var(--_field-padding) center;
+            }
+            .checkbox-field {
+                appearance: none;
+                border: none;
+            }
+            .checkbox-field legend {
+                margin-bottom: calc(var(--_gap) / 2);
+            }
+            .checkbox-field label {
+                display: flex;
+                align-items: center;
+                column-gap: var(--_field-padding);
+                width: fit-content;
+                max-width: 100%;
+                cursor: pointer;
+            }
+            .checkbox-field input {
+                flex-grow: 0;
+                flex-shrink: 0;
+                position: relative;
+                align-self: flex-start;
+                appearance: none;
+                width: 1lh;
+                height: 1lh;
+                border: 1px solid var(--form-field-outline-colour);
+                background: var(--form-field-background-default-colour);
+                cursor: pointer;
+            }
+            .checkbox-field input::before {
+                content: '✕';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                visibility: hidden;
+            }
+            .checkbox-field input:checked::before {
+                visibility: visible;
+            }
+            button {
+                display: block;
+                width: fit-content;
+                max-width: 100%;
+                margin-top: 0.25rem;
+                padding-block: var(--_button-block-padding);
+                padding-inline: var(--_button-inline-padding);
+                outline: 1px solid var(--form-field-outline-colour);
+                background-color: var(--form-button-background-colour);
+                border-radius: 9999px;
+                cursor: pointer;
+            }
+            @media (any-hover: hover) {
+                .text-field input:not(:focus):hover,
+                .textarea-field textarea:not(:focus):hover {
+                    background-color: var(--form-field-background-hover-colour);
+                }
+                .text-field label:not(:focus):hover + input,
+                .textarea-field label:not(:focus):hover + textarea {
+                    background-color: var(--form-field-background-default-colour);
+                }
+                .select-field select:not(:focus):hover {
+                    background-color: var(--form-field-background-hover-colour);
+                }
+                .select-field label:not(:focus):hover + select {
+                    background-color: var(--form-field-background-default-colour);
+                }
+                .checkbox-field input:not(:focus):hover {
+                    background-color: var(--form-field-background-hover-colour);
+                }
+                button:hover {
+                    color: var(--text-link-hover-colour);
+                }
+            }
+        }
+        p + p {
+            margin-top: var(--content-small-gap);
+        }
+        p + ol,
+        p + ul {
+            margin-top: var(--content-medium-gap);
+        }
+        p + h3 {
+            margin-top: var(--content-big-gap);
+        }
+        p + blockquote {
+            margin-top: var(--content-medium-gap);
+        }
+        p + .image-block {
+            margin-top: var(--content-medium-gap);
+        }
+        p + .video-block {
+            margin-top: var(--content-medium-gap);
+        }
+        p + .audio-block {
+            margin-top: var(--content-medium-gap);
+        }
+        p + .form-block {
+            margin-top: var(--content-medium-gap);
+        }
+        ol + p,
+        ul + p {
+            margin-top: var(--content-medium-gap);
+        }
+        ol + ol,
+        ul + ol {
+            margin-top: var(--content-medium-gap);
+        }
+        ol + ul,
+        ul + ul {
+            margin-top: var(--content-medium-gap);
+        }
+        ol + h3,
+        ul + h3 {
+            margin-top: var(--content-big-gap);
+        }
+        ol + blockquote,
+        ul + blockquote {
+            margin-top: var(--content-medium-gap);
+        }
+        ol + .image-block,
+        ul + .image-block {
+            margin-top: var(--content-medium-gap);
+        }
+        ol + .video-block,
+        ul + .video-block {
+            margin-top: var(--content-medium-gap);
+        }
+        ol + .audio-block,
+        ul + .audio-block {
+            margin-top: var(--content-medium-gap);
+        }
+        ol + .form-block,
+        ul + .form-block {
+            margin-top: var(--content-medium-gap);
+        }
+        h3 + p {
+            margin-top: var(--content-medium-gap);
+        }
+        h3 + ol,
+        h3 + ul {
+            margin-top: var(--content-medium-gap);
+        }
+        h3 + h3 {
+            margin-top: var(--content-big-gap);
+        }
+        h3 + blockquote {
+            margin-top: var(--content-medium-gap);
+        }
+        h3 + .image-block {
+            margin-top: var(--content-medium-gap);
+        }
+        h3 + .video-block {
+            margin-top: var(--content-medium-gap);
+        }
+        h3 + .audio-block {
+            margin-top: var(--content-medium-gap);
+        }
+        h3 + .form-block {
+            margin-top: var(--content-medium-gap);
+        }
+        blockquote + p {
+            margin-top: var(--content-medium-gap);
+        }
+        blockquote + ol,
+        blockquote + ul {
+            margin-top: var(--content-medium-gap);
+        }
+        blockquote + h3 {
+            margin-top: var(--content-big-gap);
+        }
+        blockquote + blockquote {
+            margin-top: var(--content-medium-gap);
+        }
+        blockquote + .image-block {
+            margin-top: var(--content-medium-gap);
+        }
+        blockquote + .video-block {
+            margin-top: var(--content-medium-gap);
+        }
+        blockquote + .audio-block {
+            margin-top: var(--content-medium-gap);
+        }
+        blockquote + .form-block {
+            margin-top: var(--content-medium-gap);
+        }
+        .image-block + p,
+        .video-block + p,
+        .audio-block + p,
+        .form-block + p {
+            margin-top: var(--content-medium-gap);
+        }
+        .image-block + ol,
+        .video-block + ol,
+        .audio-block + ol,
+        .form-block + ol,
+        .image-block + ul,
+        .video-block + ul,
+        .audio-block + ul,
+        .form-block + ul {
+            margin-top: var(--content-medium-gap);
+        }
+        .image-block + h3,
+        .video-block + h3,
+        .audio-block + h3,
+        .form-block + h3 {
+            margin-top: var(--content-big-gap);
+        }
+        .image-block + blockquote,
+        .video-block + blockquote,
+        .audio-block + blockquote
+        .form-block + blockquote {
+            margin-top: var(--content-medium-gap);
+        }
+        .image-block + .image-block,
+        .video-block + .image-block,
+        .audio-block + .image-block,
+        .form-block + .image-block {
+            margin-top: var(--content-medium-gap);
+        }
+        .image-block + .video-block,
+        .video-block + .video-block,
+        .audio-block + .video-block,
+        .form-block + .video-block {
+            margin-top: var(--content-medium-gap);
+        }
+        .image-block + .audio-block,
+        .video-block + .audio-block,
+        .audio-block + .audio-block
+        .form-block + .audio-block {
+            margin-top: var(--content-medium-gap);
+        }
+        .image-block + .form-block,
+        .video-block + .form-block,
+        .audio-block + .form-block,
+        .form-block + .form-block {
+            margin-top: var(--content-medium-gap);
+        }
+    }
+</style>

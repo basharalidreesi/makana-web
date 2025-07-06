@@ -1,9 +1,9 @@
 ---
 import sanityClient from '@root/sanity/sanity.cli';
-import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject, CollectionDocument, CollectionDocumentType, StaticDocumentType, HomePage } from '@root/sanity/sanity.types';
+import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject, CollectionDocument, HomePage } from '@root/sanity/sanity.types';
 import { definedLocalisedSlug } from '@lib/groqUtils';
 import { getSlug, groupByLocalisedSlug, type AlternateDocument } from '@lib/contentUtils';
-import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED, DEFAULT_LANGUAGE_DIR, SUPPORTED_LANGUAGES_RECORD, SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED, SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
 import { createSanityImage, generateOgImageUrl } from '@lib/imageUtils';
 import { ClientRouter } from 'astro:transitions';
 import { generateRoute } from '@lib/routingUtils';
@@ -95,35 +95,27 @@ const resources: Resource[] | undefined = await sanityClient.fetch(`
 
 type Props = {
     lang: Language | undefined;
-    dir: string;
     title: string | undefined;
-    description?: string;
-    keywords?: Array<string>;
-    image?: SanityImageObject;
-    canonical?: string;
-    analytics?: string;
-    mode: {
-        name: 'windowed' | 'superpose';
-        type: CollectionDocumentType | StaticDocumentType;
-        textLength?: number;
-    } | false;
-    alternates?: AlternateDocument[];
+    description?: string | undefined;
+    keywords?: Array<string> | undefined;
+    image?: SanityImageObject | undefined;
+    canonical?: string | undefined;
+    analytics?: string | undefined;
+    alternates?: AlternateDocument[] | undefined;
 };
 
 const {
     lang = DEFAULT_LANGUAGE_ID,
-    dir = DEFAULT_LANGUAGE_DIR,
     title,
     description,
     keywords,
     image,
     canonical,
     analytics,
-    mode,
     alternates,
 } = Astro.props;
 
-const websiteTitle = websiteSettings?.title?.[lang] || UI_DICTIONARY.website[lang];
+const websiteTitle = websiteSettings?.title?.[lang] || UI_DICTIONARY.websiteTitle[lang];
 const pageTitle = title;
 
 const resolvedTitle = [pageTitle, websiteTitle].filter(Boolean).join(' · ');
@@ -133,9 +125,17 @@ const resolvedImage = image?.asset ? generateOgImageUrl(image) : websiteSettings
 const resolvedCanonical = canonical || new URL(Astro.url.pathname, Astro.site);
 const resolvedAnalytics = analytics || websiteSettings?.analytics;
 
-const modeName = mode && mode.name;
-const modeType = mode && mode.type;
-const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 'small';
+const doesSubmenuExist = (docCollection: CollectionDocument[] | undefined) => Array.isArray(docCollection) && docCollection.length > 0;
+const baseMenuItemsCount = aboutPage ? 1 : 0;
+const dynamicMenuItemsCount = (
+    (doesSubmenuExist(projects) ? 1 : 0)
+    + (doesSubmenuExist(writings) ? 1 : 0)
+    + (doesSubmenuExist(happenings) ? 1 : 0)
+    + (doesSubmenuExist(resources) ? 1 : 0)
+);
+const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
+
+const featuredItems = (homePage?.featuredItems || []).filter((item) => Object.values(item.slug || {}).some((langObj) => langObj && typeof langObj.current === 'string'));
 ---
 
 <html lang={lang} transition:animate='none'>
@@ -195,12 +195,12 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
             </h1>
             <div class='logo-bar'>
                 <div>
-                    <a href='/' title={UI_DICTIONARY.website[lang]} aria-label={UI_DICTIONARY.website[lang]}>
+                    <a href='/' title={UI_DICTIONARY.websiteTitle[lang]} aria-label={UI_DICTIONARY.websiteTitle[lang]}>
                         <Logo source={websiteSettings?.logoUrl} />
                     </a>
                 </div>
             </div>
-            <div class='navigation-bar' transition:persist>
+            <div class='navigation-bar' transition:persist style={{ '--how-many-menu-items': MINIMUM_MENU_ITEMS_COUNT, }}>
                 {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
                     const langId = supportedLang.id;
                     const langDir = supportedLang.dir;
@@ -208,20 +208,11 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
                     const langWritings = groupByLocalisedSlug(writings, langId);
                     const langHappenings = groupByLocalisedSlug(happenings, langId);
                     const langResources = groupByLocalisedSlug(resources, langId);
-                    const doesItExist = (docCollection: CollectionDocument[] | undefined) => Array.isArray(docCollection) && docCollection.length > 0;
-                    const baseMenuItemsCount = aboutPage ? 1 : 0;
-                    const dynamicMenuItemsCount = (
-                        (doesItExist(projects) ? 1 : 0)
-                        + (doesItExist(writings) ? 1 : 0)
-                        + (doesItExist(happenings) ? 1 : 0)
-                        + (doesItExist(resources) ? 1 : 0)
-                    );
-                    const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                     const routeToAboutPage = aboutPage?.slug?.[langId]?.current && generateRoute(aboutPage, langId);
                     const aboutPageTitle = aboutPage?.title?.[langId] || UI_DICTIONARY.aboutPage[langId];
                     return (
-                        <section lang={langId} dir={langDir} data-has-expanded='false' style={`--how-many-menus: ${MINIMUM_MENU_ITEMS_COUNT};`}> {/* data-has-expanded is currently unused */}
-                            <nav aria-label={UI_DICTIONARY.navigation[langId]}>
+                        <section lang={langId} dir={langDir} data-has-expanded='false'> {/* data-has-expanded is currently unused */}
+                            <nav aria-label={UI_DICTIONARY.navigationMenuLabel[langId]}>
                                 <ul class='navigation-menu'>
                                     {routeToAboutPage ? (
                                         <li class='navigation-menu-item static-navigation-item'>
@@ -230,18 +221,20 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
                                             </a>
                                         </li>
                                     ) : aboutPage && (
-                                        <li class='navigation-menu-item disabled-navigation-item'><span><bdi>{aboutPageTitle}</bdi></span></li>
+                                        <li class='navigation-menu-item static-navigation-item'>
+                                            <a href='#' aria-disabled='true' tabindex='-1'><bdi>{aboutPageTitle}</bdi></a>
+                                        </li>
                                     )}
-                                    {doesItExist(projects) && (
+                                    {doesSubmenuExist(projects) && (
                                         <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} min={MINIMUM_MENU_ITEMS_COUNT} />
                                     )}
-                                    {doesItExist(writings) && (
+                                    {doesSubmenuExist(writings) && (
                                         <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} min={MINIMUM_MENU_ITEMS_COUNT} />
                                     )}
-                                    {doesItExist(happenings) && (
+                                    {doesSubmenuExist(happenings) && (
                                         <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} min={MINIMUM_MENU_ITEMS_COUNT} />
                                     )}
-                                    {doesItExist(resources) && (
+                                    {doesSubmenuExist(resources) && (
                                         <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} min={MINIMUM_MENU_ITEMS_COUNT} />
                                     )}
                                 </ul>
@@ -251,135 +244,57 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
                 })}
             </div>
         </header>
-        <!-- change it to an aside (see mockups) -->
-        <!-- {
-            homePage
-            && Array.isArray(homePage.featuredItems)
-            && homePage.featuredItems.filter((item) => Object.values(item.slug || {}).some((langObj) => langObj && typeof langObj.current === 'string')).length > 0
-            && (
-                <div class='featured-bar' role='complementary' aria-label='Featured items (todo)'>
-                    <ul>
-                        {homePage.featuredItems.map((featuredItem) => {
-                            let itemSlug: string | undefined;
-                            let langUsed: Language | undefined;
-                            const preferredLangOrder = [
-                                lang,
-                                DEFAULT_LANGUAGE_ID === lang ? undefined : DEFAULT_LANGUAGE_ID,
-                                ...SUPPORTED_LANGUAGES_IDS.filter((l) => l !== lang && l !== DEFAULT_LANGUAGE_ID),
-                            ].filter(Boolean);
-                            for (const preferredLang of preferredLangOrder as Language[]) {
-                                const preferredLangSlug = getSlug(featuredItem, preferredLang);
-                                if (preferredLangSlug) {
-                                    itemSlug = preferredLangSlug;
-                                    langUsed = preferredLang;
-                                    break;
-                                }
+        <!-- {Array.isArray(featuredItems) && featuredItems.length > 0 && (
+            <aside class='featured-bar' aria-label='Featured items (todo)'>
+                <ul>
+                    {featuredItems.map((featuredItem) => {
+                        let itemSlug: string | undefined;
+                        let langUsed: Language | undefined;
+                        const preferredLangOrder = [
+                            lang,
+                            DEFAULT_LANGUAGE_ID === lang ? undefined : DEFAULT_LANGUAGE_ID,
+                            ...SUPPORTED_LANGUAGES_IDS.filter((l) => l !== lang && l !== DEFAULT_LANGUAGE_ID),
+                        ].filter(Boolean);
+                        for (const preferredLang of preferredLangOrder as Language[]) {
+                            const preferredLangSlug = getSlug(featuredItem, preferredLang);
+                            if (preferredLangSlug) {
+                                itemSlug = preferredLangSlug;
+                                langUsed = preferredLang;
+                                break;
                             }
-                            const routeToItem = generateRoute(featuredItem, langUsed);
-                            if (!itemSlug || !langUsed || !routeToItem) return;
-                            const itemAsRegistered = getFromRegistry(featuredItem._id);
-                            if (!itemAsRegistered) return;
-                            const thumbnail = createSanityImage({
-                                source: featuredItem.mainImage,
-                                width: 1200,
-                                height: 900,
-                            });
-                            return (
-                                <li class='featured-item'>
-                                    <a href={routeToItem}>
-                                        {SUPPORTED_LANGUAGES_IDS.map((langId) => itemAsRegistered[langId]?.title && (
-                                            <span>{itemAsRegistered[langId]?.title}</span>
-                                        ))}
-                                        {thumbnail && (
-                                            <Fragment set:html={thumbnail} />
-                                        )}
-                                    </a>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </div>
-            )
-        } -->
+                        }
+                        const routeToItem = generateRoute(featuredItem, langUsed);
+                        if (!itemSlug || !langUsed || !routeToItem) return;
+                        const itemAsRegistered = getFromRegistry(featuredItem._id);
+                        if (!itemAsRegistered) return;
+                        const thumbnail = createSanityImage({
+                            source: featuredItem.mainImage,
+                            width: 1200,
+                            height: 900,
+                        });
+                        return (
+                            <li class='featured-item'>
+                                <a href={routeToItem}>
+                                    {SUPPORTED_LANGUAGES_IDS.map((langId) => itemAsRegistered[langId]?.title && (
+                                        <span>{itemAsRegistered[langId]?.title}</span>
+                                    ))}
+                                    {thumbnail && (
+                                        <Fragment set:html={thumbnail} />
+                                    )}
+                                </a>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </aside>
+        )} -->
         <main>
-            {mode && modeName && (
-                <div class={`${modeName}-content-container`} dir={dir}>
-                    <div class={`${modeName}-content ${modeType}-windowed-content ${modeSize}-windowed-content`}>
-                        {modeName === 'windowed' && (
-                            <div class='windowed-content-orbs'>
-                                {Array.isArray(alternates) && alternates.length > 0 && alternates.map((alternate) => {
-                                    const altRoute = alternate.route;
-                                    const altLang = alternate.lang;
-                                    if (!altRoute || !altLang) return;
-                                    return (
-                                        <div class='windowed-content-orb switch-content-language'>
-                                            <a href={altRoute} title={UI_DICTIONARY.switch[altLang]} aria-label={UI_DICTIONARY.switch[altLang]}>
-                                                <Fragment set:html={SUPPORTED_LANGUAGES_RECORD[altLang].symbol} />
-                                            </a>
-                                        </div>
-                                    );
-                                })}
-                                <div class='windowed-content-orb close-windowed-content'>
-                                    <a href='/' title={UI_DICTIONARY.close[lang]} aria-label={UI_DICTIONARY.close[lang]}>
-                                        <svg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
-                                            <line x1='6' y1='6' x2='18' y2='18'/>
-                                            <line x1='6' y1='18' x2='18' y2='6'/>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
-                        )}
-                        <slot />
-                    </div>
-                </div>
-            )}
+            <slot />
         </main>
     </body>
 </html>
 
 <script>
-    // document.addEventListener('astro:before-preparation', () => {
-    //     console.log('now');
-    // });
-
-    // const navAnchors = document.querySelectorAll('nav a');
-    // navAnchors?.forEach((anchor) => { // TODO
-    //     anchor.addEventListener('click', () => {
-    //         const header = document.querySelector('header');
-    //         header?.setAttribute('aria-hidden', 'true');
-    //     });
-    // });
-
-    // @ts-ignore
-    if (!window.isCloseWindowedContentInitialised) {
-        // @ts-ignore
-        window.isCloseWindowedContentInitialised = true;
-        const closeWindowedContentDirectly = () => {
-            const windowedContentContainer = document.querySelector('.windowed-content-container');
-            if (windowedContentContainer) {
-                (windowedContentContainer as HTMLElement).style.setProperty('display', 'none');
-            }
-            history.pushState({}, '', '/');
-            const currentNavAnchor = document.querySelector('.navigation-bar a[aria-current]');
-            currentNavAnchor?.removeAttribute('aria-current');
-            // const header = document.querySelector('header');
-            // header?.setAttribute('aria-hidden', 'false'); // TODO
-        }
-        const attachCloseWindowedContent = () => {
-            const windowedContentControlsAnchor = document.querySelector('.close-windowed-content a');
-            windowedContentControlsAnchor?.addEventListener('click', (event) => {
-                event.preventDefault();
-                closeWindowedContentDirectly();
-            }, { passive: false, once: true });
-        }
-        attachCloseWindowedContent();
-        document.addEventListener('astro:after-swap', () => {
-            attachCloseWindowedContent();
-        });
-        // @ts-ignore
-        window.closeWindowedContentDirectly = closeWindowedContentDirectly;
-    }
-
     // @ts-ignore
     if (!window._isNavInitialised) {
         // @ts-ignore
@@ -412,6 +327,7 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
                 section.setAttribute('data-has-expanded', String(isExpanding));
             }
             // @ts-ignore
+            // see @components/WindowedContent.astro
             if (typeof window.closeWindowedContentDirectly === 'function') {
                 // @ts-ignore
                 window.closeWindowedContentDirectly();
@@ -439,6 +355,7 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
     :root {
         --font-size: 18px;
         --font-family: 'IBMPS', 'Helvetica Neue', 'Arial', sans-serif;
+        --page-background-colour: #fff;
         --text-default-colour: #000;
         --text-light-colour: #555;
         --text-disabled-colour: #b7b7b7;
@@ -451,11 +368,11 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
         --windowed-content-backdrop-colour: #000;
         --windowed-content-backdrop-opacity: 0.22;
         --windowed-content-orb-colour: #fff;
-        --windowed-content-aboutPage-colour: #aeeb9b;
-        --windowed-content-project-colour: #fff;
-        --windowed-content-writing-colour: #fff;
-        --windowed-content-happening-colour: #fff500;
-        --windowed-content-resource-colour: #ff7d57;
+        --windowed-content-aboutPage-background-colour: #aeeb9b;
+        --windowed-content-project-background-colour: #fff;
+        --windowed-content-writing-background-colour: #fff;
+        --windowed-content-happening-background-colour: #fff500;
+        --windowed-content-resource-background-colour: #ff7d57;
         --form-field-outline-colour: #b7b7b7;
         --form-field-background-default-colour: #fff;
         --form-field-background-hover-colour: #f5f5f5;
@@ -470,7 +387,7 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
         --menu-item-height: calc(1lh + (var(--menu-item-padding-block) * 2) + 1px);
         --navigation-submenu-indent-inline-start: 10rem;
         --navigation-submenu-indent-inline-end: 10rem;
-        --navigation-submenu-date-title-gap: 3rem;
+        --navigation-submenu-date-title-gap: 4rem;
         --small-windowed-content-max-width: 37.5rem;
         --big-windowed-content-max-width: 47.5rem;
         --windowed-content-indent-inline-start: 10rem;
@@ -535,8 +452,8 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
         }
     }
     body {
-        background-color: #fff; /* TODO */
         font-size: var(--font-size);
+        background-color: var(--page-background-colour);
     }
     header {
         & {
@@ -571,6 +488,16 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
             margin-top: calc(var(--menu-item-padding-block) * -1 / 2);
             touch-action: manipulation;
         }
+        .navigation-bar::after {
+            content: '';
+            position: absolute;
+            display: block;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--page-background-colour);
+        }
         .navigation-bar section {
             flex: 1 0 0;
         }
@@ -585,7 +512,7 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
             top: 0;
             inset-inline-start: var(--navigation-submenu-indent-inline-start);
             inset-inline-end: var(--navigation-submenu-indent-inline-end);
-            height: calc(var(--how-many-menus) * var(--menu-item-height) + 1px);
+            height: calc((var(--how-many-menu-items) * var(--menu-item-height)) + 1px);
             overflow-y: auto;
             background-color: var(--navigation-submenu-background-colour);
             @include mixins.no-scrollbar;
@@ -615,16 +542,12 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
             scroll-snap-align: end;
         }
         .static-navigation-item a,
-        .collection-navigation-item button,
-        .disabled-navigation-item span {
+        .collection-navigation-item button {
             display: block;
             padding-block: var(--menu-item-padding-block);
             width: fit-content;
             text-overflow: ellipsis;
             overflow: hidden;
-        }
-        .disabled-navigation-item {
-            color: var(--text-disabled-colour);
         }
         .static-navigation-item a[aria-current] {
             font-weight: 400;
@@ -632,525 +555,24 @@ const modeSize = mode && mode.textLength && mode.textLength >= 1500 ? 'big' : 's
         .collection-navigation-item button[aria-expanded='true'] {
             font-weight: 400;
         }
+        .static-navigation-item a[aria-disabled='true'],
+        .collection-navigation-item button[aria-disabled='true'] {
+            color: var(--text-disabled-colour);
+        }
         @media (any-hover: hover) {
-            .navigation-menu-item a:hover,
-            .navigation-menu-item button:hover {
+            .navigation-menu-item a:not([aria-disabled='true']):hover,
+            .navigation-menu-item button:not([aria-disabled='true']):hover {
                 color: var(--text-link-hover-colour);
-            }
-            .navigation-bar button {
                 cursor: pointer;
             }
         }
     }
-    main {
-        & {
-            position: relative;
-            pointer-events: none;
-        }
-        .windowed-content-container {
-            padding-top: calc(var(--page-padding-top) + var(--windowed-content-container-extra-padding-top));
-            padding-bottom: calc(var(--page-padding-bottom) + var(--windowed-content-container-extra-padding-bottom));
-            padding-inline-start: calc(var(--page-padding-inline) + var(--windowed-content-container-extra-padding-inline));
-            padding-inline-end: calc(var(--page-padding-inline) + var(--windowed-content-container-extra-padding-inline));
-        }
-        .windowed-content {
-            display: flex;
-            flex-direction: column;
-            height: auto;
-            margin-inline-start: var(--windowed-content-indent-inline-start);
-            margin-inline-end: var(--windowed-content-indent-inline-end);
-            padding-top: var(--windowed-content-padding-top);
-            padding-bottom: var(--windowed-content-padding-bottom);
-            padding-inline: var(--windowed-content-padding-inline);
-            outline: 1px solid var(--windowed-content-outline-colour);
-            pointer-events: all;
-        }
-        .small-windowed-content {
-            max-width: var(--small-windowed-content-max-width);
-        }
-        .big-windowed-content {
-            max-width: var(--big-windowed-content-max-width);
-        }
-        .aboutPage-windowed-content {
-            background-color: var(--windowed-content-aboutPage-colour);
-        }
-        .project-windowed-content {
-            background-color: var(--windowed-content-project-colour);
-        }
-        .writing-windowed-content {
-            background-color: var(--windowed-content-writing-colour);
-        }
-        .happening-windowed-content {
-            background-color: var(--windowed-content-happening-colour);
-        }
-        .resource-windowed-content {
-            background-color: var(--windowed-content-resource-colour);
-        }
-        .windowed-content-orbs {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 0.5rem; /* TODO */
-            padding-inline: var(--windowed-content-padding-top);
-            margin-inline: calc(var(--windowed-content-padding-inline) * -1);
-        }
-        .windowed-content-orb {
-            outline: 1px solid var(--windowed-content-outline-colour);
-            border-radius: 100%;
-            background-color: var(--windowed-content-orb-colour);
-        }
-        .windowed-content-orb a {
-            display: block;
-            width: var(--windowed-content-orb-width);
-            height: var(--windowed-content-orb-width);
-        }
-        .windowed-content-orb svg {
-            display: block;
-            width: 100%;
-            height: 100%;
-            padding: var(--windowed-content-orb-padding);
-        }
-        .switch-content-language svg {
-            fill: currentColor;
-        }
-        .close-windowed-content svg {
-            stroke-width: 1px;
-            stroke: currentColor;
-        }
-        .close-windowed-content a::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: var(--windowed-content-backdrop-colour);
-            opacity: var(--windowed-content-backdrop-opacity);
-            z-index: -1;
-        }
-        @media (any-hover: hover) {
-            .windowed-content-orb svg:hover {
-                color: var(--text-link-hover-colour);
-            }
-        }
-        .content-header, .content {
-            --small-gap: 0.5rem;
-            --medium-gap: 1rem;
-            --big-gap: 2rem;
-        }
-        .windowed-content-orbs + .content-header {
-            margin-top: var(--small-gap);
-        }
-        .content-header + .content {
-            margin-top: var(--big-gap);
-        }
-        .content-header {
-            h2, time {
-                font-weight: 400;
-            }
-            h2:lang(ar) {
-                line-height: 1.6;
-            }
-            h2:lang(en) {
-                line-height: 1.5;
-            }
-            time {
-                display: block;
-            }
-            h2 + time {
-                margin-top: var(--small-gap);
-            }
-        }
-        .content {
-            & {
-                --media-landscape-max-width: 50rem;
-                --media-portrait-max-width: 22.5rem;
-            }
-            &:lang(ar) {
-                line-height: 1.6;
-            }
-            &:lang(en) {
-                line-height: 1.5;
-            }
-            h3, strong {
-                font-weight: 400;
-            }
-            em {
-                font-style: italic;
-            }
-            ul, ol {
-                padding-inline-start: 2.5rem;
-            }
-            a {
-                text-decoration: underline;
-                text-decoration-thickness: 1px;
-                text-decoration-color: var(--text-link-underline-colour);
-                text-underline-offset: 3px;
-            }
-            @media (any-hover: hover) {
-                a:hover {
-                    color: var(--text-link-hover-colour);
-                    text-decoration-color: var(--text-link-hover-colour);
-                }
-            }
-            blockquote {
-                position: relative;
-                padding-inline-start: 1rem;
-            }
-            blockquote::before {
-                content: '';
-                position: absolute;
-                inset-inline-start: 0;
-                top: 0.2lh;
-                bottom: 0.1lh;
-                width: 2px;
-                background: var(--blockquote-indentation-line-colour);
-            }
-            .image {
-                --_gap: var(--small-gap);
-            }
-            .image > div {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: flex-end;
-                justify-content: center;
-                gap: var(--_gap);
-                @media (max-width: 512px) {
-                    flex-direction: column;
-                }
-            }
-            .image > div > div {
-                flex-basis: calc((100% - ((var(--how-many-images) - 1) * var(--_gap))) / var(--how-many-images));
-            }
-            .image img {
-                margin-inline: auto;
-            }
-            .image img[data-orientation='landscape'] {
-                max-width: min(100%, var(--media-landscape-max-width));
-            }
-            .image img[data-orientation='portrait'],
-            .image img[data-orientation='square'] {
-                max-width: min(100%, var(--media-portrait-max-width));
-            }
-            .video {}
-            .video > div {
-                margin-inline: auto;
-            }
-            .video > div[data-orientation='landscape'] {
-                max-width: min(100%, var(--media-landscape-max-width));
-            }
-            .video > div[data-orientation='portrait'],
-            .video > div[data-orientation='square'] {
-                max-width: min(100%, var(--media-portrait-max-width));
-            }
-            .video iframe {
-                display: block;
-            }
-            .audio {}
-            .audio audio {
-                display: block;
-                width: 100%;
-                max-width: var(--media-portrait-max-width);
-                margin-inline: auto;
-            }
-            figcaption {
-                display: flex;
-                justify-content: center;
-                margin-top: var(--small-gap);
-                color: var(--text-light-colour);
-            }
-            figcaption:lang(ar) {
-                line-height: 1.4;
-            }
-            figcaption:lang(en) {
-                line-height: 1.3;
-            }
-            @media (any-hover: hover) {
-                figcaption a:hover {
-                    color: var(--text-default-colour);
-                    text-decoration-color: var(--text-default-colour);
-                }
-            }
-            .form {
-                & {
-                    display: flex;
-                    flex-direction: column;
-                    row-gap: var(--_gap);
-                    --_gap: 0.75rem;
-                    --_field-padding: 0.333rem;
-                    --_button-block-padding: 0.75rem;
-                    --_button-inline-padding: 1rem;
-                }
-                .text, .textarea, .select, .checkbox {
-                    display: flex;
-                    flex-direction: column;
-                    row-gap: calc(var(--_gap) / 2);
-                }
-                .text label, .textarea label, .select label, .checkbox legend {
-                    width: fit-content;
-                    max-width: 100%;
-                    font-weight: 400;
-                }
-                .text input,
-                .textarea textarea,
-                .select select {
-                    appearance: none;
-                    display: block;
-                    padding: var(--_field-padding);
-                    border: 1px solid var(--form-field-outline-colour);
-                    background-color: var(--form-field-background-default-colour);
-                }
-                .textarea textarea {
-                    resize: vertical;
-                    min-height: calc(1lh + (var(--_field-padding) * 2) + (1px * 2));
-                }
-                .select select {
-                    cursor: pointer;
-                    background-image: url("data:image/svg+xml;utf8,<svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M6 9L12 15L18 9' stroke-width='1' stroke='currentColor' vector-effect='non-scaling-stroke'/></svg>");
-                    background-repeat: no-repeat;
-                    background-size: 1lh;
-                }
-                .select select:dir(rtl) {
-                    background-position: left var(--_field-padding) center;
-                }
-                .select select:dir(ltr) {
-                    background-position: right var(--_field-padding) center;
-                }
-                .checkbox {
-                    appearance: none;
-                    border: none;
-                }
-                .checkbox legend {
-                    margin-bottom: calc(var(--_gap) / 2);
-                }
-                .checkbox label {
-                    display: flex;
-                    align-items: center;
-                    column-gap: var(--_field-padding);
-                    width: fit-content;
-                    max-width: 100%;
-                    cursor: pointer;
-                }
-                .checkbox input {
-                    flex-grow: 0;
-                    flex-shrink: 0;
-                    position: relative;
-                    align-self: flex-start;
-                    appearance: none;
-                    width: 1lh;
-                    height: 1lh;
-                    border: 1px solid var(--form-field-outline-colour);
-                    background: var(--form-field-background-default-colour);
-                    cursor: pointer;
-                }
-                .checkbox input::before {
-                    content: '✕';
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    visibility: hidden;
-                }
-                .checkbox input:checked::before {
-                    visibility: visible;
-                }
-                button {
-                    display: block;
-                    width: fit-content;
-                    max-width: 100%;
-                    margin-top: 0.25rem;
-                    padding-block: var(--_button-block-padding);
-                    padding-inline: var(--_button-inline-padding);
-                    outline: 1px solid var(--form-field-outline-colour);
-                    background-color: var(--form-button-background-colour);
-                    border-radius: 9999px;
-                    cursor: pointer;
-                }
-                @media (any-hover: hover) {
-                    .text input:not(:focus):hover, .textarea textarea:not(:focus):hover {
-                        background-color: var(--form-field-background-hover-colour);
-                    }
-                    .text label:not(:focus):hover + input, .textarea label:not(:focus):hover + textarea {
-                        background-color: var(--form-field-background-default-colour);
-                    }
-                    .select select:not(:focus):hover {
-                        background-color: var(--form-field-background-hover-colour);
-                    }
-                    .select label:not(:focus):hover + select {
-                        background-color: var(--form-field-background-default-colour);
-                    }
-                    .checkbox input:not(:focus):hover {
-                        background-color: var(--form-field-background-hover-colour);
-                    }
-                    button:hover {
-                        color: var(--text-link-hover-colour);
-                    }
-                }
-            }
-            p + p {
-                margin-top: var(--small-gap);
-            }
-            p + ol,
-            p + ul {
-                margin-top: var(--medium-gap);
-            }
-            p + h3 {
-                margin-top: var(--big-gap);
-            }
-            p + blockquote {
-                margin-top: var(--medium-gap);
-            }
-            p + .image {
-                margin-top: var(--medium-gap);
-            }
-            p + .video {
-                margin-top: var(--medium-gap);
-            }
-            p + .audio {
-                margin-top: var(--medium-gap);
-            }
-            p + .form {
-                margin-top: var(--medium-gap);
-            }
-            ol + p,
-            ul + p {
-                margin-top: var(--medium-gap);
-            }
-            ol + ol,
-            ul + ol {
-                margin-top: var(--medium-gap);
-            }
-            ol + ul,
-            ul + ul {
-                margin-top: var(--medium-gap);
-            }
-            ol + h3,
-            ul + h3 {
-                margin-top: var(--big-gap);
-            }
-            ol + blockquote,
-            ul + blockquote {
-                margin-top: var(--medium-gap);
-            }
-            ol + .image,
-            ul + .image {
-                margin-top: var(--medium-gap);
-            }
-            ol + .video,
-            ul + .video {
-                margin-top: var(--medium-gap);
-            }
-            ol + .audio,
-            ul + .audio {
-                margin-top: var(--medium-gap);
-            }
-            ol + .form,
-            ul + .form {
-                margin-top: var(--medium-gap);
-            }
-            h3 + p {
-                margin-top: var(--medium-gap);
-            }
-            h3 + ol,
-            h3 + ul {
-                margin-top: var(--medium-gap);
-            }
-            h3 + h3 {
-                margin-top: var(--big-gap);
-            }
-            h3 + blockquote {
-                margin-top: var(--medium-gap);
-            }
-            h3 + .image {
-                margin-top: var(--medium-gap);
-            }
-            h3 + .video {
-                margin-top: var(--medium-gap);
-            }
-            h3 + .audio {
-                margin-top: var(--medium-gap);
-            }
-            h3 + .form {
-                margin-top: var(--medium-gap);
-            }
-            blockquote + p {
-                margin-top: var(--medium-gap);
-            }
-            blockquote + ol,
-            blockquote + ul {
-                margin-top: var(--medium-gap);
-            }
-            blockquote + h3 {
-                margin-top: var(--big-gap);
-            }
-            blockquote + blockquote {
-                margin-top: var(--medium-gap);
-            }
-            blockquote + .image {
-                margin-top: var(--medium-gap);
-            }
-            blockquote + .video {
-                margin-top: var(--medium-gap);
-            }
-            blockquote + .audio {
-                margin-top: var(--medium-gap);
-            }
-            blockquote + .form {
-                margin-top: var(--medium-gap);
-            }
-            .image + p,
-            .video + p,
-            .audio + p,
-            .form + p {
-                margin-top: var(--medium-gap);
-            }
-            .image + ol,
-            .video + ol,
-            .audio + ol,
-            .form + ol,
-            .image + ul,
-            .video + ul,
-            .audio + ul,
-            .form + ul {
-                margin-top: var(--medium-gap);
-            }
-            .image + h3,
-            .video + h3,
-            .audio + h3,
-            .form + h3 {
-                margin-top: var(--big-gap);
-            }
-            .image + blockquote,
-            .video + blockquote,
-            .audio + blockquote
-            .form + blockquote {
-                margin-top: var(--medium-gap);
-            }
-            .image + .image,
-            .video + .image,
-            .audio + .image,
-            .form + .image {
-                margin-top: var(--medium-gap);
-            }
-            .image + .video,
-            .video + .video,
-            .audio + .video,
-            .form + .video {
-                margin-top: var(--medium-gap);
-            }
-            .image + .audio,
-            .video + .audio,
-            .audio + .audio
-            .form + .audio {
-                margin-top: var(--medium-gap);
-            }
-            .image + .form,
-            .video + .form,
-            .audio + .form,
-            .form + .form {
-                margin-top: var(--medium-gap);
-            }
-        }
+    aside {
+        position: fixed;
+        top: calc(var(--page-padding-top));
+        left: var(--page-padding-inline);
+        right: var(--page-padding-inline);
+        bottom: var(--page-padding-bottom);
     }
     header { z-index: 1; }
     main { z-index: 2; }

@@ -1,16 +1,35 @@
 import type { CollectionDocument, CollectionDocumentStub, CollectionDocumentType, Language, StaticDocumentStub } from '@root/sanity/sanity.types';
-import { getSlug } from './contentUtils';
+import { getSlug } from '@lib/contentUtils';
 
 export const LOCALE_PREFIXES: Record<Language, string> = {
     ar: 'ar',
     en: 'en',
 };
 
-export const DOCUMENT_COLLECTION_PATHS: Record<CollectionDocumentType, string> = {
-    project: 'projects',
-    writing: 'writings',
-    happening: 'happenings',
-    resource: 'resources',
+type LocalisedDocumentCollectionPathRecord<T> = {
+    [L in Language]: T;
+};
+type DocumentCollectionPathDictionary = {
+  [K in CollectionDocumentType]: LocalisedDocumentCollectionPathRecord<string>;
+};
+
+export const DOCUMENT_COLLECTION_PATHS: DocumentCollectionPathDictionary = {
+    project: {
+        ar: 'masharih',
+        en: 'projects',
+    },
+    writing: {
+        ar: 'kitabat',
+        en: 'writings',
+    },
+    happening: {
+        ar: 'baramij',
+        en: 'happenings',
+    },
+    resource: {
+        ar: 'mawarid',
+        en: 'resources',
+    },
 };
 
 const isCollectionDocument = (doc: CollectionDocumentStub | StaticDocumentStub): doc is CollectionDocument => {
@@ -26,7 +45,7 @@ export const generateRoute = (
     const slug = getSlug(doc, lang);
     if (!slug) return undefined;
     if (isCollectionDocument(doc)) {
-        const collectionPath = DOCUMENT_COLLECTION_PATHS[doc._type];
+        const collectionPath: string = DOCUMENT_COLLECTION_PATHS[doc._type][lang];
         return `/${localePath}/${collectionPath}/${slug}`;
     } else {
         return `/${localePath}/${slug}`;

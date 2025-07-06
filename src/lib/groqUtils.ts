@@ -1,4 +1,4 @@
-import { SUPPORTED_LANGUAGES_IDS } from './languageUtils';
+import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
 
 const PT_LINK_MARK_RESOLVER_QUERY = (`
     markDefs[]{

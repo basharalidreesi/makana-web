@@ -1,7 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import type { Language, StaticDocument, StaticDocumentType } from '@root/sanity/sanity.types';
-import { SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
+import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
 import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
 import { getAlternates, getContent, getSlug, getTextLength, getTitle, groupByLocalisedSlug } from '@lib/contentUtils';
@@ -9,6 +9,7 @@ import { registerId } from '@lib/registry';
 import { generateRoute, LOCALE_PREFIXES } from '@lib/routingUtils';
 import Layout from '@layouts/Layout.astro';
 import PageContent from '@components/PageContent.astro';
+import WindowedContent from '@components/WindowedContent.astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
     const documentTypes: StaticDocumentType[] = ['aboutPage'];
@@ -72,33 +73,30 @@ const {
 } = Astro.props;
 
 const resolvedTitle = getTitle(doc, lang);
-const resolvedContent = getContent(doc, lang);
-const resolvedTextLength = getTextLength(doc, lang);
 const resolvedAlternates = getAlternates(doc, lang);
+const resolvedTextLength = getTextLength(doc, lang);
+const resolvedContent = getContent(doc, lang);
 ---
 
 <Layout
     lang={lang}
-    dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}
     title={resolvedTitle}
-    mode={{
-        name: 'windowed',
-        type: doc._type,
-        textLength: resolvedTextLength,
-    }}
     alternates={resolvedAlternates}
 >
-    {resolvedTitle && (
-        <div class='content-header'>
-            <h2>
-                <bdi>{resolvedTitle}</bdi>
-            </h2>
-            <time>
+    <WindowedContent
+        lang={lang}
+        title={resolvedTitle}
+        type={doc._type}
+        textLength={resolvedTextLength}
+        alternates={resolvedAlternates}
+    >
+        {resolvedTitle && (
+            <time slot='in-header'>
                 <bdi>00_00_0000</bdi>
             </time>
-        </div>
-    )}
-    {resolvedContent && (
-        <PageContent source={resolvedContent} lang={lang} />
-    )}
+        )}
+        {resolvedContent && (
+            <PageContent source={resolvedContent} lang={lang} />
+        )}
+    </WindowedContent>
 </Layout>

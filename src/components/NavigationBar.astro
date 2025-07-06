@@ -1,0 +1,55 @@
+---
+import type { CollectionDocumentStub, CollectionDocumentType } from '@root/sanity/sanity.types';
+
+type Props = {
+    items: { [K in CollectionDocumentType]: CollectionDocumentStub[] | undefined; } | undefined;
+};
+
+const {
+    items,
+} = Astro.props;
+---
+
+<!-- <div class='navigation-bar' transition:persist style={{ '--how-many-menu-items': MINIMUM_MENU_ITEMS_COUNT, }}>
+    {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
+        const langId = supportedLang.id;
+        const langDir = supportedLang.dir;
+        const langProjects = groupByLocalisedSlug(projects, langId);
+        const langWritings = groupByLocalisedSlug(writings, langId);
+        const langHappenings = groupByLocalisedSlug(happenings, langId);
+        const langResources = groupByLocalisedSlug(resources, langId);
+        const routeToAboutPage = aboutPage?.slug?.[langId]?.current && generateRoute(aboutPage, langId);
+        const aboutPageTitle = aboutPage?.title?.[langId] || UI_DICTIONARY.aboutPage[langId];
+        return (
+            <section lang={langId} dir={langDir} data-has-expanded='false'> {/* data-has-expanded is currently unused */}
+                <nav aria-label={UI_DICTIONARY.navigationMenuLabel[langId]}>
+                    <ul class='navigation-menu'>
+                        {routeToAboutPage ? (
+                            <li class='navigation-menu-item static-navigation-item'>
+                                <a href={routeToAboutPage} aria-current={routeToAboutPage === Astro.url.pathname ? 'page' : undefined}>
+                                    <bdi>{aboutPageTitle}</bdi>
+                                </a>
+                            </li>
+                        ) : aboutPage && (
+                            <li class='navigation-menu-item static-navigation-item'>
+                                <a href='#' aria-disabled='true' tabindex='-1'><bdi>{aboutPageTitle}</bdi></a>
+                            </li>
+                        )}
+                        {doesSubmenuExist(projects) && (
+                            <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} min={MINIMUM_MENU_ITEMS_COUNT} />
+                        )}
+                        {doesSubmenuExist(writings) && (
+                            <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} min={MINIMUM_MENU_ITEMS_COUNT} />
+                        )}
+                        {doesSubmenuExist(happenings) && (
+                            <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} min={MINIMUM_MENU_ITEMS_COUNT} />
+                        )}
+                        {doesSubmenuExist(resources) && (
+                            <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} min={MINIMUM_MENU_ITEMS_COUNT} />
+                        )}
+                    </ul>
+                </nav>
+            </section>
+        );
+    })}
+</div> -->

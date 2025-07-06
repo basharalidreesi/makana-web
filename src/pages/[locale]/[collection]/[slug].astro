@@ -1,7 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import type { CollectionDocument, CollectionDocumentType, Language } from '@root/sanity/sanity.types';
-import { SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
+import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
 import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
 import { getAlternates, getContent, getSlug, getSummary, getTextLength, groupByLocalisedSlug } from '@lib/contentUtils';
@@ -11,6 +11,7 @@ import { DOCUMENT_COLLECTION_PATHS } from '@lib/routingUtils';
 import { getTitle } from '@lib/contentUtils';
 import Layout from '@layouts/Layout.astro';
 import PageContent from '@components/PageContent.astro';
+import WindowedContent from '@components/WindowedContent.astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
     const documentTypes: CollectionDocumentType[] = ['project', 'writing', 'happening', 'resource'];
@@ -50,7 +51,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
                 const route = generateRoute(doc, lang);
                 if (!slug || !route) continue;
                 const locale = LOCALE_PREFIXES[lang];
-                const collection = DOCUMENT_COLLECTION_PATHS[documentType];
+                const collection = DOCUMENT_COLLECTION_PATHS[documentType][lang];
                 registerId(
                     doc._id,
                     lang,
@@ -89,35 +90,32 @@ const {
 const resolvedTitle = getTitle(doc, lang);
 const resolvedDescription = getSummary(doc, lang);
 const resolvedImage = doc.mainImage;
-const resolvedContent = getContent(doc, lang);
-const resolvedTextLength = getTextLength(doc, lang);
 const resolvedAlternates = getAlternates(doc, lang);
+const resolvedTextLength = getTextLength(doc, lang);
+const resolvedContent = getContent(doc, lang);
 ---
 
 <Layout
     lang={lang}
-    dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}
     title={resolvedTitle}
     description={resolvedDescription}
     image={resolvedImage}
-    mode={{
-        name: 'windowed',
-        type: doc._type,
-        textLength: resolvedTextLength,
-    }}
     alternates={resolvedAlternates}
 >
-    {resolvedTitle && (
-        <div class='content-header'>
-            <h2>
-                <bdi>{resolvedTitle}</bdi>
-            </h2>
-            <time>
+    <WindowedContent
+        lang={lang}
+        title={resolvedTitle}
+        type={doc._type}
+        textLength={resolvedTextLength}
+        alternates={resolvedAlternates}
+    >
+        {resolvedTitle && (
+            <time slot='in-header'>
                 <bdi>00_00_0000</bdi>
             </time>
-        </div>
-    )}
-    {resolvedContent && (
-        <PageContent source={resolvedContent} lang={lang} />
-    )}
+        )}
+        {resolvedContent && (
+            <PageContent source={resolvedContent} lang={lang} />
+        )}
+    </WindowedContent>
 </Layout>

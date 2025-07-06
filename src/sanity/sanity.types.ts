@@ -80,23 +80,54 @@ export type Resource = {
   content?: LocalisedPageBuilder
 }
 
-export type Form = {
-  _id: string
-  _type: 'form'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  referenceName?: string
-  endpoint?: string
-  fields?: Array<{
-    type?: 'text' | 'textarea' | 'select' | 'checkbox' | 'hidden'
-    name?: string
-    label?: LocalisedString
-    options?: Array<string>
-    value?: string
+type FieldBase = {
     _key: string
-  }>
-  attributes?: Array<string>
+    label?: LocalisedString
+}
+
+type FieldOptions = Array<string>
+
+type TextField = FieldBase & {
+    type: 'text'
+}
+
+type TextareaField = FieldBase & {
+    type: 'textarea'
+}
+
+type SelectField = FieldBase & {
+    type: 'select'
+    options: FieldOptions
+}
+
+type CheckboxField = FieldBase & {
+    type: 'checkbox'
+    options: FieldOptions
+}
+
+type HiddenField = FieldBase & {
+    type: 'hidden'
+    name: string
+    value: string
+}
+
+type Field =
+    | TextField
+    | TextareaField
+    | SelectField
+    | CheckboxField
+    | HiddenField
+
+export type Form = {
+    _id: string
+    _type: 'form'
+    _createdAt: string
+    _updatedAt: string
+    _rev: string
+    referenceName?: string
+    endpoint?: string
+    fields?: Array<Field>
+    attributes?: Array<string>
 }
 
 export type HomePage = {

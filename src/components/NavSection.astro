@@ -53,5 +53,7 @@ const delta = min - (items?.length || 0);
         </ul>
     </li>
 ) : (
-    <li class='navigation-menu-item disabled-navigation-item'><span><bdi>{title}</bdi></span></li>
+    <li class='navigation-menu-item collection-navigation-item'>
+        <button type='button' aria-disabled='true' tabindex='-1'><bdi>{title}</bdi></button>
+    </li>
 )}

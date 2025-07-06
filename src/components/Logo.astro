@@ -10,6 +10,8 @@ const {
 } = Astro.props;
 
 const svgContent = source && await fetchSvg(source);
+
+export const DEFAULT_LOGO_ASPECT_RATIO = 494.81 / 243.65;
 ---
 
 {svgContent ? (

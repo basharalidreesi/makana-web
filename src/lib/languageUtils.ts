@@ -67,82 +67,50 @@ type UICategoryDictionary = {
 };
 
 export const UI_DICTIONARY: UICategoryDictionary & {
-    website: LocalisedUIDictionaryRecord<string>;
-    navigation: LocalisedUIDictionaryRecord<string>;
-    '404': LocalisedUIDictionaryRecord<string>;
-    untitled: LocalisedUIDictionaryRecord<string>;
-    switch: LocalisedUIDictionaryRecord<string>;
-    select: LocalisedUIDictionaryRecord<string>;
-    close: LocalisedUIDictionaryRecord<string>;
-    submit: LocalisedUIDictionaryRecord<string>;
+    websiteTitle: LocalisedUIDictionaryRecord<string>;
+    untitledLabel: LocalisedUIDictionaryRecord<string>;
+    navigationMenuLabel: LocalisedUIDictionaryRecord<string>;
+    languageSwitchLabel: LocalisedUIDictionaryRecord<string>;
+    submitButtonLabel: LocalisedUIDictionaryRecord<string>;
+    closeButtonLabel: LocalisedUIDictionaryRecord<string>;
+    optionSelectPlaceholder: LocalisedUIDictionaryRecord<string>;
+    error404Message: LocalisedUIDictionaryRecord<string>;
 } = {
-    website: {
+    websiteTitle: {
         ar: 'مكانة',
         en: 'makāna',
     },
-    navigation: {
-        ar: 'القائمة العربية',
-        en: 'English menu',
-    },
-    '404': {
-        ar: `
-<pre>خطأ 404:
-  الصفحة غير موجودة
-
-قد تكون الصفحة التي تبحثون عنها قد نُقلت
-  أو حُذفت، أو ربّما لم تكن موجودة أصلًا.
-
-فيما يلي خطوتان يمكنكم تجربتهما:
-  -&gt; التحقق من الرابط بحثًا عن الأخطاء المطبعية
-  -&gt; العودة إلى <a href='/'>الصفحة الرئيسة</a>
-
-في حال استمرار المشكلة، لا تترددوا في
-  التواصل معنا أو إعادة المحاولة لاحقًا.
-
-مكانة</pre>
-        `,
-        en: `
-<pre>Error 404:
-    Page not found
-
-The page you are looking for
-  might have moved, been deleted,
-  or never existed at all.
-
-A few things you can try:
-  -&gt; Check the URL for typos
-  -&gt; Go back to the <a href='/'>homepage</a>
-
-If you think this is a mistake,
-  please contact us
-  or try again later.
-
-makāna</pre>
-`,
-    },
-    untitled: {
+    untitledLabel: {
         ar: 'بلا عنوان',
         en: 'Untitled',
     },
-    switch: {
-        ar: 'التطلّع بالعربية',
+    navigationMenuLabel: {
+        ar: 'القائمة العربية',
+        en: 'English menu',
+    },
+    languageSwitchLabel: {
+        ar: 'المطالعة بالعربية',
         en: 'View in English',
     },
-    select: {
-        ar: '-- يرجى الاختيار --',
-        en: '-- select an option --',
-    },
-    close: {
-        ar: 'إغلاق',
-        en: 'Close',
-    },
-    submit: {
+    submitButtonLabel: {
         ar: 'إرسال',
         en: 'Submit',
     },
+    closeButtonLabel: {
+        ar: 'إغلاق',
+        en: 'Close',
+    },
+    optionSelectPlaceholder: {
+        ar: '-- يرجى الاختيار --',
+        en: '-- select an option --',
+    },
+    error404Message: {
+        ar: `<h1>خطأ 404: الصفحة غير متوفرة</h1><p>قد تكون الصفحة التي تبحثون عنها نُقلت أو حُذفت، أو ربّما لم تكن موجودة أصلًا.</p><p>يمكنكم تجربة ما يلي:</p><ol><li>التحقق من صحة الرابط</li><li>العودة إلى <a href='/'>الصفحة الرئيسة</a></li></ol><p>إذا استمرت المشكلة، يُرجى التواصل معنا أو تكرار المحاولة لاحقًا.</p><p><em>مكانة</em></p>`,
+        en: `<h1>Error 404: Page not found</h1><p>The page you are looking for may have been moved or deleted, or it might have never existed at all.</p><p>A few things you can try:</p><ol><li>Check the URL for any typos</li><li>Go back to the <a href='/'>homepage</a></li></ol><p>If the problem persists, please contact us or try again later.</p><p><em>makāna</em></p>`,
+    },
     aboutPage: {
         ar: 'عن مكانة',
-        en: 'About makāna',
+        en: 'About',
     },
     project: {
         ar: 'مشاريع',
