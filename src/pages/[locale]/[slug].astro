@@ -11,11 +11,10 @@ import Layout from '@layouts/Layout.astro';
 import PageContent from '@components/PageContent.astro';
 import WindowedContent from '@components/WindowedContent.astro';
 
-const documentTypes: RootDocumentType[] = [
-    'aboutPage',
-];
-
 export const getStaticPaths: GetStaticPaths = async () => {
+    const documentTypes: RootDocumentType[] = [
+        'aboutPage',
+    ];
     const languages: Language[] = SUPPORTED_LANGUAGES_IDS as Language[];
     const paths: { params: Record<string, string>, props: Record<string, any> }[] = [];
     for (const documentType of documentTypes) {

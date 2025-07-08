@@ -168,7 +168,7 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         <meta name='robots' content='max-snippet:-1,max-image-preview:large,max-video-preview:-1' />
         <link rel='sitemap' href='/sitemap-index.xml' />
         {Array.isArray(fontFiles) && fontFiles.length > 0 && fontFiles.map((fontFile) => (
-            <link rel='preload' href={fontFile.default.replace('/public', '')} as='font' />
+            <link rel='preload' href={fontFile.default.replace('/public', '')} as='font' type='font/woff' crossorigin='anonymous' />
         ))}
         {resolvedAnalytics && (
             <Fragment set:html={resolvedAnalytics} />
