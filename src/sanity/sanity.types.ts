@@ -1,59 +1,70 @@
+// --- Base ---
+
 export type Language = 'ar' | 'en'
 
-export type CollectionDocument = Project | Writing | Happening | Resource
-
-export type StaticDocument = AboutPage
-
-export type CollectionDocumentType = CollectionDocument['_type']
-
-export type StaticDocumentType = StaticDocument['_type']
-
-export type CollectionDocumentStub = {
-  _type: CollectionDocumentType
-  slug?: LocalisedSlug
-}
-
-export type StaticDocumentStub = {
-  _type: StaticDocumentType
-  slug?: LocalisedSlug
-}
-
-export type Project = {
+type SanityDocumentBase = {
   _id: string
+  _type: string
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+}
+
+// --- Traits ---
+
+interface IsTargetable {
+  slug?: LocalisedSlug
+}
+
+interface IsFeaturable {
+  __isFeaturable: true
+}
+
+interface HasTitle {
+  title?: LocalisedString
+}
+
+interface HasContent {
+  content?: LocalisedPageBuilder
+}
+
+interface HasMeta {
+  summary?: LocalisedText
+  mainImage?: ResolvedSanityReference<SanityImage>
+}
+
+// --- Collection Documents ---
+
+export type Project = SanityDocumentBase
+  & IsTargetable
+  & IsFeaturable
+  & HasTitle
+  & HasContent
+  & HasMeta
+  & {
   _type: 'project'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: LocalisedString
-  slug?: LocalisedSlug
   date?: string
-  summary?: LocalisedText
-  mainImage?: SanityImageObject
-  content?: LocalisedPageBuilder
 }
 
-export type Writing = {
-  _id: string
+export type Writing = SanityDocumentBase
+  & IsTargetable
+  & IsFeaturable
+  & HasTitle
+  & HasContent
+  & HasMeta
+  & {
   _type: 'writing'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: LocalisedString
-  slug?: LocalisedSlug
   date?: string
-  summary?: LocalisedText
-  mainImage?: SanityImageObject
-  content?: LocalisedPageBuilder
 }
 
-export type Happening = {
-  _id: string
+export type Happening = SanityDocumentBase
+  & IsTargetable
+  & IsFeaturable
+  & HasTitle
+  & HasContent
+  & HasMeta
+  & {
   _type: 'happening'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: LocalisedString
-  slug?: LocalisedSlug
   startDate?: string
   startTime?: {
     hours?: string
@@ -61,166 +72,179 @@ export type Happening = {
   }
   timezone?: string
   location?: LocalisedString
-  summary?: LocalisedText
-  mainImage?: SanityImageObject
-  content?: LocalisedPageBuilder
 }
 
-export type Resource = {
-  _id: string
+export type Resource = SanityDocumentBase
+  & IsTargetable
+  & IsFeaturable
+  & HasTitle
+  & HasContent
+  & HasMeta
+  & {
   _type: 'resource'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: LocalisedString
-  slug?: LocalisedSlug
   date?: string
-  summary?: LocalisedText
-  mainImage?: SanityImageObject
-  content?: LocalisedPageBuilder
 }
 
-type FieldBase = {
-    _key: string
-    label?: LocalisedString
-}
+export type CollectionDocument =
+  | Project
+  | Writing
+  | Happening
+  | Resource
 
-type FieldOptions = Array<string>
+export type CollectionDocumentType = CollectionDocument['_type']
 
-type TextField = FieldBase & {
-    type: 'text'
-}
+// --- Root Documents ---
 
-type TextareaField = FieldBase & {
-    type: 'textarea'
-}
-
-type SelectField = FieldBase & {
-    type: 'select'
-    options: FieldOptions
-}
-
-type CheckboxField = FieldBase & {
-    type: 'checkbox'
-    options: FieldOptions
-}
-
-type HiddenField = FieldBase & {
-    type: 'hidden'
-    name: string
-    value: string
-}
-
-type Field =
-    | TextField
-    | TextareaField
-    | SelectField
-    | CheckboxField
-    | HiddenField
-
-export type Form = {
-    _id: string
-    _type: 'form'
-    _createdAt: string
-    _updatedAt: string
-    _rev: string
-    referenceName?: string
-    endpoint?: string
-    fields?: Array<Field>
-    attributes?: Array<string>
-}
-
-export type HomePage = {
-  _id: string
-  _type: 'homePage'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  // featuredItems?: Array<
-  //   | {
-  //       _ref: string
-  //       _type: 'reference'
-  //       _weak?: boolean
-  //       [internalGroqTypeReferenceTo]?: 'happening'
-  //     }
-  //   | {
-  //       _ref: string
-  //       _type: 'reference'
-  //       _weak?: boolean
-  //       [internalGroqTypeReferenceTo]?: 'project'
-  //     }
-  //   | {
-  //       _ref: string
-  //       _type: 'reference'
-  //       _weak?: boolean
-  //       [internalGroqTypeReferenceTo]?: 'resource'
-  //     }
-  //   | {
-  //       _ref: string
-  //       _type: 'reference'
-  //       _weak?: boolean
-  //       [internalGroqTypeReferenceTo]?: 'writing'
-  //     }
-  // >
-  featuredItems?: Array<CollectionDocument>
-}
-
-export type AboutPage = {
-  _id: string
+export type AboutPage = SanityDocumentBase
+  & IsTargetable
+  & HasTitle
+  & HasContent
+  & {
   _type: 'aboutPage'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: LocalisedString
-  slug?: LocalisedSlug
-  content?: LocalisedPageBuilder
 }
 
-export type Website = {
-  _id: string
+export type HomePage = SanityDocumentBase
+  & {
+  _type: 'homePage'
+  featuredItems?: Array<ResolvedSanityReference<AnyFeaturableDocument>>
+}
+
+export type RootDocument = 
+  | AboutPage
+  | HomePage
+
+export type RootDocumentType = RootDocument['_type']
+
+// --- Derived Documents ---
+
+export type AnyDocument =
+  | CollectionDocument
+  | RootDocument
+
+export type AnyTargetableDocument = Extract<AnyDocument, IsTargetable>
+export type AnyTargetableDocumentType = AnyTargetableDocument['_type']
+export type AnyTargetableDocumentStub = Stub<AnyTargetableDocument>
+
+export type AnyFeaturableDocument = Extract<AnyDocument, IsFeaturable>
+export type AnyFeaturableDocumentType = AnyFeaturableDocument['_type']
+
+export type AnyTitledDocument = Extract<AnyDocument, HasTitle>
+export type AnyTitledDocumentType = AnyTitledDocument['_type']
+
+export type AnyContentDocument = Extract<AnyDocument, HasContent>
+export type AnyContentDocumentType = AnyContentDocument['_type']
+
+export type AnyMetaedDocument = Extract<AnyDocument, HasMeta>
+export type AnyMetaedDocumentType = AnyMetaedDocument['_type']
+
+// --- System Documents ---
+
+export type Website = SanityDocumentBase
+  & {
   _type: 'website'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
   title?: LocalisedString
   summary?: LocalisedText
   keywords?: Array<string>
-  logo?: SanityImageObject
-  mainImage?: SanityImageObject
+  logo?: ResolvedSanityReference<SanityImage>
+  mainImage?: ResolvedSanityReference<SanityImage>
   analytics?: string
 }
 
-export type Link = {
-  _type: 'link'
-  type?: 'external' | 'internal'
-  // internalTarget?:
-  //   | {
-  //       _ref: string
-  //       _type: 'reference'
-  //       _weak?: boolean
-  //       [internalGroqTypeReferenceTo]?: 'happening'
-  //     }
-  //   | {
-  //       _ref: string
-  //       _type: 'reference'
-  //       _weak?: boolean
-  //       [internalGroqTypeReferenceTo]?: 'project'
-  //     }
-  //   | {
-  //       _ref: string
-  //       _type: 'reference'
-  //       _weak?: boolean
-  //       [internalGroqTypeReferenceTo]?: 'resource'
-  //     }
-  //   | {
-  //       _ref: string
-  //       _type: 'reference'
-  //       _weak?: boolean
-  //       [internalGroqTypeReferenceTo]?: 'writing'
-  //     }
-  internalTarget?: CollectionDocumentStub
-  externalTarget?: string
+export type Form = SanityDocumentBase
+  & {
+  _type: 'form'
+  referenceName?: string
+  endpoint?: string
+  fields?: Array<{
+    _key: string
+    type?:
+      | 'text'
+      | 'textarea'
+      | 'select'
+      | 'checkbox'
+      | 'hidden'
+    label?: LocalisedString
+    options?: Array<string>
+    name?: string
+    value?: string
+  }>
+  attributes?: Array<string>
 }
+
+// --- Portable Text Blocks ---
+
+type PortableTextChild = {
+  _key: string
+  _type: 'span'
+  text?: string
+  marks?: Array<string>
+}
+
+type BodyPortableTextBlock = {
+  _key: string
+  _type: 'block'
+  style?:
+    | 'normal'
+    | 'heading'
+    | 'blockquote'
+  listItem?:
+    | 'bullet'
+    | 'number'
+  level?: number
+  children?: Array<PortableTextChild>
+  markDefs?: Array<
+    | Link
+  >
+}
+
+type AuxiliaryPortableTextBlock = {
+  _key: string
+  _type: 'block'
+  style?: 'normal'
+  listItem?: never
+  level?: number
+  children?: Array<PortableTextChild>
+  markDefs?: Array<
+    | Link
+  >
+}
+
+export type PortableTextImageBlock = {
+  _key: string
+  _type: 'imageBlock'
+  images?: Array<ResolvedSanityReference<SanityImage & { altText?: string }>>
+  caption?: Array<AuxiliaryPortableTextBlock>
+}
+
+export type PortableTextVideoBlock = {
+  _key: string
+  _type: 'videoBlock'
+  url?: string
+  aspectRatio?: string
+  caption?: Array<AuxiliaryPortableTextBlock>
+}
+
+export type PortableTextAudioBlock = {
+  _key: string
+  _type: 'audioBlock'
+  file?: SanityFile
+  caption?: Array<AuxiliaryPortableTextBlock>
+}
+
+export type PortableTextFormBlock = {
+  form?: ResolvedSanityReference<Form>
+  _type: 'formBlock'
+  _key: string
+}
+
+export type PortableTextBlock =
+  | BodyPortableTextBlock
+  | PortableTextImageBlock
+  | PortableTextVideoBlock
+  | PortableTextAudioBlock
+  | PortableTextFormBlock
+
+// --- Schemas ---
 
 export type Slug = {
   _type: 'slug'
@@ -228,107 +252,48 @@ export type Slug = {
   source?: string
 }
 
-export type LocalisedSlug = {
-  [lang in Language]?: Slug;
+export type LocalisedSlug = Localise<Slug>
+
+export type LocalisedString = Localise<string>
+
+export type LocalisedText = Localise<string>
+
+export type PageBuilder = Array<PortableTextBlock>
+
+export type LocalisedPageBuilder = Localise<PageBuilder>
+
+export type Link = {
+  _type: 'link'
+  type?: 'external' | 'internal'
+  internalTarget?: ResolvedSanityReference<AnyTargetableDocumentStub>
+  externalTarget?: string
 }
 
-export type LocalisedString = {
-  [lang in Language]?: string;
+// Sanity Images and Assets
+
+type Geopoint = {
+  _type: 'geopoint'
+  lat?: number
+  lng?: number
+  alt?: number
 }
 
-export type LocalisedText = {
-  [lang in Language]?: string;
+type SanityImagePaletteSwatch = {
+  _type: 'sanity.imagePaletteSwatch'
+  background?: string
+  foreground?: string
+  population?: number
+  title?: string
 }
 
-export type LocalisedPageBuilder = {
-  [lang in Language]?: PageBuilder;
+type SanityImageDimensions = {
+  _type: 'sanity.imageDimensions'
+  height?: number
+  width?: number
+  aspectRatio?: number
 }
 
-export type PortableText = BodyPortableText | AuxiliaryPortableText
-
-export type BodyPortableText = Array<{
-  children?: Array<{
-    marks?: Array<string>
-    text?: string
-    _type: 'span'
-    _key: string
-  }>
-  style?: 'normal' | 'heading' | 'blockquote'
-  listItem?: 'bullet' | 'number'
-  markDefs?: Array<Link>
-  level?: number
-  _type: 'block'
-  _key: string
-}>
-
-export type BodyPortableTextBlock = BodyPortableText[number]
-
-export type AuxiliaryPortableText = Array<{
-  children?: Array<{
-    marks?: Array<string>
-    text?: string
-    _type: 'span'
-    _key: string
-  }>
-  style?: 'normal'
-  listItem?: never
-  markDefs?: Array<Link>
-  level?: number
-  _type: 'block'
-  _key: string
-}>
-
-export type PageBuilder = Array<
-  | BodyPortableTextBlock
-  | {
-      // images?: Array<{
-      //   asset?: {
-      //     _ref: string
-      //     _type: 'reference'
-      //     _weak?: boolean
-      //     [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
-      //   }
-      //   media?: unknown
-      //   hotspot?: SanityImageHotspot
-      //   crop?: SanityImageCrop
-      //   altText?: string
-      //   _type: 'image'
-      //   _key: string
-      // }>
-      images?: Array<SanityImageObject & {
-        altText?: string
-      }>
-      caption?: AuxiliaryPortableText
-      _type: 'imageBlock'
-      _key: string
-    }
-  | {
-      url?: string
-      aspectRatio?: string
-      caption?: AuxiliaryPortableText
-      _type: 'videoBlock'
-      _key: string
-    }
-  | {
-      file?: SanityFileObject
-      caption?: AuxiliaryPortableText
-      _type: 'audioBlock'
-      _key: string
-    }
-  | {
-      // form?: {
-      //   _ref: string
-      //   _type: 'reference'
-      //   _weak?: boolean
-      //   [internalGroqTypeReferenceTo]?: 'form'
-      // }
-      form?: Form
-      _type: 'formBlock'
-      _key: string
-    }
->
-
-export type SanityImagePalette = {
+type SanityImagePalette = {
   _type: 'sanity.imagePalette'
   darkMuted?: SanityImagePaletteSwatch
   lightVibrant?: SanityImagePaletteSwatch
@@ -339,38 +304,7 @@ export type SanityImagePalette = {
   muted?: SanityImagePaletteSwatch
 }
 
-export type SanityImagePaletteSwatch = {
-  _type: 'sanity.imagePaletteSwatch'
-  background?: string
-  foreground?: string
-  population?: number
-  title?: string
-}
-
-export type SanityImageDimensions = {
-  _type: 'sanity.imageDimensions'
-  height?: number
-  width?: number
-  aspectRatio?: number
-}
-
-export type SanityImageHotspot = {
-  _type: 'sanity.imageHotspot'
-  x?: number
-  y?: number
-  height?: number
-  width?: number
-}
-
-export type SanityImageCrop = {
-  _type: 'sanity.imageCrop'
-  top?: number
-  bottom?: number
-  left?: number
-  right?: number
-}
-
-export type SanityImageMetadata = {
+type SanityImageMetadata = {
   _type: 'sanity.imageMetadata'
   location?: Geopoint
   dimensions?: SanityImageDimensions
@@ -381,32 +315,15 @@ export type SanityImageMetadata = {
   isOpaque?: boolean
 }
 
-export type Geopoint = {
-  _type: 'geopoint'
-  lat?: number
-  lng?: number
-  alt?: number
+type SanityAssetSourceData = {
+  _type: 'sanity.assetSourceData'
+  name?: string
+  id?: string
+  url?: string
 }
 
-export type SanityImageObject = {
-  asset?: {
-    _ref: string
-    _type: 'reference'
-    _weak?: boolean
-    // [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
-  } | SanityImageAsset
-  media?: unknown
-  hotspot?: SanityImageHotspot
-  crop?: SanityImageCrop
-  _type: 'image'
-}
-
-export type SanityImageAsset = {
-  _id: string
+type SanityImageAsset = SanityDocumentBase & {
   _type: 'sanity.imageAsset'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
   originalFilename?: string
   label?: string
   title?: string
@@ -424,23 +341,24 @@ export type SanityImageAsset = {
   source?: SanityAssetSourceData
 }
 
-export type SanityFileObject = {
-  asset?: {
-    _ref: string
-    _type: 'reference'
-    _weak?: boolean
-    [internalGroqTypeReferenceTo]?: 'sanity.fileAsset'
-  }
-  media?: unknown
-  _type: 'file'
+type SanityImageHotspot = {
+  _type: 'sanity.imageHotspot'
+  x?: number
+  y?: number
+  height?: number
+  width?: number
 }
 
-export type SanityFileAsset = {
-  _id: string
+type SanityImageCrop = {
+  _type: 'sanity.imageCrop'
+  top?: number
+  bottom?: number
+  left?: number
+  right?: number
+}
+
+type SanityFileAsset = SanityDocumentBase & {
   _type: 'sanity.fileAsset'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
   originalFilename?: string
   label?: string
   title?: string
@@ -457,49 +375,41 @@ export type SanityFileAsset = {
   source?: SanityAssetSourceData
 }
 
-export type SanityAssetSourceData = {
-  _type: 'sanity.assetSourceData'
-  name?: string
-  id?: string
-  url?: string
+export type SanityImage = {
+  _type: 'image'
+  asset?: SanityReference<SanityImageAsset>
+  hotspot?: SanityImageHotspot
+  crop?: SanityImageCrop
 }
 
-export type AllSanitySchemaTypes =
-  | Language
-  | CollectionDocument
-  | StaticDocument
-  | CollectionDocumentType
-  | StaticDocumentType
-  | CollectionDocumentStub
-  | StaticDocumentStub
-  | Project
-  | Writing
-  | Happening
-  | Resource
-  | Form
-  | HomePage
-  | AboutPage
-  | Website
-  | Link
-  | Slug
-  | LocalisedSlug
-  | LocalisedString
-  | LocalisedText
-  | LocalisedPageBuilder
-  | PortableText
-  | BodyPortableText
-  | BodyPortableTextBlock
-  | AuxiliaryPortableText
-  | PageBuilder
-  | SanityImagePalette
-  | SanityImagePaletteSwatch
-  | SanityImageDimensions
-  | SanityImageHotspot
-  | SanityImageCrop
-  | SanityImageMetadata
-  | Geopoint
-  | SanityImageObject
-  | SanityImageAsset
-  | SanityFileAsset
-  | SanityAssetSourceData
-export declare const internalGroqTypeReferenceTo: unique symbol
+export type SanityFile = {
+  _type: 'file'
+  asset?: SanityReference<SanityFileAsset>
+}
+
+// --- Utilities ---
+
+type Localise<T> = {
+  [L in Language]?: T
+}
+
+type SanityReference<T> =
+  | T
+  | {
+      _ref: string
+      _type: 'reference'
+      _weak?: boolean
+      __refTarget?: T extends { _type: infer U extends string } ? U : never
+    }
+
+type ResolvedSanityReference<T> = Extract<SanityReference<T>, T>
+
+type Stub<T extends {
+  _id: string
+  _type: string
+  slug?: LocalisedSlug
+}> = Pick<T,
+  | '_id'
+  |'_type'
+  | 'slug'
+>

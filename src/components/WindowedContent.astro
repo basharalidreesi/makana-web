@@ -1,12 +1,12 @@
 ---
-import type { CollectionDocumentType, Language, StaticDocumentType } from '@root/sanity/sanity.types';
+import type { AnyContentDocumentType, Language } from '@root/sanity/sanity.types';
 import type { AlternateDocument } from '@lib/contentUtils';
 import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
 
 type Props = {
     lang: Language | undefined;
     title: string | undefined;
-    type?: CollectionDocumentType | StaticDocumentType | undefined;
+    type?: AnyContentDocumentType | undefined;
     textLength?: number | undefined;
     alternates?: AlternateDocument[] | undefined;
 };
@@ -60,11 +60,6 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
 </div>
 
 <script>
-    // TODO initiate skeleton
-    // document.addEventListener('astro:before-preparation', () => {
-    //     console.log('now');
-    // });
-
     // const navAnchors = document.querySelectorAll('nav a');
     // navAnchors?.forEach((anchor) => { // TODO
     //     anchor.addEventListener('click', () => {
@@ -78,19 +73,19 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
         // @ts-ignore
         window.isCloseWindowedContentInitialised = true;
         const closeWindowedContentDirectly = () => {
-            const windowedContentContainer = document.querySelector('.windowed-content-container');
+            const windowedContentContainer: HTMLElement | null = document.querySelector('.windowed-content-container');
             if (windowedContentContainer) {
-                (windowedContentContainer as HTMLElement).style.setProperty('display', 'none');
+                windowedContentContainer.style.setProperty('display', 'none');
             }
             history.pushState({}, '', '/');
-            const currentNavAnchor = document.querySelector('.navigation-bar a[aria-current]');
+            const currentNavAnchor: HTMLElement | null = document.querySelector('.navigation-bar a[aria-current]');
             currentNavAnchor?.removeAttribute('aria-current');
-            // const header = document.querySelector('header');
+            // const header: HTMLElement | null = document.querySelector('header');
             // header?.setAttribute('aria-hidden', 'false'); // TODO
             console.info('Window was force-closed successfully');
         }
         const attachCloseWindowedContent = () => {
-            const windowedContentControlsAnchor = document.querySelector('.close-windowed-content a');
+            const windowedContentControlsAnchor: HTMLElement | null = document.querySelector('.close-windowed-content a');
             windowedContentControlsAnchor?.addEventListener('click', (event) => {
                 event.preventDefault();
                 closeWindowedContentDirectly();
@@ -101,6 +96,7 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
             attachCloseWindowedContent();
         });
         // @ts-ignore
+        // hoisted to the window so that it can be used elsewhere (see @components/NavigationBar.astro)
         window.closeWindowedContentDirectly = closeWindowedContentDirectly;
     }
 </script>

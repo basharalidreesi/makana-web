@@ -1,7 +1,7 @@
 import imageUrlBuilder from '@sanity/image-url';
 import sanityClient from '@root/sanity/sanity.cli';
 import type { FitMode, SanityImageSource } from '@sanity/image-url/lib/types/types';
-import type { SanityImageObject } from '@root/sanity/sanity.types';
+import type { SanityImage } from '@root/sanity/sanity.types';
 import { escapeHtml } from '@lib/contentUtils';
 
 const builder = imageUrlBuilder(sanityClient);
@@ -12,7 +12,7 @@ const buildSanityImage = (source: SanityImageSource | undefined) => {
 };
 
 export const generateOgImageUrl = (
-    source: SanityImageObject | undefined
+    source: SanityImage | undefined
 ): string | undefined => {
     return buildSanityImage(source)
         ?.width(1200)
@@ -21,7 +21,7 @@ export const generateOgImageUrl = (
         .url();
 };
 
-const getSanityImageDimensions = (source: SanityImageObject | undefined): Record<'width' | 'height', number> | undefined => {
+const getSanityImageDimensions = (source: SanityImage | undefined): Record<'width' | 'height', number> | undefined => {
     if (!source || !source.asset) return undefined;
     const id =
         '_ref' in source.asset ? source.asset._ref
@@ -47,7 +47,7 @@ export const createSanityImage = ({
     sizes,
     previewBase64,
 }: {
-    source: SanityImageObject | undefined;
+    source: SanityImage | undefined;
     width?: number;
     height?: number;
     alt?: string;

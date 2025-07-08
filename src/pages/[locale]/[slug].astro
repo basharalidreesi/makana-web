@@ -1,6 +1,6 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import type { Language, StaticDocument, StaticDocumentType } from '@root/sanity/sanity.types';
+import type { HomePage, Language, RootDocument, RootDocumentType } from '@root/sanity/sanity.types';
 import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
 import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
@@ -11,8 +11,11 @@ import Layout from '@layouts/Layout.astro';
 import PageContent from '@components/PageContent.astro';
 import WindowedContent from '@components/WindowedContent.astro';
 
+const documentTypes: RootDocumentType[] = [
+    'aboutPage',
+];
+
 export const getStaticPaths: GetStaticPaths = async () => {
-    const documentTypes: StaticDocumentType[] = ['aboutPage'];
     const languages: Language[] = SUPPORTED_LANGUAGES_IDS as Language[];
     const paths: { params: Record<string, string>, props: Record<string, any> }[] = [];
     for (const documentType of documentTypes) {
@@ -24,7 +27,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
             RESOLVED_CONTENT_QUERY,
         ];
         const queryFields = baseQueryFields.join(', ');
-        const documents: StaticDocument[] = await sanityClient.fetch(`
+        const documents: Exclude<RootDocument, HomePage>[] = await sanityClient.fetch(`
             *[_type == '${documentType}' && (${definedLocalisedSlug})] {
                 ${queryFields}
             }
@@ -64,7 +67,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 type Props = {
     lang: Language;
-    doc: StaticDocument;
+    doc: Exclude<RootDocument, HomePage>;
 };
 
 const {

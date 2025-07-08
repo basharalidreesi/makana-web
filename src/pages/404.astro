@@ -1,6 +1,5 @@
 ---
 import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
-import Logo from '@components/Logo.astro';
 ---
 
 <html lang={DEFAULT_LANGUAGE_ID}>
@@ -17,11 +16,12 @@ import Logo from '@components/Logo.astro';
                     <Fragment set:html={(UI_DICTIONARY.error404Message[lang])?.trim()} />
                 </div>
             ))}
-            <div class='logo'>
+            <!-- <div class='logo'>
                 <a href='/' title={UI_DICTIONARY.websiteTitle[DEFAULT_LANGUAGE_ID]}>
                     <Logo />
                 </a>
-            </div>
+            </div> -->
+            <!-- todo -->
         </div>
     </body>
 </html>

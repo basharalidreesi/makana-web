@@ -1,4 +1,4 @@
-import type { CollectionDocumentType, Language, StaticDocumentType } from '@root/sanity/sanity.types';
+import type { AnyTargetableDocumentType, Language } from '@root/sanity/sanity.types';
 
 type LanguageDefinition = {
     title: string;
@@ -63,7 +63,7 @@ type LocalisedUIDictionaryRecord<T> = {
 };
 
 type UICategoryDictionary = {
-  [K in (CollectionDocumentType | StaticDocumentType)]: LocalisedUIDictionaryRecord<string>;
+  [K in AnyTargetableDocumentType]: LocalisedUIDictionaryRecord<string>;
 };
 
 export const UI_DICTIONARY: UICategoryDictionary & {

@@ -1,10 +1,18 @@
-import type { CollectionDocumentType, Language, StaticDocumentType } from '@root/sanity/sanity.types';
+import type { AnyTargetableDocumentType, Language } from '@root/sanity/sanity.types';
+
+// The Registry is used as a validation gate
+// and a source for multi-language linking.
+// A document is only registered when it
+// is successfully published (i.e., when it
+// passes all the checks in getStaticPaths –
+// see @pages/[slug.astro] and
+// @pages/[locale]/[collection].astro)
 
 type DocumentId = string;
 
 type RegistryEntry = {
     [lang in Language]?: {
-        type: CollectionDocumentType | StaticDocumentType;
+        type: AnyTargetableDocumentType;
         slug: string;
         route: string;
         title: string;
@@ -16,7 +24,7 @@ const idRegistry = new Map<DocumentId, RegistryEntry>();
 export const registerId = (
     id: DocumentId,
     lang: Language,
-    type: CollectionDocumentType | StaticDocumentType,
+    type: AnyTargetableDocumentType,
     slug: string,
     route: string,
     title: string,

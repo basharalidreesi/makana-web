@@ -1,8 +1,8 @@
 ---
-import type { Language, Link, LocalisedString, PageBuilder } from '@root/sanity/sanity.types';
+import type { Language, Link, LocalisedString, PageBuilder, PortableTextAudioBlock, PortableTextFormBlock, PortableTextImageBlock, PortableTextVideoBlock } from '@root/sanity/sanity.types';
 import { toHTML, uriLooksSafe, type PortableTextHtmlComponents } from '@portabletext/to-html';
 import { createSanityImage } from '@lib/imageUtils';
-import { escapeHtml, normaliseAspectRatioForPadding } from '@lib/contentUtils';
+import { escapeHtml, getPreferredSlug, normaliseAspectRatioForPadding } from '@lib/contentUtils';
 import { getFile } from '@lib/assetUtils';
 import { generateRoute } from '@lib/routingUtils';
 import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
@@ -23,7 +23,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
             const {
                 images = [],
                 caption,
-            } = value as Extract<PageBuilder[number], { _type: 'imageBlock' }>;
+            } = value as PortableTextImageBlock;
             const imagesWithAssets = images?.filter(i => !!i.asset);
             if (!Array.isArray(imagesWithAssets) || imagesWithAssets.length === 0) return '';
             return (`
@@ -57,7 +57,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                 url,
                 aspectRatio,
                 caption,
-            } = value as Extract<PageBuilder[number], { _type: 'videoBlock' }>;
+            } = value as PortableTextVideoBlock;
             if (!url) return '';
             const padding = normaliseAspectRatioForPadding(aspectRatio) || '56.25%';
             let embedUrl = '';
@@ -115,10 +115,11 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
             const {
                 file,
                 caption,
-            } = value as Extract<PageBuilder[number], { _type: 'audioBlock' }>;
+            } = value as PortableTextAudioBlock;
             const fileAsset =
                 file
                 && file.asset
+                && '_ref' in file.asset
                 && file.asset._ref
                     ? getFile(file.asset)
                     : undefined;
@@ -146,7 +147,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
         formBlock: ({ value }) => {
             const {
                 form,
-            } = value as Extract<PageBuilder[number], { _type: 'formBlock' }>;
+            } = value as PortableTextFormBlock;
             if (
                 form
                 && form.endpoint
@@ -185,6 +186,9 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                             const {
                                 type,
                                 label,
+                                options = [],
+                                name,
+                                value,
                             } = field;
                             const rawFieldName = getNameFromLabel(label) || `field_${fieldIndex}`;
                             const fieldName = escapeHtml(rawFieldName);
@@ -205,38 +209,11 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                         <textarea rows='5' ${fieldAttributesString}></textarea>
                                     </div>
                                 `);
-                                case 'select': {
-                                    const {
-                                        options = [],
-                                    } = field;
-                                    return (`
-                                        <div class='select-field'>
-                                            ${fieldLabelHTML}
-                                            <select ${fieldAttributesString}>
-                                                <option disabled selected value>${UI_DICTIONARY.optionSelectPlaceholder[lang]}</option>
-                                                ${options.map((option, optionIndex) => {
-                                                    try {
-                                                        const parsedOption = JSON.parse(option);
-                                                        const rawOptionName = getNameFromLabel(parsedOption) || `option_${optionIndex}`;
-                                                        const optionName = escapeHtml(rawOptionName);
-                                                        const rawOptionLabel = parsedOption?.[lang]?.trim() || optionName;
-                                                        const optionLabel = escapeHtml(rawOptionLabel);
-                                                        return `<option value='${optionName}'>${optionLabel}</option>`;
-                                                    } catch {
-                                                        return null;
-                                                    }
-                                                }).filter(Boolean).join('\n')}
-                                            </select>
-                                        </div>
-                                    `);
-                                };
-                                case 'checkbox': {
-                                    const {
-                                        options = [],
-                                    } = field;
-                                    return (`
-                                        <fieldset class='checkbox-field'>
-                                            <legend>${fieldLabelText}</legend>
+                                case 'select': return (`
+                                    <div class='select-field'>
+                                        ${fieldLabelHTML}
+                                        <select ${fieldAttributesString}>
+                                            <option disabled selected value>${UI_DICTIONARY.optionSelectPlaceholder[lang]}</option>
                                             ${options.map((option, optionIndex) => {
                                                 try {
                                                     const parsedOption = JSON.parse(option);
@@ -244,28 +221,39 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                                     const optionName = escapeHtml(rawOptionName);
                                                     const rawOptionLabel = parsedOption?.[lang]?.trim() || optionName;
                                                     const optionLabel = escapeHtml(rawOptionLabel);
-                                                    return (`
-                                                        <label>
-                                                            <input type='checkbox' name='${fieldName}' value='${optionName}' />
-                                                            <bdi>${optionLabel}</bdi>
-                                                        </label>
-                                                    `);
+                                                    return `<option value='${optionName}'>${optionLabel}</option>`;
                                                 } catch {
                                                     return null;
                                                 }
-                                            }).join('\n')}
-                                        </fieldset>
-                                    `);
-                                };
-                                 case 'hidden': {
-                                    const {
-                                        name,
-                                        value,
-                                    } = field;
-                                    return (`
-                                        <input type='hidden' name='${escapeHtml(name?.trim() || '')}' value='${escapeHtml(value?.trim() || '')}' />
-                                    `);
-                                };
+                                            }).filter(Boolean).join('\n')}
+                                        </select>
+                                    </div>
+                                `);
+                                case 'checkbox': return (`
+                                    <fieldset class='checkbox-field'>
+                                        <legend>${fieldLabelText}</legend>
+                                        ${options.map((option, optionIndex) => {
+                                            try {
+                                                const parsedOption = JSON.parse(option);
+                                                const rawOptionName = getNameFromLabel(parsedOption) || `option_${optionIndex}`;
+                                                const optionName = escapeHtml(rawOptionName);
+                                                const rawOptionLabel = parsedOption?.[lang]?.trim() || optionName;
+                                                const optionLabel = escapeHtml(rawOptionLabel);
+                                                return (`
+                                                    <label>
+                                                        <input type='checkbox' name='${fieldName}' value='${optionName}' />
+                                                        <bdi>${optionLabel}</bdi>
+                                                    </label>
+                                                `);
+                                            } catch {
+                                                return null;
+                                            }
+                                        }).join('\n')}
+                                    </fieldset>
+                                `);
+                                 case 'hidden': return (`
+                                    <input type='hidden' name='${escapeHtml(name?.trim() || '')}' value='${escapeHtml(value?.trim() || '')}' />
+                                `);
                                 default: return '';
                             }
                         }).join('\n')}
@@ -291,8 +279,13 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
             if (type === 'external' && externalTarget && uriLooksSafe(externalTarget)) {
                 href = escapeHtml(externalTarget);
             } else if (type === 'internal' && internalTarget) {
-                // todo
-                href = generateRoute(internalTarget, lang);
+                const slugData = getPreferredSlug(internalTarget, lang);
+                if (slugData) {
+                    const routeToItem = generateRoute(internalTarget, slugData.langUsed);
+                    if (routeToItem) {
+                        href = routeToItem;
+                    }
+                }
             }
             const rel = href?.startsWith('/') ? undefined : 'noreferrer noopener'
             return href ? (

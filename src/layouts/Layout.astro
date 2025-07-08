@@ -1,26 +1,26 @@
 ---
 import sanityClient from '@root/sanity/sanity.cli';
-import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImageObject, CollectionDocument, HomePage } from '@root/sanity/sanity.types';
+import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImage, HomePage } from '@root/sanity/sanity.types';
 import { definedLocalisedSlug } from '@lib/groqUtils';
-import { getSlug, groupByLocalisedSlug, type AlternateDocument } from '@lib/contentUtils';
-import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY, SUPPORTED_LANGUAGES_ORDERED, SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
-import { createSanityImage, generateOgImageUrl } from '@lib/imageUtils';
+import { type AlternateDocument } from '@lib/contentUtils';
+import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
+import { generateOgImageUrl } from '@lib/imageUtils';
 import { ClientRouter } from 'astro:transitions';
-import { generateRoute } from '@lib/routingUtils';
-import Logo from '@components/Logo.astro';
-import NavSection from '@components/NavSection.astro';
-import { getFromRegistry } from '@lib/registry';
+import LogoBar from '@components/LogoBar.astro';
+import NavigationBar from '@components/NavigationBar.astro';
+import FeaturedBar from '@components/FeaturedBar.astro';
 import '@styles/reset.css';
 import '@styles/fonts.css';
 
-interface CustomDataFile {
+type CustomDataFile = {
   default: string;
-}
+};
+
 const fontFiles = Object.values<CustomDataFile>(
     import.meta.glob('../../public/fonts/*.woff', { eager: true })
 );
 
-const websiteSettings: (Website & { logoUrl: string; }) | undefined = await sanityClient.fetch(`
+const websiteSettings: (Website & { logoUrl: string | undefined; }) | undefined = await sanityClient.fetch(`
     *[_id == 'website'][0] {
         _type,
         title,
@@ -37,7 +37,6 @@ const homePage: HomePage | undefined = await sanityClient.fetch(`
         featuredItems[] -> {
             _id,
             _type,
-            language,
             title,
             slug,
             mainImage
@@ -98,7 +97,7 @@ type Props = {
     title: string | undefined;
     description?: string | undefined;
     keywords?: Array<string> | undefined;
-    image?: SanityImageObject | undefined;
+    image?: SanityImage | undefined;
     canonical?: string | undefined;
     analytics?: string | undefined;
     alternates?: AlternateDocument[] | undefined;
@@ -124,18 +123,7 @@ const resolvedKeywords = [...(keywords || []), ...(websiteSettings?.keywords || 
 const resolvedImage = image?.asset ? generateOgImageUrl(image) : websiteSettings?.mainImage?.asset ? generateOgImageUrl(websiteSettings?.mainImage) : undefined;
 const resolvedCanonical = canonical || new URL(Astro.url.pathname, Astro.site);
 const resolvedAnalytics = analytics || websiteSettings?.analytics;
-
-const doesSubmenuExist = (docCollection: CollectionDocument[] | undefined) => Array.isArray(docCollection) && docCollection.length > 0;
-const baseMenuItemsCount = aboutPage ? 1 : 0;
-const dynamicMenuItemsCount = (
-    (doesSubmenuExist(projects) ? 1 : 0)
-    + (doesSubmenuExist(writings) ? 1 : 0)
-    + (doesSubmenuExist(happenings) ? 1 : 0)
-    + (doesSubmenuExist(resources) ? 1 : 0)
-);
-const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
-
-const featuredItems = (homePage?.featuredItems || []).filter((item) => Object.values(item.slug || {}).some((langObj) => langObj && typeof langObj.current === 'string'));
+const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => Object.values(item.slug || {}).some((langObj) => langObj && typeof langObj.current === 'string'));
 ---
 
 <html lang={lang} transition:animate='none'>
@@ -193,101 +181,27 @@ const featuredItems = (homePage?.featuredItems || []).filter((item) => Object.va
             <h1 class='sr-only'>
                 {websiteTitle}
             </h1>
-            <div class='logo-bar'>
-                <div>
-                    <a href='/' title={UI_DICTIONARY.websiteTitle[lang]} aria-label={UI_DICTIONARY.websiteTitle[lang]}>
-                        <Logo source={websiteSettings?.logoUrl} />
-                    </a>
-                </div>
-            </div>
-            <div class='navigation-bar' transition:persist style={{ '--how-many-menu-items': MINIMUM_MENU_ITEMS_COUNT, }}>
-                {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
-                    const langId = supportedLang.id;
-                    const langDir = supportedLang.dir;
-                    const langProjects = groupByLocalisedSlug(projects, langId);
-                    const langWritings = groupByLocalisedSlug(writings, langId);
-                    const langHappenings = groupByLocalisedSlug(happenings, langId);
-                    const langResources = groupByLocalisedSlug(resources, langId);
-                    const routeToAboutPage = aboutPage?.slug?.[langId]?.current && generateRoute(aboutPage, langId);
-                    const aboutPageTitle = aboutPage?.title?.[langId] || UI_DICTIONARY.aboutPage[langId];
-                    return (
-                        <section lang={langId} dir={langDir} data-has-expanded='false'> {/* data-has-expanded is currently unused */}
-                            <nav aria-label={UI_DICTIONARY.navigationMenuLabel[langId]}>
-                                <ul class='navigation-menu'>
-                                    {routeToAboutPage ? (
-                                        <li class='navigation-menu-item static-navigation-item'>
-                                            <a href={routeToAboutPage} aria-current={routeToAboutPage === Astro.url.pathname ? 'page' : undefined}>
-                                                <bdi>{aboutPageTitle}</bdi>
-                                            </a>
-                                        </li>
-                                    ) : aboutPage && (
-                                        <li class='navigation-menu-item static-navigation-item'>
-                                            <a href='#' aria-disabled='true' tabindex='-1'><bdi>{aboutPageTitle}</bdi></a>
-                                        </li>
-                                    )}
-                                    {doesSubmenuExist(projects) && (
-                                        <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                                    )}
-                                    {doesSubmenuExist(writings) && (
-                                        <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                                    )}
-                                    {doesSubmenuExist(happenings) && (
-                                        <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                                    )}
-                                    {doesSubmenuExist(resources) && (
-                                        <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                                    )}
-                                </ul>
-                            </nav>
-                        </section>
-                    );
-                })}
-            </div>
+            <LogoBar
+                lang={lang}
+                websiteSettings={websiteSettings}
+            />
+            <NavigationBar
+                lang={lang}
+                currentPath={Astro.url.pathname}
+                items={{
+                    aboutPage: aboutPage,
+                    projects: projects,
+                    writings: writings,
+                    happenings: happenings,
+                    resources: resources,
+                }}
+                transition:persist
+            />
+            <!-- <FeaturedBar
+                lang={lang}
+                items={resolvedFeaturedItems}
+            /> -->
         </header>
-        <!-- {Array.isArray(featuredItems) && featuredItems.length > 0 && (
-            <aside class='featured-bar' aria-label='Featured items (todo)'>
-                <ul>
-                    {featuredItems.map((featuredItem) => {
-                        let itemSlug: string | undefined;
-                        let langUsed: Language | undefined;
-                        const preferredLangOrder = [
-                            lang,
-                            DEFAULT_LANGUAGE_ID === lang ? undefined : DEFAULT_LANGUAGE_ID,
-                            ...SUPPORTED_LANGUAGES_IDS.filter((l) => l !== lang && l !== DEFAULT_LANGUAGE_ID),
-                        ].filter(Boolean);
-                        for (const preferredLang of preferredLangOrder as Language[]) {
-                            const preferredLangSlug = getSlug(featuredItem, preferredLang);
-                            if (preferredLangSlug) {
-                                itemSlug = preferredLangSlug;
-                                langUsed = preferredLang;
-                                break;
-                            }
-                        }
-                        const routeToItem = generateRoute(featuredItem, langUsed);
-                        if (!itemSlug || !langUsed || !routeToItem) return;
-                        const itemAsRegistered = getFromRegistry(featuredItem._id);
-                        if (!itemAsRegistered) return;
-                        const thumbnail = createSanityImage({
-                            source: featuredItem.mainImage,
-                            width: 1200,
-                            height: 900,
-                        });
-                        return (
-                            <li class='featured-item'>
-                                <a href={routeToItem}>
-                                    {SUPPORTED_LANGUAGES_IDS.map((langId) => itemAsRegistered[langId]?.title && (
-                                        <span>{itemAsRegistered[langId]?.title}</span>
-                                    ))}
-                                    {thumbnail && (
-                                        <Fragment set:html={thumbnail} />
-                                    )}
-                                </a>
-                            </li>
-                        );
-                    })}
-                </ul>
-            </aside>
-        )} -->
         <main>
             <slot />
         </main>
@@ -295,75 +209,37 @@ const featuredItems = (homePage?.featuredItems || []).filter((item) => Object.va
 </html>
 
 <script>
-    // @ts-ignore
-    if (!window._isNavInitialised) {
-        // @ts-ignore
-        window._isNavInitialised = true;
-        const navExpandButtons = document.querySelectorAll('button[data-nav-expand]');
-        navExpandButtons?.forEach((button) => button.addEventListener('click', () => {
-            const expanded = button.getAttribute('aria-expanded') === 'true';
-            const controls = button.getAttribute('aria-controls');
-            if (!controls) return;
-            const menu = document.getElementById(controls);
-            if (!menu) return;
-            const section = menu.closest('section');
-            navExpandButtons.forEach((otherButton) => {
-                const otherControls = otherButton.getAttribute('aria-controls') || '';
-                const otherMenu = document.getElementById(otherControls);
-                const otherSection = otherMenu?.closest('section');
-                if (!otherControls || !otherMenu || !otherSection) return;
-                if (otherButton !== button && otherMenu) {
-                    otherButton.setAttribute('aria-expanded', 'false');
-                    otherMenu.setAttribute('aria-hidden', 'true');
-                    otherMenu.hidden = true;
-                    otherSection.setAttribute('data-has-expanded', 'false');
-                }
-            });
-            const isExpanding = !expanded;
-            button.setAttribute('aria-expanded', String(isExpanding));
-            menu.setAttribute('aria-hidden', String(!isExpanding));
-            menu.hidden = !isExpanding;
-            if (section) {
-                section.setAttribute('data-has-expanded', String(isExpanding));
-            }
-            // @ts-ignore
-            // see @components/WindowedContent.astro
-            if (typeof window.closeWindowedContentDirectly === 'function') {
-                // @ts-ignore
-                window.closeWindowedContentDirectly();
-            }
-        }));
-        const navAnchors = document.querySelectorAll('.navigation-bar a');
-        navAnchors?.forEach((anchor) => {
-            anchor.addEventListener('click', () => {
-                anchor.setAttribute('aria-current', 'page');
-                navAnchors.forEach((otherAnchor) => {
-                    if (otherAnchor !== anchor) {
-                        otherAnchor.removeAttribute('aria-current');
-                    }
-                });
-            });
-        });
-    }
+    // TODO initiate skeletons
+    document.addEventListener('astro:before-preparation', () => {
+        console.log('now');
+    });
 </script>
 
-<style lang='scss' is:global>
+<style lang='scss'>
     @use '@styles/mixins.scss';
-    .sr-only:not(:focus):not(:active) {
+    :global(.sr-only:not(:focus):not(:active)) {
         @include mixins.visually-hidden;
     }
+
     :root {
+        // text
         --font-size: 18px;
         --font-family: 'IBMPS', 'Helvetica Neue', 'Arial', sans-serif;
+    }
+    :root {
+        // page
         --page-background-colour: #fff;
+        // navigation menu
+        --navigation-menu-background-colour: #fff;
+        --navigation-submenu-background-colour: #fff;
+        // text
         --text-default-colour: #000;
         --text-light-colour: #555;
         --text-disabled-colour: #b7b7b7;
         --text-link-hover-colour: #808080;
         --text-link-underline-colour: #666;
         --blockquote-indentation-line-colour: #3A3A3A;
-        --navigation-menu-background-colour: #fff;
-        --navigation-submenu-background-colour: #fff;
+        // windowed content
         --windowed-content-outline-colour: #707070;
         --windowed-content-backdrop-colour: #000;
         --windowed-content-backdrop-opacity: 0.22;
@@ -373,21 +249,26 @@ const featuredItems = (homePage?.featuredItems || []).filter((item) => Object.va
         --windowed-content-writing-background-colour: #fff;
         --windowed-content-happening-background-colour: #fff500;
         --windowed-content-resource-background-colour: #ff7d57;
+        // forms
         --form-field-outline-colour: #b7b7b7;
         --form-field-background-default-colour: #fff;
         --form-field-background-hover-colour: #f5f5f5;
         --form-button-background-colour: #fff;
     }
     :root {
+        // page
         --page-padding-top: 2.5rem;
         --page-padding-bottom: 2.5rem;
         --page-padding-inline: calc(env(safe-area-inset-left, 0px) + 2.5rem);
+        // logo
         --logo-height: 3.5rem;
+        // navigation menu
         --menu-item-padding-block: 0.666rem;
         --menu-item-height: calc(1lh + (var(--menu-item-padding-block) * 2) + 1px);
         --navigation-submenu-indent-inline-start: 10rem;
         --navigation-submenu-indent-inline-end: 10rem;
         --navigation-submenu-date-title-gap: 4rem;
+        // windowed content
         --small-windowed-content-max-width: 37.5rem;
         --big-windowed-content-max-width: 47.5rem;
         --windowed-content-indent-inline-start: 10rem;
@@ -400,54 +281,82 @@ const featuredItems = (homePage?.featuredItems || []).filter((item) => Object.va
         --windowed-content-container-extra-padding-inline: 0px;
         --windowed-content-orb-width: 2.5rem;
         --windowed-content-orb-padding: 0.25rem;
+        // featured items
+        --featured-items-gap: 2rem;
+        --featured-item-max-width: 25rem;
+        --featured-item-padding-top: 1.5rem;
+        --featured-item-padding-bottom: 1.25rem;
+        --featured-item-padding-inline: 1.5rem;
+        --featured-item-image-aspect-ratio: 3/2;
+    }
+    :root {
         @media (max-width: 1152px) {
+            // windowed content
             --big-windowed-content-max-width: 42.5rem;
+            // featured items
+                // --featured-items-gap: 1.5rem;
+                // --featured-item-width: 20rem;
+                // --featured-item-padding-top: 1.25rem;
+                // --featured-item-padding-bottom: 1rem;
+                // --featured-item-padding-inline: 1.25rem;
+                // --featured-item-image-aspect-ratio: 4/3;
         }
         @media (max-width: 1024px) {
-            --big-windowed-content-max-width: 37.5rem;
+            // navigation menu
             --navigation-submenu-indent-inline-start: 7.5rem;
             --navigation-submenu-indent-inline-end: 7.5rem;
             --windowed-content-indent-inline-start: 7.5rem;
             --navigation-submenu-date-title-gap: 1.5rem;
+            // windowed content
+            --big-windowed-content-max-width: 37.5rem;
+            // featured items
+                // --featured-item-image-aspect-ratio: 3/2;
         }
         @media (max-width: 896px) {
+            // windowed content
             --small-windowed-content-max-width: 31.25rem;
             --big-windowed-content-max-width: 31.25rem;
         }
         @media (max-width: 768px) {
+            // text
+            --font-size: 16px;
+            // windowed content
             --windowed-content-indent-inline-start: auto;
             --windowed-content-indent-inline-end: auto;
             --windowed-content-container-extra-padding-top: 1rem;
             --windowed-content-container-extra-padding-bottom: calc(1rem + var(--logo-height));
             --windowed-content-container-extra-padding-inline: 1rem;
-            --font-size: 16px;
             --windowed-content-orb-width: 2.25rem;
-            .navigation-submenu-item .time {
-                display: none;
-            }
         }
         @media (max-width: 640px) {
+            // page
             --page-padding-top: 1.5rem;
             --page-padding-bottom: 1.5rem;
             --page-padding-inline: calc(env(safe-area-inset-left, 0px) + 1.5rem);
+            // logo
             --logo-height: 2.5rem;
         }
         @media (max-width: 512px) {
+            // navigation menu
             --navigation-submenu-indent-inline-start: 6.5rem;
             --navigation-submenu-indent-inline-end: 0px;
+            // windowed content
             --windowed-content-padding-top: 1.5rem;
             --windowed-content-padding-bottom: 1.5rem;
             --windowed-content-padding-inline: 1.5rem;
         }
         @media (max-width: 384px) {
+            // windowed content
             --windowed-content-padding-bottom: 1rem;
             --windowed-content-padding-inline: 1rem;
             --windowed-content-container-extra-padding-inline: 0.5rem;
             --windowed-content-padding-top: 1rem;
         }
         @media (max-height: 448px) {
+            // page
             --page-padding-top: 1.5rem;
             --page-padding-bottom: 1.5rem;
+            // logo
             --logo-height: 2rem;
         }
     }
@@ -456,124 +365,38 @@ const featuredItems = (homePage?.featuredItems || []).filter((item) => Object.va
         background-color: var(--page-background-colour);
     }
     header {
-        & {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            flex-direction: column-reverse;
-            justify-content: space-between;
-            row-gap: var(--page-padding-bottom);
-            padding-top: var(--page-padding-top);
-            padding-left: var(--page-padding-inline);
-            padding-right: var(--page-padding-inline);
-            padding-bottom: var(--page-padding-bottom);
-        }
-        .logo-bar div {
-            height: var(--logo-height);
-            width: fit-content;
-            margin-left: auto;
-        }
-        .logo-bar svg {
-            display: block;
-            height: 100%;
-            width: auto;
-            max-width: 100%;
-        }
-        .navigation-bar {
-            position: relative;
-            display: flex;
-            margin-top: calc(var(--menu-item-padding-block) * -1 / 2);
-            touch-action: manipulation;
-        }
-        .navigation-bar::after {
-            content: '';
-            position: absolute;
-            display: block;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: var(--page-background-colour);
-        }
-        .navigation-bar section {
-            flex: 1 0 0;
-        }
-        .navigation-bar ul, .navigation-bar li {
-            list-style: none;
-        }
-        .navigation-menu {
-            background-color: var(--navigation-menu-background-colour);
-        }
-        .navigation-submenu {
-            position: absolute;
-            top: 0;
-            inset-inline-start: var(--navigation-submenu-indent-inline-start);
-            inset-inline-end: var(--navigation-submenu-indent-inline-end);
-            height: calc((var(--how-many-menu-items) * var(--menu-item-height)) + 1px);
-            overflow-y: auto;
-            background-color: var(--navigation-submenu-background-colour);
-            @include mixins.no-scrollbar;
-        }
-        .navigation-menu-item, .navigation-submenu-item {
-            height: var(--menu-item-height);
-            border-bottom: 1px solid var(--text-default-colour);
-            white-space: nowrap;
-        }
-        .navigation-menu-item a, .navigation-menu-item button {
-            max-width: var(--navigation-submenu-indent-inline-start);
-        }
-        .navigation-submenu-item .time {
-            margin-inline-end: var(--navigation-submenu-date-title-gap);
-        }
-        .navigation-submenu-item a {
-            max-width: 100%;
-        }
-        .navigation-submenu {
-            scroll-snap-type: y mandatory;
-            scroll-snap-stop: normal;
-            scroll-behavior: smooth;
-            padding-bottom: 1px;
-            scroll-padding-bottom: 1px;
-        }
-        .navigation-submenu-item {
-            scroll-snap-align: end;
-        }
-        .static-navigation-item a,
-        .collection-navigation-item button {
-            display: block;
-            padding-block: var(--menu-item-padding-block);
-            width: fit-content;
-            text-overflow: ellipsis;
-            overflow: hidden;
-        }
-        .static-navigation-item a[aria-current] {
-            font-weight: 400;
-        }
-        .collection-navigation-item button[aria-expanded='true'] {
-            font-weight: 400;
-        }
-        .static-navigation-item a[aria-disabled='true'],
-        .collection-navigation-item button[aria-disabled='true'] {
-            color: var(--text-disabled-colour);
-        }
-        @media (any-hover: hover) {
-            .navigation-menu-item a:not([aria-disabled='true']):hover,
-            .navigation-menu-item button:not([aria-disabled='true']):hover {
-                color: var(--text-link-hover-colour);
-                cursor: pointer;
-            }
-        }
-    }
-    aside {
         position: fixed;
-        top: calc(var(--page-padding-top));
-        left: var(--page-padding-inline);
-        right: var(--page-padding-inline);
-        bottom: var(--page-padding-bottom);
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--menu-item-height);
+        padding-top: var(--page-padding-top);
+        padding-left: var(--page-padding-inline);
+        padding-right: var(--page-padding-inline);
+        padding-bottom: var(--page-padding-bottom);
     }
-    header { z-index: 1; }
-    main { z-index: 2; }
+    :global(.navigation-bar) {
+        order: 1;
+        flex-basis: 100%;
+        margin-bottom: auto;
+    }
+    :global(.featured-bar) {
+        order: 2;
+        flex: 1;
+        margin-top: auto;
+    }
+    :global(.logo-bar) {
+        order: 3;
+        margin-top: auto;
+        margin-left: auto;
+    }
+    header {
+        z-index: 1;
+    }
+    main {
+        z-index: 3;
+    }
 </style>

@@ -1,55 +1,274 @@
 ---
-import type { CollectionDocumentStub, CollectionDocumentType } from '@root/sanity/sanity.types';
+import type { AboutPage, CollectionDocument, CollectionDocumentType, Happening, Language, Project, Resource, Writing } from '@root/sanity/sanity.types';
+import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_ORDERED, UI_DICTIONARY } from '@lib/languageUtils';
+import { getSlug, getTitle, groupByLocalisedSlug } from '@lib/contentUtils';
+import { generateRoute } from '@lib/routingUtils';
 
 type Props = {
-    items: { [K in CollectionDocumentType]: CollectionDocumentStub[] | undefined; } | undefined;
+    lang: Language;
+    currentPath: string;
+    items: {
+        aboutPage: AboutPage | undefined;
+        projects: Project[] | undefined;
+        writings: Writing[] | undefined;
+        happenings: Happening[] | undefined;
+        resources: Resource[] | undefined;
+    };
 };
 
 const {
+    lang = DEFAULT_LANGUAGE_ID,
     items,
+    currentPath,
+    ...rest
 } = Astro.props;
+
+type ContentCollection = {
+    key: CollectionDocumentType;
+    docs: CollectionDocument[] | undefined;
+};
+
+const contentCollections: ContentCollection[] = [
+    {
+        key: 'project',
+        docs: items.projects,
+    },
+    {
+        key: 'writing',
+        docs: items.writings,
+    },
+    {
+        key: 'happening',
+        docs: items.happenings,
+    },
+    {
+        key: 'resource',
+        docs: items.resources,
+    },
+];
+
+const hasDocs = (docs: CollectionDocument[] | undefined) => Array.isArray(docs) && docs.length > 0;
+
+const contentCollectionsWithDocs = contentCollections.filter(({ docs }) => hasDocs(docs));
+
+const baseMenuItemsCount = items.aboutPage ? 1 : 0;
+
+const dynamicMenuItemsCount = contentCollectionsWithDocs.length;
+
+const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
 ---
 
-<!-- <div class='navigation-bar' transition:persist style={{ '--how-many-menu-items': MINIMUM_MENU_ITEMS_COUNT, }}>
+<div class='navigation-bar' style={{ '--how-many-menu-items': MINIMUM_MENU_ITEMS_COUNT, }} {...rest}>
     {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
         const langId = supportedLang.id;
         const langDir = supportedLang.dir;
-        const langProjects = groupByLocalisedSlug(projects, langId);
-        const langWritings = groupByLocalisedSlug(writings, langId);
-        const langHappenings = groupByLocalisedSlug(happenings, langId);
-        const langResources = groupByLocalisedSlug(resources, langId);
-        const routeToAboutPage = aboutPage?.slug?.[langId]?.current && generateRoute(aboutPage, langId);
-        const aboutPageTitle = aboutPage?.title?.[langId] || UI_DICTIONARY.aboutPage[langId];
+        const routeToAboutPage = items.aboutPage?.slug?.[langId]?.current && generateRoute(items.aboutPage, langId);
+        const aboutPageTitle = items.aboutPage?.title?.[langId] || UI_DICTIONARY.aboutPage[langId];
         return (
-            <section lang={langId} dir={langDir} data-has-expanded='false'> {/* data-has-expanded is currently unused */}
+            <section lang={langId} dir={langDir}>
                 <nav aria-label={UI_DICTIONARY.navigationMenuLabel[langId]}>
                     <ul class='navigation-menu'>
-                        {routeToAboutPage ? (
+                        {items.aboutPage && (
                             <li class='navigation-menu-item static-navigation-item'>
-                                <a href={routeToAboutPage} aria-current={routeToAboutPage === Astro.url.pathname ? 'page' : undefined}>
-                                    <bdi>{aboutPageTitle}</bdi>
-                                </a>
+                                {routeToAboutPage ? (
+                                    <a href={routeToAboutPage} aria-current={routeToAboutPage === currentPath ? 'page' : undefined}>
+                                        <bdi>{aboutPageTitle}</bdi>
+                                    </a>
+                                ) : (
+                                    <a aria-disabled='true' tabindex='-1'>
+                                        <bdi>{aboutPageTitle}</bdi>
+                                    </a>
+                                )}
                             </li>
-                        ) : aboutPage && (
-                            <li class='navigation-menu-item static-navigation-item'>
-                                <a href='#' aria-disabled='true' tabindex='-1'><bdi>{aboutPageTitle}</bdi></a>
-                            </li>
                         )}
-                        {doesSubmenuExist(projects) && (
-                            <NavSection items={langProjects} lang={langId} title={UI_DICTIONARY.project[langId]} type={'project'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                        )}
-                        {doesSubmenuExist(writings) && (
-                            <NavSection items={langWritings} lang={langId} title={UI_DICTIONARY.writing[langId]} type={'writing'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                        )}
-                        {doesSubmenuExist(happenings) && (
-                            <NavSection items={langHappenings} lang={langId} title={UI_DICTIONARY.happening[langId]} type={'happening'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                        )}
-                        {doesSubmenuExist(resources) && (
-                            <NavSection items={langResources} lang={langId} title={UI_DICTIONARY.resource[langId]} type={'resource'} min={MINIMUM_MENU_ITEMS_COUNT} />
-                        )}
+                        {contentCollectionsWithDocs.map(({ key, docs }) => {
+                            const localisedItems = (groupByLocalisedSlug(docs, langId) as CollectionDocument[]) || [];
+                            const itemsExist = hasDocs(localisedItems);
+                            const sectionTitle = UI_DICTIONARY[key][langId];
+                            const delta = MINIMUM_MENU_ITEMS_COUNT - localisedItems.length;
+                            return (
+                                <li class='navigation-menu-item collection-navigation-item'>
+                                    {itemsExist ? (
+                                        <button type='button' data-nav-expand aria-expanded='false' aria-controls={`${key}-submenu-${langId}`}>
+                                            <bdi>{sectionTitle}</bdi>
+                                        </button>
+                                        <ul id={`${key}-submenu-${langId}`} class='navigation-submenu' aria-hidden='true' hidden tabindex='-1'>
+                                            {localisedItems.map((item) => {
+                                                const itemSlug = getSlug(item, langId);
+                                                const itemTitle = getTitle(item, langId);
+                                                const routeToItem = itemSlug && generateRoute(item, langId);
+                                                if (!routeToItem) return;
+                                                return (
+                                                    <li class='navigation-submenu-item static-navigation-item'>
+                                                        <a href={routeToItem} aria-current={routeToItem === currentPath ? 'page' : undefined}>
+                                                            <span class='time'>
+                                                                <time>
+                                                                    <bdi>00_00_0000</bdi>
+                                                                </time>
+                                                            </span>
+                                                            <span class='title'>
+                                                                <bdi>{itemTitle}</bdi>
+                                                            </span>
+                                                        </a>
+                                                    </li>
+                                                );
+                                            })}
+                                            {delta > 0 && [...Array(delta)].map(() => (
+                                                <li class='navigation-submenu-item' aria-hidden='true' role='presentation'></li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <button type='button' aria-disabled='true' tabindex='-1'>
+                                            <bdi>{sectionTitle}</bdi>
+                                        </button>
+                                    )}
+                                </li>
+                            );
+                        })}
                     </ul>
                 </nav>
             </section>
         );
     })}
-</div> -->
+</div>
+
+<script>
+    // @ts-ignore
+    if (!window._isNavInitialised) {
+        // @ts-ignore
+        window._isNavInitialised = true;
+        const navExpandButtons: NodeListOf<HTMLElement> | null = document.querySelectorAll(`button[data-nav-expand]:not([aria-disabled='true'])`);
+        navExpandButtons?.forEach((button) => button.addEventListener('click', () => {
+            const expanded = button.getAttribute('aria-expanded') === 'true';
+            const controls = button.getAttribute('aria-controls');
+            if (!controls) return;
+            const menu = document.getElementById(controls);
+            if (!menu) return;
+            navExpandButtons.forEach((otherButton) => {
+                const otherControls = otherButton.getAttribute('aria-controls') || '';
+                const otherMenu = document.getElementById(otherControls);
+                if (!otherControls || !otherMenu) return;
+                if (otherButton !== button && otherMenu) {
+                    otherButton.setAttribute('aria-expanded', 'false');
+                    otherMenu.setAttribute('aria-hidden', 'true');
+                    otherMenu.hidden = true;
+                }
+            });
+            const isExpanding = !expanded;
+            button.setAttribute('aria-expanded', String(isExpanding));
+            menu.setAttribute('aria-hidden', String(!isExpanding));
+            menu.hidden = !isExpanding;
+            console.info(`Section ${controls} was expanded successfully`);
+            console.info(`All other sections were collapsed`);
+            // @ts-ignore
+            // see @components/WindowedContent.astro
+            if (typeof window.closeWindowedContentDirectly === 'function') {
+                // @ts-ignore
+                window.closeWindowedContentDirectly();
+            }
+        }));
+        const navAnchors: NodeListOf<HTMLElement> | null = document.querySelectorAll(`.navigation-bar a:not([aria-disabled='true'])`);
+        navAnchors?.forEach((anchor) => {
+            anchor.addEventListener('click', () => {
+                anchor.setAttribute('aria-current', 'page');
+                navAnchors.forEach((otherAnchor) => {
+                    if (otherAnchor !== anchor) {
+                        otherAnchor.removeAttribute('aria-current');
+                    }
+                });
+            });
+        });
+    }
+</script>
+
+<style lang='scss'>
+    @use '@styles/mixins.scss';
+    
+    .navigation-bar {
+        position: relative;
+        display: flex;
+        margin-top: calc(var(--menu-item-padding-block) * -1 / 2);
+        touch-action: manipulation;
+    }
+    .navigation-bar::after {
+        content: '';
+        position: absolute;
+        display: block;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--page-background-colour);
+    }
+    .navigation-bar section {
+        flex: 1 0 0;
+    }
+    .navigation-bar ul, .navigation-bar li {
+        list-style: none;
+    }
+    .navigation-menu {
+        background-color: var(--navigation-menu-background-colour);
+    }
+    .navigation-submenu {
+        position: absolute;
+        top: 0;
+        inset-inline-start: var(--navigation-submenu-indent-inline-start);
+        inset-inline-end: var(--navigation-submenu-indent-inline-end);
+        height: calc((var(--how-many-menu-items) * var(--menu-item-height)) + 1px);
+        overflow-y: auto;
+        background-color: var(--navigation-submenu-background-colour);
+        @include mixins.no-scrollbar;
+    }
+    .navigation-menu-item, .navigation-submenu-item {
+        height: var(--menu-item-height);
+        border-bottom: 1px solid var(--text-default-colour);
+        white-space: nowrap;
+    }
+    .navigation-menu-item a, .navigation-menu-item button {
+        max-width: var(--navigation-submenu-indent-inline-start);
+    }
+    .navigation-submenu-item .time {
+        margin-inline-end: var(--navigation-submenu-date-title-gap);
+        @media (max-width: 768px) {
+            display: none;
+        }
+    }
+    .navigation-submenu-item a {
+        max-width: 100%;
+    }
+    .navigation-submenu {
+        scroll-snap-type: y mandatory;
+        scroll-snap-stop: normal;
+        scroll-behavior: smooth;
+        padding-bottom: 1px;
+        scroll-padding-bottom: 1px;
+    }
+    .navigation-submenu-item {
+        scroll-snap-align: end;
+    }
+    .static-navigation-item a,
+    .collection-navigation-item button {
+        display: block;
+        padding-block: var(--menu-item-padding-block);
+        width: fit-content;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+    .static-navigation-item a[aria-current] {
+        font-weight: 400;
+    }
+    .collection-navigation-item button[aria-expanded='true'] {
+        font-weight: 400;
+    }
+    .static-navigation-item a[aria-disabled='true'],
+    .collection-navigation-item button[aria-disabled='true'] {
+        color: var(--text-disabled-colour);
+    }
+    @media (any-hover: hover) {
+        .navigation-menu-item a:not([aria-disabled='true']):hover,
+        .navigation-menu-item button:not([aria-disabled='true']):hover {
+            color: var(--text-link-hover-colour);
+            cursor: pointer;
+        }
+    }
+</style>

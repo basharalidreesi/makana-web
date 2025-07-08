@@ -1,10 +1,10 @@
-import type { CollectionDocument, CollectionDocumentStub, CollectionDocumentType, Language, PageBuilder, StaticDocument, StaticDocumentStub, StaticDocumentType } from '@root/sanity/sanity.types';
+import type { AnyContentDocument, AnyMetaedDocument, AnyTargetableDocument, AnyTargetableDocumentStub, AnyTargetableDocumentType, AnyTitledDocument, Language, PageBuilder } from '@root/sanity/sanity.types';
 import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, UI_DICTIONARY } from '@lib/languageUtils';
 import { getFromRegistry } from '@lib/registry';
 
 const hasSlugForLang = (
-    doc: CollectionDocument | StaticDocument | undefined,
-    lang: Language | undefined
+    doc: AnyTargetableDocumentStub | undefined,
+    lang: Language | undefined,
 ): boolean => {
     if (!doc || !lang) return false;
     const slug = doc.slug?.[lang]?.current;
@@ -12,16 +12,16 @@ const hasSlugForLang = (
 };
 
 export const groupByLocalisedSlug = (
-    docs: (CollectionDocument | StaticDocument)[] | undefined = [],
-    lang: Language
-): (CollectionDocument | StaticDocument)[] | undefined => {
+    docs: AnyTargetableDocument[] | undefined = [],
+    lang: Language,
+): AnyTargetableDocument[] | undefined => {
     if (!docs || !Array.isArray(docs) || docs.length === 0 || !lang) return undefined;
     return docs.filter((doc) => hasSlugForLang(doc, lang));
 };
 
 export const getSlug = (
-    doc: CollectionDocumentStub | CollectionDocument | StaticDocument | StaticDocumentStub | undefined,
-    lang: Language | undefined
+    doc: AnyTargetableDocumentStub | undefined,
+    lang: Language | undefined,
 ): string | undefined => {
     if (!doc || !lang) return undefined;
     const slug = doc.slug?.[lang]?.current;
@@ -29,9 +29,30 @@ export const getSlug = (
     return slug;
 };
 
+export const getPreferredSlug = (
+    doc: AnyTargetableDocumentStub | undefined,
+    lang: Language | undefined,
+): { slug: string; langUsed: Language } | undefined => {
+    if (!doc || !lang) return undefined;
+    const preferredLangOrder = [
+        lang,
+        DEFAULT_LANGUAGE_ID === lang ? undefined : DEFAULT_LANGUAGE_ID,
+        ...SUPPORTED_LANGUAGES_IDS.filter((l) => l !== lang && l !== DEFAULT_LANGUAGE_ID),
+    ].filter(Boolean);
+    for (const preferredLang of preferredLangOrder as Language[]) {
+        const preferredSlug = getSlug(doc, preferredLang);
+        if (preferredSlug) {
+            return {
+                slug: preferredSlug,
+                langUsed: preferredLang,
+            }
+        }
+    }
+};
+
 export const getTitle = (
-    doc: CollectionDocument | StaticDocument | undefined,
-    lang: Language | undefined
+    doc: AnyTitledDocument | undefined,
+    lang: Language | undefined,
 ): string => {
     const fallbackTitle = UI_DICTIONARY.untitledLabel[lang ?? DEFAULT_LANGUAGE_ID]
     if (!doc || !lang) return fallbackTitle;
@@ -40,8 +61,8 @@ export const getTitle = (
 };
 
 export const getSummary = (
-    doc: CollectionDocument | StaticDocument | undefined,
-    lang: Language | undefined
+    doc: AnyMetaedDocument | undefined,
+    lang: Language | undefined,
 ): string | undefined => {
     if (!doc || !lang) return undefined;
     if (!('summary' in doc)) return undefined;
@@ -51,8 +72,8 @@ export const getSummary = (
 };
 
 export const getContent = (
-    doc: CollectionDocument | StaticDocument | undefined,
-    lang: Language | undefined
+    doc: AnyContentDocument | undefined,
+    lang: Language | undefined,
 ): PageBuilder | undefined => {
     if (!doc || !lang) return undefined;
     const content = doc.content?.[lang];
@@ -61,8 +82,8 @@ export const getContent = (
 };
 
 export const getTextLength = (
-    doc: CollectionDocument | StaticDocument | undefined,
-    lang: Language | undefined
+    doc: AnyContentDocument | undefined,
+    lang: Language | undefined,
 ): number | undefined => {
     if (!doc || !lang) return undefined;
     if (!('textLength' in doc)) return undefined;
@@ -128,15 +149,15 @@ export const normaliseAspectRatioForPadding = (ratio: string | undefined): strin
 
 export type AlternateDocument = {
     lang: Language;
-    type: CollectionDocumentType | StaticDocumentType;
+    type: AnyTargetableDocumentType;
     slug: string;
     title: string;
     route: string;
 };
 
 export const getAlternates = (
-    doc: CollectionDocument | StaticDocument | undefined,
-    lang: Language | undefined
+    doc: AnyTargetableDocumentStub | undefined,
+    lang: Language | undefined,
 ): AlternateDocument[] | undefined => {
     if (!doc || !lang) return undefined;
     const allVersions = getFromRegistry(doc._id);

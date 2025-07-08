@@ -1,0 +1,101 @@
+---
+import type { AnyFeaturableDocument, Language } from '@root/sanity/sanity.types';
+import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
+import { getPreferredSlug } from '@lib/contentUtils';
+import { generateRoute } from '@lib/routingUtils';
+import { getFromRegistry } from '@lib/registry';
+import { createSanityImage } from '@lib/imageUtils';
+
+type Props = {
+    lang: Language;
+    items: AnyFeaturableDocument[];
+};
+
+const {
+    lang,
+    items,
+} = Astro.props;
+---
+
+{Array.isArray(items) && items.length > 0 && (
+    <aside class='featured-bar' aria-label='Featured items (todo)' style={{ '--how-many-featured-items': items.length, }}>
+        <ul class='featured-items'>
+            {items.map((item) => {
+                const slugData = getPreferredSlug(item, lang);
+                if (!slugData) return;
+                const routeToItem = generateRoute(item, slugData.langUsed);
+                if (!routeToItem) return;
+                const itemAsRegistered = getFromRegistry(item._id);
+                if (!itemAsRegistered?.[slugData.langUsed]) return;
+                const thumbnail = createSanityImage({
+                    source: item.mainImage,
+                    width: 1200,
+                    height: 900,
+                });
+                return (
+                    <li class='featured-item'>
+                        {thumbnail && (
+                            <div>
+                                <Fragment set:html={thumbnail} />
+                            </div>
+                        )}
+                        <div>
+                            <a href={routeToItem}>
+                                {SUPPORTED_LANGUAGES_IDS.map((langId) => itemAsRegistered[langId]?.title && (
+                                    <span lang={langId}>
+                                        <bdi>{itemAsRegistered[langId]?.title}</bdi>
+                                    </span>
+                                ))}
+                            </a>
+                        </div>
+                    </li>
+                );
+            })}
+        </ul>
+    </aside>
+)}
+
+<style lang='scss'>
+    .featured-bar {
+        padding-left: 1px;
+        padding-bottom: 1px;
+    }
+    ul, li {
+        list-style: none;
+    }
+    .featured-items {
+        display: flex;
+        align-items: flex-end;
+        gap: var(--featured-items-gap);
+        // @media (max-width: 1024px) {
+        //     flex-direction: column;
+        //     align-items: unset;
+        //     justify-content: flex-end;
+        // }
+    }
+    .featured-item {
+        display: flex;
+        flex-direction: column;
+        row-gap: 0.5rem;
+        max-width: var(--featured-item-max-width);
+        width: calc((100% - ((var(--how-many-featured-items) - 1) * var(--featured-items-gap))) / var(--how-many-featured-items));
+        padding-top: var(--featured-item-padding-top);
+        padding-bottom: var(--featured-item-padding-bottom);
+        padding-inline: var(--featured-item-padding-inline);
+        outline: 1px solid;
+    }
+    a {
+        display: flex;
+        flex-direction: column;
+        text-align: right;
+    }
+    span {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+    :global(img) {
+        aspect-ratio: var(--featured-item-image-aspect-ratio);
+        object-fit: cover;
+    }
+</style>
