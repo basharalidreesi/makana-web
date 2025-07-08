@@ -64,7 +64,12 @@ export const createSanityImage = ({
     if (!width || !height) return undefined;
     const builder = buildSanityImage(source);
     if (!builder) return undefined;
-    const src = builder.width(width).height(height).auto('format').fit(fit).url();
+    const src = builder
+        .width(width)
+        .height(height)
+        .fit(fit)
+        .auto('format')
+        .url();
     const srcSet = dprs.map((dpr) => builder
         .width(Math.round(width * dpr))
         .height(Math.round(height * dpr))

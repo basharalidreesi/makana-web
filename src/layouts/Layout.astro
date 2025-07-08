@@ -198,7 +198,7 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
                 transition:persist
             />
             <!-- <FeaturedBar
-                lang={lang}
+                lang={'ar'}
                 items={resolvedFeaturedItems}
             /> -->
         </header>
@@ -260,6 +260,7 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         --page-padding-top: 2.5rem;
         --page-padding-bottom: 2.5rem;
         --page-padding-inline: calc(env(safe-area-inset-left, 0px) + 2.5rem);
+        --page-gap: var(--menu-item-height);
         // logo
         --logo-height: 3.5rem;
         // navigation menu
@@ -284,24 +285,26 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         // featured items
         --featured-items-gap: 2rem;
         --featured-item-max-width: 25rem;
-        --featured-item-padding-top: 1.5rem;
-        --featured-item-padding-bottom: 1.25rem;
-        --featured-item-padding-inline: 1.5rem;
+        --featured-item-padding-top: 1.25rem;
+        --featured-item-padding-bottom: 1.0625rem;
+        --featured-item-padding-inline: 1.25rem;
         --featured-item-image-aspect-ratio: 3/2;
     }
     :root {
+        // width breakpoints
         @media (max-width: 1152px) {
             // windowed content
             --big-windowed-content-max-width: 42.5rem;
             // featured items
-                // --featured-items-gap: 1.5rem;
-                // --featured-item-width: 20rem;
-                // --featured-item-padding-top: 1.25rem;
-                // --featured-item-padding-bottom: 1rem;
-                // --featured-item-padding-inline: 1.25rem;
-                // --featured-item-image-aspect-ratio: 4/3;
+            --featured-items-gap: 1.5rem;
+            --featured-item-max-width: 20rem;
         }
         @media (max-width: 1024px) {
+            // page
+            header {
+                flex-direction: column;
+                flex-wrap: nowrap;
+            }
             // navigation menu
             --navigation-submenu-indent-inline-start: 7.5rem;
             --navigation-submenu-indent-inline-end: 7.5rem;
@@ -309,8 +312,6 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             --navigation-submenu-date-title-gap: 1.5rem;
             // windowed content
             --big-windowed-content-max-width: 37.5rem;
-            // featured items
-                // --featured-item-image-aspect-ratio: 3/2;
         }
         @media (max-width: 896px) {
             // windowed content
@@ -330,11 +331,16 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         }
         @media (max-width: 640px) {
             // page
+            --page-gap: 1rem;
             --page-padding-top: 1.5rem;
             --page-padding-bottom: 1.5rem;
             --page-padding-inline: calc(env(safe-area-inset-left, 0px) + 1.5rem);
             // logo
             --logo-height: 2.5rem;
+            // featured items
+            --featured-item-padding-top: 0.75rem;
+            --featured-item-padding-bottom: 0.625rem;
+            --featured-item-padding-inline: 0.75rem;
         }
         @media (max-width: 512px) {
             // navigation menu
@@ -352,10 +358,12 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             --windowed-content-container-extra-padding-inline: 0.5rem;
             --windowed-content-padding-top: 1rem;
         }
+        // height breakpoints
         @media (max-height: 448px) {
             // page
-            --page-padding-top: 1.5rem;
-            --page-padding-bottom: 1.5rem;
+            --page-gap: 1rem; // like --page-gap in @media (max-width: 640px) (see above)
+            --page-padding-top: 1.5rem; // like --page-padding-top in @media (max-width: 640px) (see above)
+            --page-padding-bottom: 1.5rem; // like --page-padding-bottom in @media (max-width: 640px) (see above)
             // logo
             --logo-height: 2rem;
         }
@@ -372,7 +380,7 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         bottom: 0;
         display: flex;
         flex-wrap: wrap;
-        gap: var(--menu-item-height);
+        gap: var(--page-gap);
         padding-top: var(--page-padding-top);
         padding-left: var(--page-padding-inline);
         padding-right: var(--page-padding-inline);

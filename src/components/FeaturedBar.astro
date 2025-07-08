@@ -1,6 +1,6 @@
 ---
 import type { AnyFeaturableDocument, Language } from '@root/sanity/sanity.types';
-import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
+import { SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
 import { getPreferredSlug } from '@lib/contentUtils';
 import { generateRoute } from '@lib/routingUtils';
 import { getFromRegistry } from '@lib/registry';
@@ -35,14 +35,14 @@ const {
                 return (
                     <li class='featured-item'>
                         {thumbnail && (
-                            <div>
+                            <div class='thumbnail'>
                                 <Fragment set:html={thumbnail} />
                             </div>
                         )}
                         <div>
                             <a href={routeToItem}>
                                 {SUPPORTED_LANGUAGES_IDS.map((langId) => itemAsRegistered[langId]?.title && (
-                                    <span lang={langId}>
+                                    <span lang={langId} dir={SUPPORTED_LANGUAGES_RECORD[langId].dir}>
                                         <bdi>{itemAsRegistered[langId]?.title}</bdi>
                                     </span>
                                 ))}
@@ -65,6 +65,7 @@ const {
     }
     .featured-items {
         display: flex;
+        flex-wrap: wrap;
         align-items: flex-end;
         gap: var(--featured-items-gap);
         // @media (max-width: 1024px) {
@@ -77,8 +78,8 @@ const {
         display: flex;
         flex-direction: column;
         row-gap: 0.5rem;
+        flex: 1 1 calc((100% - ((var(--how-many-featured-items) - 1) * var(--featured-items-gap))) / var(--how-many-featured-items));
         max-width: var(--featured-item-max-width);
-        width: calc((100% - ((var(--how-many-featured-items) - 1) * var(--featured-items-gap))) / var(--how-many-featured-items));
         padding-top: var(--featured-item-padding-top);
         padding-bottom: var(--featured-item-padding-bottom);
         padding-inline: var(--featured-item-padding-inline);
@@ -93,8 +94,10 @@ const {
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+        line-height: 1.5;
     }
-    :global(img) {
+    .thumbnail :global(img) {
+        width: 100%;
         aspect-ratio: var(--featured-item-image-aspect-ratio);
         object-fit: cover;
     }
