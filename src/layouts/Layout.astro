@@ -197,10 +197,10 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
                 }}
                 transition:persist
             />
-            <FeaturedBar
+            <!-- <FeaturedBar
                 lang={lang}
                 items={resolvedFeaturedItems}
-            />
+            /> -->
         </header>
         <main>
             <slot />
@@ -291,18 +291,6 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
     }
     :root {
         // width breakpoints
-        @media (min-width: 1153px) {
-            @media (max-height: 704px) {
-                :global(.featured-item .thumbnail) {
-                    display: none;
-                }
-            }
-            @media (max-height: 400px) {
-                :global(.featured-bar) {
-                    display: none;
-                }
-            }
-        }
         @media (max-width: 1152px) {
             // windowed content
             --big-windowed-content-max-width: 42.5rem;
@@ -312,18 +300,6 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             --featured-item-padding-top: 1rem;
             --featured-item-padding-bottom: 0.75rem;
             --featured-item-padding-inline: 1rem;
-            @media (min-width: 897px) {
-                @media (max-height: 640px) {
-                    :global(.featured-item .thumbnail) {
-                        display: none;
-                    }
-                }
-                @media (max-height: 400px) {
-                    :global(.featured-bar) {
-                        display: none;
-                    }
-                }
-            }
         }
         @media (max-width: 1024px) {
             // navigation menu
@@ -342,52 +318,43 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             :global(.featured-items) {
                 flex-direction: column;
             }
-            @media (min-width: 513px) {
-                @media (max-height: 960px) {
-                    :global(.featured-item:nth-of-type(2) .thumbnail) {
-                        display: none;
-                    }
-                }
-                @media (max-height: 736px) {
-                    :global(.featured-item:nth-of-type(1) .thumbnail) {
-                        display: none;
-                    }
-                }
-                @media (max-height: 544px) {
-                    :global(.featured-bar) {
-                        display: none;
-                    }
-                }
-            }
         }
         @media (max-width: 768px) {
             // text
             --font-size: 16px;
+            // navigation menu
+            --menu-item-padding-block: 1rem;
             // windowed content
             --windowed-content-indent-inline-start: auto;
             --windowed-content-indent-inline-end: auto;
             --windowed-content-container-extra-padding-top: 1rem;
             --windowed-content-container-extra-padding-bottom: calc(1rem + var(--logo-height));
             --windowed-content-container-extra-padding-inline: 1rem;
-            --windowed-content-orb-width: 2.25rem;
         }
-        @media (max-width: 640px) {
+        @media (max-width: 640px) or (max-height: 448px) {
             // page
-            --page-gap: 1rem;
+            --page-gap: 1.5rem;
             --page-padding-top: 1.5rem;
             --page-padding-bottom: 1.5rem;
             --page-padding-inline: calc(env(safe-area-inset-left, 0px) + 1.5rem);
+            // logo
+            --logo-height: 2.5rem;
+        }
+        @media (max-width: 640px) {
             header {
                 flex-direction: column;
                 flex-wrap: nowrap;
             }
+        }
+        @media (max-height: 384px) {
+            // page
+            --page-gap: 1rem;
+            --page-padding-top: 1rem;
+            --page-padding-bottom: 1rem;
             // logo
-            --logo-height: 2.5rem;
-            // featured items
-            --featured-items-gap: 1rem;
-            --featured-item-padding-top: 0.75rem;
-            --featured-item-padding-bottom: 0.625rem;
-            --featured-item-padding-inline: 0.75rem;
+            --logo-height: 2rem;
+            // navigation menu
+            --menu-item-padding-block: 0.666rem;
         }
         @media (max-width: 512px) {
             // navigation menu
@@ -398,24 +365,9 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             --windowed-content-padding-bottom: 1.5rem;
             --windowed-content-padding-inline: 1.5rem;
             // featured items
-            --featured-item-padding-top: 1rem;
-            --featured-item-padding-bottom: 0.75rem;
-            --featured-item-padding-inline: 1rem;
             --featured-item-max-width: 100%;
             :global(.featured-item) {
                 flex: 1 1 100%;
-            }
-            @media (min-width: 385px) {
-                @media (max-height: 1120px) {
-                    :global(.featured-item:nth-of-type(2)) {
-                        display: none;
-                    }
-                }
-                @media (max-height: 736px) {
-                    :global(.featured-bar) {
-                        display: none;
-                    }
-                }
             }
         }
         @media (max-width: 384px) {
@@ -424,31 +376,15 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             --windowed-content-padding-inline: 1rem;
             --windowed-content-container-extra-padding-inline: 0.5rem;
             --windowed-content-padding-top: 1rem;
-            // featured items
-            @media (max-height: 960px) {
-                :global(.featured-item:nth-of-type(2)) {
-                    display: none;
-                }
-            }
-            @media (max-height: 640px) {
-                :global(.featured-bar) {
-                    display: none;
-                }
-            }
         }
-        // height breakpoints
-        @media (max-height: 448px) {
-            // page
-            --page-gap: 1rem; // like --page-gap in @media (max-width: 640px) (see above)
-            --page-padding-top: 1.5rem; // like --page-padding-top in @media (max-width: 640px) (see above)
-            --page-padding-bottom: 1.5rem; // like --page-padding-bottom in @media (max-width: 640px) (see above)
-            // logo
-            --logo-height: 2.5rem; // like --logo-height in @media (max-width: 640px) (see above)
-        }
+    }
+    html {
+        overscroll-behavior: none;
     }
     body {
         font-size: var(--font-size);
         background-color: var(--page-background-colour);
+        touch-action: manipulation;
     }
     header {
         position: fixed;

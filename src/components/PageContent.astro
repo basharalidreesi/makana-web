@@ -5,7 +5,7 @@ import { createSanityImage } from '@lib/imageUtils';
 import { escapeHtml, getPreferredSlug, normaliseAspectRatioForPadding } from '@lib/contentUtils';
 import { getFile } from '@lib/assetUtils';
 import { generateRoute } from '@lib/routingUtils';
-import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID, FSI, PDI, UI_DICTIONARY } from '@lib/languageUtils';
 
 type Props = {
     lang: Language;
@@ -221,7 +221,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                                     const optionName = escapeHtml(rawOptionName);
                                                     const rawOptionLabel = parsedOption?.[lang]?.trim() || optionName;
                                                     const optionLabel = escapeHtml(rawOptionLabel);
-                                                    return `<option value='${optionName}'>${optionLabel}</option>`;
+                                                    return `<option value='${optionName}'>${FSI}${optionLabel}${PDI}</option>`;
                                                 } catch {
                                                     return null;
                                                 }
@@ -459,7 +459,8 @@ const html = toHTML(source, {
         .form-block {
             & {
                 --_gap: 0.75rem;
-                --_field-padding: 0.333rem;
+                --_field-padding: 0.375rem;
+                --_checkbox-label-gap: 0.5rem;
                 --_button-block-padding: 0.75rem;
                 --_button-inline-padding: 1rem;
             }
@@ -513,7 +514,7 @@ const html = toHTML(source, {
             .checkbox-field label {
                 display: flex;
                 align-items: center;
-                column-gap: var(--_field-padding);
+                column-gap: var(--_checkbox-label-gap);
                 width: fit-content;
                 max-width: 100%;
                 cursor: pointer;

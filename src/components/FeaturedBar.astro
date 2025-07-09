@@ -1,6 +1,6 @@
 ---
 import type { AnyFeaturableDocument, Language } from '@root/sanity/sanity.types';
-import { SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
 import { getPreferredSlug } from '@lib/contentUtils';
 import { generateRoute } from '@lib/routingUtils';
 import { getFromRegistry } from '@lib/registry';
@@ -12,15 +12,16 @@ type Props = {
 };
 
 const {
-    lang,
+    lang = DEFAULT_LANGUAGE_ID,
     items,
 } = Astro.props;
 ---
 
 {Array.isArray(items) && items.length > 0 && (
-    <aside class='featured-bar' aria-label='Featured items (todo)' style={{ '--how-many-featured-items': items.length, }}>
+    <aside class='featured-bar' aria-label={UI_DICTIONARY.featuredItemsLabel[lang]} style={{ '--how-many-featured-items': 1, }}>
         <ul class='featured-items'>
-            {items.map((item) => {
+            {items.map((item, index) => {
+                if (index === 1 )return
                 const slugData = getPreferredSlug(item, lang);
                 if (!slugData) return;
                 const routeToItem = generateRoute(item, slugData.langUsed);
@@ -56,9 +57,6 @@ const {
 )}
 
 <style lang='scss'>
-    .featured-bar {
-        padding: 1px;
-    }
     ul, li {
         list-style: none;
     }

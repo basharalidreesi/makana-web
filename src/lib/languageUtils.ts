@@ -70,6 +70,7 @@ export const UI_DICTIONARY: UICategoryDictionary & {
     websiteTitle: LocalisedUIDictionaryRecord<string>;
     untitledLabel: LocalisedUIDictionaryRecord<string>;
     navigationMenuLabel: LocalisedUIDictionaryRecord<string>;
+    featuredItemsLabel: LocalisedUIDictionaryRecord<string>;
     languageSwitchLabel: LocalisedUIDictionaryRecord<string>;
     submitButtonLabel: LocalisedUIDictionaryRecord<string>;
     closeButtonLabel: LocalisedUIDictionaryRecord<string>;
@@ -85,8 +86,12 @@ export const UI_DICTIONARY: UICategoryDictionary & {
         en: 'Untitled',
     },
     navigationMenuLabel: {
-        ar: 'القائمة العربية',
-        en: 'English menu',
+        ar: 'قائمة التصفح',
+        en: 'Navigation menu',
+    },
+    featuredItemsLabel: {
+        ar: 'مختارات',
+        en: 'Featured items',
     },
     languageSwitchLabel: {
         ar: 'المطالعة بالعربية',
@@ -129,3 +134,7 @@ export const UI_DICTIONARY: UICategoryDictionary & {
         en: 'Resources',
     },
 };
+
+export const FSI = '\u2068';
+
+export const PDI = '\u2069'
