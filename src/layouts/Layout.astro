@@ -197,10 +197,10 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
                 }}
                 transition:persist
             />
-            <!-- <FeaturedBar
-                lang={'ar'}
+            <FeaturedBar
+                lang={lang}
                 items={resolvedFeaturedItems}
-            /> -->
+            />
         </header>
         <main>
             <slot />
@@ -286,25 +286,46 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         --featured-items-gap: 2rem;
         --featured-item-max-width: 25rem;
         --featured-item-padding-top: 1.25rem;
-        --featured-item-padding-bottom: 1.0625rem;
+        --featured-item-padding-bottom: 1rem;
         --featured-item-padding-inline: 1.25rem;
-        --featured-item-image-aspect-ratio: 3/2;
     }
     :root {
         // width breakpoints
+        @media (min-width: 1153px) {
+            @media (max-height: 704px) {
+                :global(.featured-item .thumbnail) {
+                    display: none;
+                }
+            }
+            @media (max-height: 400px) {
+                :global(.featured-bar) {
+                    display: none;
+                }
+            }
+        }
         @media (max-width: 1152px) {
             // windowed content
             --big-windowed-content-max-width: 42.5rem;
             // featured items
             --featured-items-gap: 1.5rem;
             --featured-item-max-width: 20rem;
+            --featured-item-padding-top: 1rem;
+            --featured-item-padding-bottom: 0.75rem;
+            --featured-item-padding-inline: 1rem;
+            @media (min-width: 897px) {
+                @media (max-height: 640px) {
+                    :global(.featured-item .thumbnail) {
+                        display: none;
+                    }
+                }
+                @media (max-height: 400px) {
+                    :global(.featured-bar) {
+                        display: none;
+                    }
+                }
+            }
         }
         @media (max-width: 1024px) {
-            // page
-            header {
-                flex-direction: column;
-                flex-wrap: nowrap;
-            }
             // navigation menu
             --navigation-submenu-indent-inline-start: 7.5rem;
             --navigation-submenu-indent-inline-end: 7.5rem;
@@ -317,6 +338,27 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             // windowed content
             --small-windowed-content-max-width: 31.25rem;
             --big-windowed-content-max-width: 31.25rem;
+            // featured items
+            :global(.featured-items) {
+                flex-direction: column;
+            }
+            @media (min-width: 513px) {
+                @media (max-height: 960px) {
+                    :global(.featured-item:nth-of-type(2) .thumbnail) {
+                        display: none;
+                    }
+                }
+                @media (max-height: 736px) {
+                    :global(.featured-item:nth-of-type(1) .thumbnail) {
+                        display: none;
+                    }
+                }
+                @media (max-height: 544px) {
+                    :global(.featured-bar) {
+                        display: none;
+                    }
+                }
+            }
         }
         @media (max-width: 768px) {
             // text
@@ -335,9 +377,14 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             --page-padding-top: 1.5rem;
             --page-padding-bottom: 1.5rem;
             --page-padding-inline: calc(env(safe-area-inset-left, 0px) + 1.5rem);
+            header {
+                flex-direction: column;
+                flex-wrap: nowrap;
+            }
             // logo
             --logo-height: 2.5rem;
             // featured items
+            --featured-items-gap: 1rem;
             --featured-item-padding-top: 0.75rem;
             --featured-item-padding-bottom: 0.625rem;
             --featured-item-padding-inline: 0.75rem;
@@ -350,6 +397,26 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             --windowed-content-padding-top: 1.5rem;
             --windowed-content-padding-bottom: 1.5rem;
             --windowed-content-padding-inline: 1.5rem;
+            // featured items
+            --featured-item-padding-top: 1rem;
+            --featured-item-padding-bottom: 0.75rem;
+            --featured-item-padding-inline: 1rem;
+            --featured-item-max-width: 100%;
+            :global(.featured-item) {
+                flex: 1 1 100%;
+            }
+            @media (min-width: 385px) {
+                @media (max-height: 1120px) {
+                    :global(.featured-item:nth-of-type(2)) {
+                        display: none;
+                    }
+                }
+                @media (max-height: 736px) {
+                    :global(.featured-bar) {
+                        display: none;
+                    }
+                }
+            }
         }
         @media (max-width: 384px) {
             // windowed content
@@ -357,6 +424,17 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             --windowed-content-padding-inline: 1rem;
             --windowed-content-container-extra-padding-inline: 0.5rem;
             --windowed-content-padding-top: 1rem;
+            // featured items
+            @media (max-height: 960px) {
+                :global(.featured-item:nth-of-type(2)) {
+                    display: none;
+                }
+            }
+            @media (max-height: 640px) {
+                :global(.featured-bar) {
+                    display: none;
+                }
+            }
         }
         // height breakpoints
         @media (max-height: 448px) {
@@ -365,7 +443,7 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             --page-padding-top: 1.5rem; // like --page-padding-top in @media (max-width: 640px) (see above)
             --page-padding-bottom: 1.5rem; // like --page-padding-bottom in @media (max-width: 640px) (see above)
             // logo
-            --logo-height: 2rem;
+            --logo-height: 2.5rem; // like --logo-height in @media (max-width: 640px) (see above)
         }
     }
     body {

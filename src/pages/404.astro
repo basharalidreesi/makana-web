@@ -16,48 +16,25 @@ import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECOR
                     <Fragment set:html={(UI_DICTIONARY.error404Message[lang])?.trim()} />
                 </div>
             ))}
-            <!-- <div class='logo'>
-                <a href='/' title={UI_DICTIONARY.websiteTitle[DEFAULT_LANGUAGE_ID]}>
-                    <Logo />
-                </a>
-            </div> -->
-            <!-- todo -->
         </div>
     </body>
 </html>
 
 <style lang='scss'>
-    :global(*) {
-        padding: 0;
-        margin: 0;
-        box-sizing: border-box;
-    }
     body {
-        min-height: 100vh;
-        min-height: 100dvh;
-        padding: 2rem;
         display: flex;
         align-items: center;
         justify-content: center;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 2rem;
+        margin: 0px;
+        box-sizing: border-box;
     }
     .container {
         display: flex;
         flex-direction: column;
-        align-items: center;
         row-gap: 1rem;
-    }
-    .logo {
-        height: 3rem;
-    }
-    .logo :global(svg) {
-        display: block;
-        height: 100%;
-        width: auto;
-        max-width: 100%;
-        overflow: visible;
-        stroke-width: 0px;
-    }
-    .logo a {
-        color: inherit;
+        max-width: 45ch;
     }
 </style>
