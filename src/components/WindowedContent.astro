@@ -14,7 +14,7 @@ type Props = {
 const {
     lang = DEFAULT_LANGUAGE_ID,
     title,
-    type,
+    type = 'default',
     textLength = 0,
     alternates,
 } = Astro.props;
@@ -23,7 +23,7 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
 ---
 
 <div class='windowed-content-container' dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}>
-    <div class={['windowed-content', type ? `${type}-windowed-content` : undefined, `${resolvedSize}-windowed-content`].filter(Boolean).join(' ')}>
+    <div class=`windowed-content ${type}-windowed-content ${resolvedSize}-windowed-content`>
         <div class='windowed-content-orbs'>
             {Array.isArray(alternates) && alternates.length > 0 && alternates.map((alternate) => {
                 const altRoute = alternate.route;
@@ -82,7 +82,6 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
             currentNavAnchor?.removeAttribute('aria-current');
             // const header: HTMLElement | null = document.querySelector('header');
             // header?.setAttribute('aria-hidden', 'false'); // TODO
-            console.info('Window was force-closed successfully');
         }
         const attachCloseWindowedContent = () => {
             const windowedContentControlsAnchor: HTMLElement | null = document.querySelector('.close-windowed-content a');
@@ -102,11 +101,10 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
 </script>
 
 <style lang='scss'>
-    :global(main) {
+    .windowed-content-container {
+        z-index: 2;
         position: relative;
         pointer-events: none;
-    }
-    .windowed-content-container {
         padding-top: calc(var(--page-padding-top) + var(--windowed-content-container-extra-padding-top));
         padding-bottom: calc(var(--page-padding-bottom) + var(--windowed-content-container-extra-padding-bottom));
         padding-inline-start: calc(var(--page-padding-inline) + var(--windowed-content-container-extra-padding-inline));
@@ -130,6 +128,9 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
     .big-windowed-content {
         max-width: var(--big-windowed-content-max-width);
     }
+    .default-windowed-content {
+        background-color: var(--page-background-colour);
+    }
     .aboutPage-windowed-content {
         background-color: var(--windowed-content-aboutPage-background-colour);
     }
@@ -149,7 +150,7 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
         display: flex;
         justify-content: flex-end;
         align-items: center;
-        gap: 0.666rem;
+        gap: 0.666rem; // arbitrary
         padding-inline: var(--windowed-content-padding-top);
         margin-inline: calc(var(--windowed-content-padding-inline) * -1);
     }
@@ -197,19 +198,21 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
             display: flex;
             flex-direction: column;
             row-gap: 0.25rem; // arbitrary
-            font-weight: 400;
         }
         &:lang(ar) {
-            line-height: 1.6; // like --body-line-height-arabic in @components/PageContent.astro
+            line-height: var(--running-text-line-height-arabic);
         }
         &:not(:lang(ar)) {
-            line-height: 1.5; // like --body-line-height-non-arabic in @components/PageContent.astro
+            line-height: var(--running-text-line-height-non-arabic);
+        }
+        h2 {
+            font-weight: 400;
         }
     }
     .windowed-content-orbs + .windowed-content-header {
-        margin-top: 0.5rem; // like --content-small-gap in @components/PageContent.astro
+        margin-top: var(--content-small-gap);
     }
     .windowed-content-header + :global(.content) {
-        margin-top: 2rem; // like --content-big-gap in @components/PageContent.astro
+        margin-top: var(--content-big-gap);
     }
 </style>

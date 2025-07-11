@@ -26,6 +26,24 @@ interface HasTitle {
 
 interface HasContent {
   content?: LocalisedPageBuilder
+  textLength?: Localise<number>
+}
+
+interface HasSimpleDate {
+  date?: string
+}
+
+interface HasRichDate {
+  startDate?: string
+  startTime?: {
+    hours?: string
+    minutes?: string
+  }
+  timezone?: string
+}
+
+interface HasLocation {
+  location?: LocalisedString
 }
 
 interface HasMeta {
@@ -40,10 +58,10 @@ export type Project = SanityDocumentBase
   & IsFeaturable
   & HasTitle
   & HasContent
+  & HasSimpleDate
   & HasMeta
   & {
   _type: 'project'
-  date?: string
 }
 
 export type Writing = SanityDocumentBase
@@ -51,10 +69,10 @@ export type Writing = SanityDocumentBase
   & IsFeaturable
   & HasTitle
   & HasContent
+  & HasSimpleDate
   & HasMeta
   & {
   _type: 'writing'
-  date?: string
 }
 
 export type Happening = SanityDocumentBase
@@ -62,16 +80,11 @@ export type Happening = SanityDocumentBase
   & IsFeaturable
   & HasTitle
   & HasContent
+  & HasRichDate
+  & HasLocation
   & HasMeta
   & {
   _type: 'happening'
-  startDate?: string
-  startTime?: {
-    hours?: string
-    minutes?: string
-  }
-  timezone?: string
-  location?: LocalisedString
 }
 
 export type Resource = SanityDocumentBase
@@ -79,10 +92,10 @@ export type Resource = SanityDocumentBase
   & IsFeaturable
   & HasTitle
   & HasContent
+  & HasSimpleDate
   & HasMeta
   & {
   _type: 'resource'
-  date?: string
 }
 
 export type CollectionDocument =
@@ -133,6 +146,15 @@ export type AnyTitledDocumentType = AnyTitledDocument['_type']
 
 export type AnyContentDocument = Extract<AnyDocument, HasContent>
 export type AnyContentDocumentType = AnyContentDocument['_type']
+
+export type AnySimplyDatedDocument = Extract<AnyDocument, HasSimpleDate>
+export type AnySimplyDatedDocumentType = AnySimplyDatedDocument['_type']
+
+export type AnyRichlyDatedDocument = Extract<AnyDocument, HasRichDate>
+export type AnyRichlyDatedDocumentType = AnyRichlyDatedDocument['_type']
+
+export type AnyLocationedDocument = Extract<AnyDocument, HasLocation>
+export type AnyLocationedDocumentType = AnyLocationedDocument['_type']
 
 export type AnyMetaedDocument = Extract<AnyDocument, HasMeta>
 export type AnyMetaedDocumentType = AnyMetaedDocument['_type']

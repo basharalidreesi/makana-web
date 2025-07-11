@@ -11,6 +11,7 @@ import NavigationBar from '@components/NavigationBar.astro';
 import FeaturedBar from '@components/FeaturedBar.astro';
 import '@styles/reset.css';
 import '@styles/fonts.css';
+import '@styles/global.scss';
 
 type CustomDataFile = {
   default: string;
@@ -20,7 +21,7 @@ const fontFiles = Object.values<CustomDataFile>(
     import.meta.glob('../../public/fonts/*.woff', { eager: true })
 );
 
-const websiteSettings: (Website & { logoUrl: string | undefined; }) | undefined = await sanityClient.fetch(`
+const websiteSettings: (Website & { logoUrl: string | undefined; logoAspectRatio: number | undefined; }) | undefined = await sanityClient.fetch(`
     *[_id == 'website'][0] {
         _type,
         title,
@@ -28,7 +29,8 @@ const websiteSettings: (Website & { logoUrl: string | undefined; }) | undefined 
         keywords,
         mainImage,
         analytics,
-        'logoUrl': logo.asset->url
+        'logoUrl': logo.asset->url,
+        'logoAspectRatio': logo.asset->metadata.dimensions.aspectRatio,
     }
 `);
 
@@ -197,10 +199,10 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
                 }}
                 transition:persist
             />
-            <!-- <FeaturedBar
+            <FeaturedBar
                 lang={lang}
                 items={resolvedFeaturedItems}
-            /> -->
+            />
         </header>
         <main>
             <slot />
@@ -212,179 +214,20 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
     // TODO initiate skeletons
     document.addEventListener('astro:before-preparation', () => {
         console.log('now');
+        const windowedContentSkeleton: HTMLElement | null = document.querySelector('.windowed-content-skeleton');
+        if (!windowedContentSkeleton) return;
+        windowedContentSkeleton.hidden = false;
     });
 </script>
 
 <style lang='scss'>
-    @use '@styles/mixins.scss';
-    :global(.sr-only:not(:focus):not(:active)) {
-        @include mixins.visually-hidden;
-    }
-
-    :root {
-        // text
-        --font-size: 18px;
-        --font-family: 'IBMPS', 'Helvetica Neue', 'Arial', sans-serif;
-    }
-    :root {
-        // page
-        --page-background-colour: #fff;
-        // navigation menu
-        --navigation-menu-background-colour: #fff;
-        --navigation-submenu-background-colour: #fff;
-        // text
-        --text-default-colour: #000;
-        --text-light-colour: #555;
-        --text-disabled-colour: #b7b7b7;
-        --text-link-hover-colour: #808080;
-        --text-link-underline-colour: #666;
-        --blockquote-indentation-line-colour: #3A3A3A;
-        // windowed content
-        --windowed-content-outline-colour: #707070;
-        --windowed-content-backdrop-colour: #000;
-        --windowed-content-backdrop-opacity: 0.22;
-        --windowed-content-orb-colour: #fff;
-        --windowed-content-aboutPage-background-colour: #aeeb9b;
-        --windowed-content-project-background-colour: #fff;
-        --windowed-content-writing-background-colour: #fff;
-        --windowed-content-happening-background-colour: #fff500;
-        --windowed-content-resource-background-colour: #ff7d57;
-        // forms
-        --form-field-outline-colour: #b7b7b7;
-        --form-field-background-default-colour: #fff;
-        --form-field-background-hover-colour: #f5f5f5;
-        --form-button-background-colour: #fff;
-    }
-    :root {
-        // page
-        --page-padding-top: 2.5rem;
-        --page-padding-bottom: 2.5rem;
-        --page-padding-inline: calc(env(safe-area-inset-left, 0px) + 2.5rem);
-        --page-gap: var(--menu-item-height);
-        // logo
-        --logo-height: 3.5rem;
-        // navigation menu
-        --menu-item-padding-block: 0.666rem;
-        --menu-item-height: calc(1lh + (var(--menu-item-padding-block) * 2) + 1px);
-        --navigation-submenu-indent-inline-start: 10rem;
-        --navigation-submenu-indent-inline-end: 10rem;
-        --navigation-submenu-date-title-gap: 4rem;
-        // windowed content
-        --small-windowed-content-max-width: 37.5rem;
-        --big-windowed-content-max-width: 47.5rem;
-        --windowed-content-indent-inline-start: 10rem;
-        --windowed-content-indent-inline-end: 0px;
-        --windowed-content-padding-top: 1.5rem;
-        --windowed-content-padding-bottom: 2.5rem;
-        --windowed-content-padding-inline: 2.5rem;
-        --windowed-content-container-extra-padding-top: 0px;
-        --windowed-content-container-extra-padding-bottom: 0px;
-        --windowed-content-container-extra-padding-inline: 0px;
-        --windowed-content-orb-width: 2.5rem;
-        --windowed-content-orb-padding: 0.25rem;
-        // featured items
-        --featured-items-gap: 2rem;
-        --featured-item-max-width: 25rem;
-        --featured-item-padding-top: 1.25rem;
-        --featured-item-padding-bottom: 1rem;
-        --featured-item-padding-inline: 1.25rem;
-    }
-    :root {
-        // width breakpoints
-        @media (max-width: 1152px) {
-            // windowed content
-            --big-windowed-content-max-width: 42.5rem;
-            // featured items
-            --featured-items-gap: 1.5rem;
-            --featured-item-max-width: 20rem;
-            --featured-item-padding-top: 1rem;
-            --featured-item-padding-bottom: 0.75rem;
-            --featured-item-padding-inline: 1rem;
-        }
-        @media (max-width: 1024px) {
-            // navigation menu
-            --navigation-submenu-indent-inline-start: 7.5rem;
-            --navigation-submenu-indent-inline-end: 7.5rem;
-            --windowed-content-indent-inline-start: 7.5rem;
-            --navigation-submenu-date-title-gap: 1.5rem;
-            // windowed content
-            --big-windowed-content-max-width: 37.5rem;
-        }
-        @media (max-width: 896px) {
-            // windowed content
-            --small-windowed-content-max-width: 31.25rem;
-            --big-windowed-content-max-width: 31.25rem;
-            // featured items
-            :global(.featured-items) {
-                flex-direction: column;
-            }
-        }
-        @media (max-width: 768px) {
-            // text
-            --font-size: 16px;
-            // navigation menu
-            --menu-item-padding-block: 1rem;
-            // windowed content
-            --windowed-content-indent-inline-start: auto;
-            --windowed-content-indent-inline-end: auto;
-            --windowed-content-container-extra-padding-top: 1rem;
-            --windowed-content-container-extra-padding-bottom: calc(1rem + var(--logo-height));
-            --windowed-content-container-extra-padding-inline: 1rem;
-        }
-        @media (max-width: 640px) or (max-height: 448px) {
-            // page
-            --page-gap: 1.5rem;
-            --page-padding-top: 1.5rem;
-            --page-padding-bottom: 1.5rem;
-            --page-padding-inline: calc(env(safe-area-inset-left, 0px) + 1.5rem);
-            // logo
-            --logo-height: 2.5rem;
-        }
-        @media (max-width: 640px) {
-            header {
-                flex-direction: column;
-                flex-wrap: nowrap;
-            }
-        }
-        @media (max-height: 384px) {
-            // page
-            --page-gap: 1rem;
-            --page-padding-top: 1rem;
-            --page-padding-bottom: 1rem;
-            // logo
-            --logo-height: 2rem;
-            // navigation menu
-            --menu-item-padding-block: 0.666rem;
-        }
-        @media (max-width: 512px) {
-            // navigation menu
-            --navigation-submenu-indent-inline-start: 6.5rem;
-            --navigation-submenu-indent-inline-end: 0px;
-            // windowed content
-            --windowed-content-padding-top: 1.5rem;
-            --windowed-content-padding-bottom: 1.5rem;
-            --windowed-content-padding-inline: 1.5rem;
-            // featured items
-            --featured-item-max-width: 100%;
-            :global(.featured-item) {
-                flex: 1 1 100%;
-            }
-        }
-        @media (max-width: 384px) {
-            // windowed content
-            --windowed-content-padding-bottom: 1rem;
-            --windowed-content-padding-inline: 1rem;
-            --windowed-content-container-extra-padding-inline: 0.5rem;
-            --windowed-content-padding-top: 1rem;
-        }
-    }
     html {
         overscroll-behavior: none;
+        touch-action: manipulation;
     }
     body {
         font-size: var(--font-size);
         background-color: var(--page-background-colour);
-        touch-action: manipulation;
     }
     header {
         position: fixed;
@@ -393,32 +236,12 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         right: 0;
         bottom: 0;
         display: flex;
-        flex-wrap: wrap;
         gap: var(--page-gap);
         padding-top: var(--page-padding-top);
         padding-left: var(--page-padding-inline);
         padding-right: var(--page-padding-inline);
         padding-bottom: var(--page-padding-bottom);
-    }
-    :global(.navigation-bar) {
-        order: 1;
-        flex-basis: 100%;
-        margin-bottom: auto;
-    }
-    :global(.featured-bar) {
-        order: 2;
-        flex: 1;
-        margin-top: auto;
-    }
-    :global(.logo-bar) {
-        order: 3;
-        margin-top: auto;
-        margin-left: auto;
-    }
-    header {
         z-index: 1;
-    }
-    main {
-        z-index: 3;
+        // flex-wrap and flex-direction in @styles/global.scss
     }
 </style>

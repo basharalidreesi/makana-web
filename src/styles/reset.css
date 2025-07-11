@@ -54,7 +54,7 @@ html {
 /* Make images easier to work with */
 img, picture {
     display: block;
-    /* width: auto; */ /* breaks images */
+    /* width: auto; */ /* N.B. breaks images – do not use */
     height: auto;
     max-width: 100%;
 }

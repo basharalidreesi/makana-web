@@ -1,7 +1,7 @@
 ---
 import type { AboutPage, CollectionDocument, CollectionDocumentType, Happening, Language, Project, Resource, Writing } from '@root/sanity/sanity.types';
 import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_ORDERED, UI_DICTIONARY } from '@lib/languageUtils';
-import { getSlug, getTitle, groupByLocalisedSlug } from '@lib/contentUtils';
+import { getDate, getSlug, getTitle, groupByLocalisedSlug } from '@lib/contentUtils';
 import { generateRoute } from '@lib/routingUtils';
 
 type Props = {
@@ -58,7 +58,9 @@ const dynamicMenuItemsCount = contentCollectionsWithDocs.length;
 const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
 ---
 
-<div class='navigation-bar' style={{ '--how-many-menu-items': MINIMUM_MENU_ITEMS_COUNT, }} {...rest}>
+<Fragment set:html={`<style>:root{--how-many-menu-items:${MINIMUM_MENU_ITEMS_COUNT};--navigation-menu-height:calc(var(--how-many-menu-items)*var(--menu-item-height));}</style>`} />
+
+<div class='navigation-bar' {...rest}>
     {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
         const langId = supportedLang.id;
         const langDir = supportedLang.dir;
@@ -96,14 +98,15 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                             {localisedItems.map((item) => {
                                                 const itemSlug = getSlug(item, langId);
                                                 const itemTitle = getTitle(item, langId);
+                                                const itemDate = getDate(item, 'custom');
                                                 const routeToItem = itemSlug && generateRoute(item, langId);
                                                 if (!routeToItem) return;
                                                 return (
                                                     <li class='navigation-submenu-item static-navigation-item'>
                                                         <a href={routeToItem} aria-current={routeToItem === currentPath ? 'page' : undefined}>
                                                             <span class='time'>
-                                                                <time>
-                                                                    <bdi>00_00_0000</bdi>
+                                                                <time datetime={getDate(item, 'iso')}>
+                                                                    <bdi>{itemDate || '00_00_0000'}</bdi>
                                                                 </time>
                                                             </span>
                                                             <span class='title'>
@@ -158,8 +161,6 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
             button.setAttribute('aria-expanded', String(isExpanding));
             menu.setAttribute('aria-hidden', String(!isExpanding));
             menu.hidden = !isExpanding;
-            console.info(`Section ${controls} was expanded successfully`);
-            console.info(`All other sections were collapsed`);
             // @ts-ignore
             // see @components/WindowedContent.astro
             if (typeof window.closeWindowedContentDirectly === 'function') {
@@ -183,11 +184,14 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
 
 <style lang='scss'>
     @use '@styles/mixins.scss';
-    
+
     .navigation-bar {
         position: relative;
+        order: 1;
+        flex-basis: 100%;
         display: flex;
-        margin-top: calc(var(--menu-item-padding-block) * -1 / 2);
+        margin-top: var(--navigation-menu-margin-top);
+        margin-bottom: auto;
     }
     .navigation-bar::after {
         content: '';
@@ -228,9 +232,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
     }
     .navigation-submenu-item .time {
         margin-inline-end: var(--navigation-submenu-date-title-gap);
-        @media (max-width: 768px) {
-            display: none;
-        }
+        // display in @styles/global.scss
     }
     .navigation-submenu-item a {
         max-width: 100%;

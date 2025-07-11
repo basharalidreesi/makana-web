@@ -92,11 +92,6 @@ const resolvedContent = getContent(doc, lang);
         textLength={resolvedTextLength}
         alternates={resolvedAlternates}
     >
-        {resolvedTitle && (
-            <time slot='in-header'>
-                <bdi>00_00_0000</bdi>
-            </time>
-        )}
         {resolvedContent && (
             <PageContent source={resolvedContent} lang={lang} />
         )}

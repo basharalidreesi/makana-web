@@ -18,10 +18,9 @@ const {
 ---
 
 {Array.isArray(items) && items.length > 0 && (
-    <aside class='featured-bar' aria-label={UI_DICTIONARY.featuredItemsLabel[lang]} style={{ '--how-many-featured-items': 1, }}>
+    <aside class='featured-bar' aria-label={UI_DICTIONARY.featuredItemsLabel[lang]}>
         <ul class='featured-items'>
-            {items.map((item, index) => {
-                if (index === 1 )return
+            {items.map((item) => {
                 const slugData = getPreferredSlug(item, lang);
                 if (!slugData) return;
                 const routeToItem = generateRoute(item, slugData.langUsed);
@@ -40,7 +39,7 @@ const {
                                 <Fragment set:html={thumbnail} />
                             </div>
                         )}
-                        <div>
+                        <div class='title'>
                             <a href={routeToItem}>
                                 {SUPPORTED_LANGUAGES_IDS.map((langId) => itemAsRegistered[langId]?.title && (
                                     <span lang={langId} dir={SUPPORTED_LANGUAGES_RECORD[langId].dir}>
@@ -56,26 +55,73 @@ const {
     </aside>
 )}
 
+<!-- <script>
+    const THRESHOLD_AR = 2.0;
+    const updateThumbnails = () => {
+        const allThumbnails: NodeListOf<HTMLElement> | null = document.querySelectorAll('.featured-item .thumbnail');
+        const thumbnailsToHide: HTMLElement[] | null = [];
+        allThumbnails?.forEach((thumbnail) => {
+            thumbnail.style.display = '';
+        });
+        allThumbnails?.forEach((thumbnail) => {
+            const rect = thumbnail.getBoundingClientRect();
+            const rawAspectRatio = rect.width / rect.height;
+            const roundedAspectRatio = Math.round(rawAspectRatio * 100) / 100;
+            console.log(roundedAspectRatio);
+            if (roundedAspectRatio >= THRESHOLD_AR) {
+                thumbnailsToHide.push(thumbnail);
+            }
+        });
+        thumbnailsToHide?.forEach((thumbnail) => {
+            thumbnail.style.display = 'none';
+        });
+    };
+    updateThumbnails();
+    const container: HTMLElement | null = document.querySelector('.featured-item')?.parentElement || document.body;
+    let resizeTimeout: number | null = null;
+    const observer = new ResizeObserver(() => {
+        if (resizeTimeout) {
+            clearTimeout(resizeTimeout);
+        }
+        resizeTimeout = window.setTimeout(() => {
+            updateThumbnails();
+        }, 50);
+    });
+    observer.observe(container);
+</script> -->
+
 <style lang='scss'>
     ul, li {
         list-style: none;
     }
+    .featured-bar {
+        order: 2;
+        width: var(--featured-bar-width);
+        height: var(--featured-bar-height);
+    }
     .featured-items {
         display: flex;
         gap: var(--featured-items-gap);
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        // flex-direction, align-items, and justify-content in @styles/global.scss
     }
     .featured-item {
         position: relative;
         display: flex;
         flex-direction: column;
-        row-gap: 0.5rem;
-        flex: 1 1 calc((100% - ((var(--how-many-featured-items) - 1) * var(--featured-items-gap))) / var(--how-many-featured-items));
+        row-gap: var(--content-small-gap);
+        width: 100%;
         min-width: 0;
         max-width: var(--featured-item-max-width);
+        height: fit-content;
+        max-height: 100%;
         padding-top: var(--featured-item-padding-top);
         padding-bottom: var(--featured-item-padding-bottom);
         padding-inline: var(--featured-item-padding-inline);
-        outline: 1px solid;
+        border: 1px solid;
+        overflow: hidden;
     }
     a {
         display: flex;
@@ -100,11 +146,17 @@ const {
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
-        line-height: 1.5;
+        line-height: var(--average-text-line-height);
+    }
+    .thumbnail {
+        overflow: hidden;
     }
     .thumbnail :global(img) {
         height: 100%;
         width: 100%;
         object-fit: cover;
+    }
+    .title {
+        flex: 1;
     }
 </style>

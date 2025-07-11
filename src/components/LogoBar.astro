@@ -5,7 +5,7 @@ import { fetchSvg } from '@lib/imageUtils';
 
 type Props = {
     lang: Language;
-    websiteSettings: (Website & { logoUrl: string | undefined; }) | undefined;
+    websiteSettings: (Website & { logoUrl: string | undefined; logoAspectRatio: number | undefined; }) | undefined;
 };
 
 const {
@@ -14,7 +14,17 @@ const {
 } = Astro.props;
 
 const svgContent = websiteSettings?.logoUrl && await fetchSvg(websiteSettings.logoUrl);
+
+const FALLBACK_SVG_WIDTH = 494.81;
+
+const FALLBACK_SVG_HEIGHT = 243.65;
+
+const FALLBACK_SVG_ASPECT_RATIO = FALLBACK_SVG_WIDTH / FALLBACK_SVG_HEIGHT;
+
+const resolvedAspectRatio = websiteSettings?.logoAspectRatio ?? FALLBACK_SVG_ASPECT_RATIO;
 ---
+
+<Fragment set:html={`<style>:root{--logo-aspect-ratio:${resolvedAspectRatio};--logo-width:calc(var(--logo-height)*var(--logo-aspect-ratio));}</style>`} />
 
 <div class='logo-bar'>
     <div>
@@ -22,7 +32,7 @@ const svgContent = websiteSettings?.logoUrl && await fetchSvg(websiteSettings.lo
             {svgContent ? (
                 <Fragment set:html={svgContent} />
             ) : (
-                <svg viewBox='0 0 494.81 243.65' xmlns='http://www.w3.org/2000/svg'>
+                <svg viewBox={`0 0 ${FALLBACK_SVG_WIDTH} ${FALLBACK_SVG_HEIGHT}`} xmlns='http://www.w3.org/2000/svg'>
                     <path d='M262.43,19.08c7.51,8.38,6.07,19.65,6.07,19.65h2.02C273.41,14.16,254.34.29,248.27,0v10.4s6.36,0,14.16,8.67Z'/>
                     <path d='M165.9,6.36l-89.02,46.24-.58,9.25c6.65-4.62,89.02-45.67,89.02-46.24l.58-9.25Z'/>
                     <path d='M233.82,97.11l1.73-2.6c-2.31-.87-6.65-4.91-6.65-9.54,0-2.89,1.73-5.78,6.07-8.09L355.79,10.69l1.45-8.09-124.57,65.61c-8.96,4.62-9.54,10.69-9.54,14.45,0,9.25,10.69,14.45,10.69,14.45Z'/>
@@ -41,6 +51,11 @@ const svgContent = websiteSettings?.logoUrl && await fetchSvg(websiteSettings.lo
 </div>
 
 <style lang='scss'>
+    .logo-bar {
+        order: 3;
+        margin-top: auto;
+        margin-left: auto;
+    }
     .logo-bar div {
         height: var(--logo-height);
     }

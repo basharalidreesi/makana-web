@@ -1,15 +1,11 @@
-import type { AnyContentDocument, AnyMetaedDocument, AnyTargetableDocument, AnyTargetableDocumentStub, AnyTargetableDocumentType, AnyTitledDocument, Language, PageBuilder } from '@root/sanity/sanity.types';
-import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, UI_DICTIONARY } from '@lib/languageUtils';
+import type { AnyContentDocument, AnyLocationedDocument, AnyMetaedDocument, AnyRichlyDatedDocument, AnySimplyDatedDocument, AnyTargetableDocument, AnyTargetableDocumentStub, AnyTargetableDocumentType, AnyTitledDocument, Language, PageBuilder } from '@root/sanity/sanity.types';
+import { DEFAULT_LANGUAGE_ID, FSI, PDI, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
 import { getFromRegistry } from '@lib/registry';
 
 const hasSlugForLang = (
     doc: AnyTargetableDocumentStub | undefined,
     lang: Language | undefined,
-): boolean => {
-    if (!doc || !lang) return false;
-    const slug = doc.slug?.[lang]?.current;
-    return !!slug;
-};
+): boolean => !!getSlug(doc, lang);
 
 export const groupByLocalisedSlug = (
     docs: AnyTargetableDocument[] | undefined = [],
@@ -36,7 +32,7 @@ export const getPreferredSlug = (
     if (!doc || !lang) return undefined;
     const preferredLangOrder = [
         lang,
-        DEFAULT_LANGUAGE_ID === lang ? undefined : DEFAULT_LANGUAGE_ID,
+        lang === DEFAULT_LANGUAGE_ID ? undefined : DEFAULT_LANGUAGE_ID,
         ...SUPPORTED_LANGUAGES_IDS.filter((l) => l !== lang && l !== DEFAULT_LANGUAGE_ID),
     ].filter(Boolean);
     for (const preferredLang of preferredLangOrder as Language[]) {
@@ -65,7 +61,6 @@ export const getSummary = (
     lang: Language | undefined,
 ): string | undefined => {
     if (!doc || !lang) return undefined;
-    if (!('summary' in doc)) return undefined;
     const summary = doc.summary?.[lang];
     if (!summary) return undefined;
     return summary;
@@ -86,10 +81,85 @@ export const getTextLength = (
     lang: Language | undefined,
 ): number | undefined => {
     if (!doc || !lang) return undefined;
-    if (!('textLength' in doc)) return undefined;
-    const textLength = (doc.textLength as any)?.[lang];
+    const textLength = doc.textLength?.[lang];
     if (!textLength) return undefined;
     return textLength;
+};
+
+const pad = (n: number): string => n.toString().padStart(2, '0');
+
+export const getDate = (
+    doc: AnySimplyDatedDocument | AnyRichlyDatedDocument | undefined,
+    format: 'iso' | 'custom',
+): string | undefined => {
+    if (!doc) return undefined;
+    if ('date' in doc) {
+        if (format === 'iso') return doc.date ?? undefined;
+        const dateString = renderDate(doc.date)?.dateString;
+        if (!dateString) return undefined;
+        return dateString;
+    }
+    if ('startDate' in doc) {
+        if (format === 'iso') return doc.startDate ?? undefined;
+        const dateString = renderDate(doc.startDate)?.dateString;
+        if (!dateString) return undefined;
+        return dateString;
+    }
+};
+
+export const getDateTime = (
+    doc: AnyRichlyDatedDocument | undefined,
+    lang: Language | undefined,
+): string | undefined => {
+    if (!doc || !lang) return undefined;
+    const startDate = doc.startDate;
+    if (!startDate) return undefined;
+    const renderedDate = renderDate(startDate);
+    if (!renderedDate) return undefined;
+    const { day, month, year, dateString } = renderedDate;
+    if (!day || !month || !year || !dateString) return undefined;
+    const hours = doc.startTime?.hours ? parseInt(doc.startTime.hours, 10) : undefined;
+    const minutes = hours ? (doc.startTime?.minutes ? parseInt(doc.startTime.minutes, 10) : 0) : undefined;
+    const timeZone = doc.timezone;
+    if (!hours || !minutes || !timeZone) return getDate(doc, 'custom');
+    const isoString = `${year}-${month}-${day}T${pad(hours)}:${pad(minutes)}:00`;
+    const date = new Date(isoString);
+    const timeFormatter = new Intl.DateTimeFormat(lang, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: timeZone,
+        numberingSystem: 'latn',
+    });
+    const timeParts = timeFormatter.formatToParts(date);
+    const timeString = timeParts.map((part) => part.value).join('').replace(',', '').trim();
+    const comma = SUPPORTED_LANGUAGES_RECORD[lang].comma;
+    return `${FSI}${dateString}${PDI}${comma} ${timeString}`;
+};
+
+export const renderDate = (
+    date: string | undefined,
+): { day: string; month: string; year: string; dateString: string; } | undefined => {
+    if (!date) return undefined;
+    const [year, month, day] = date.split('-').map(Number);
+    const dateString = `${pad(day)}_${pad(month)}_${year}`;
+    if (!day || !month || !year) return undefined;
+    return {
+        day: pad(day),
+        month: pad(month),
+        year: String(year),
+        dateString: dateString,
+    };
+};
+
+export const getLocation = (
+    doc: AnyLocationedDocument | undefined,
+    lang: Language | undefined,
+): string | undefined => {
+    if (!doc || !lang) return undefined;
+    const location = doc.location?.[lang];
+    if (!location) return undefined;
+    return location;
 };
 
 export const escapeHtml = (str: string = '') => str.replace(
@@ -126,26 +196,6 @@ export const normaliseAspectRatioForPadding = (ratio: string | undefined): strin
     }
     return (numRatio * 100) + '%'; // convert to percentage padding
 }
-
-// export const renderIsoDate = (date: string | undefined, {
-//     mode = 'full',
-//     withFallback = false,
-// }: {
-//     mode?: 'full' | 'yearAndMonth' | 'yearOnly';
-//     withFallback?: boolean;
-// } = {}) => {
-//     if (!date && !withFallback) { return; }
-//     const isValidIsoDate = /^(\d{4})-(\d{2})-(\d{2})$/.test(date || '');
-//     const safeDate = isValidIsoDate ? date : (withFallback ? '0000-00-00' : undefined);
-//     if (!safeDate) { return; }
-//     const [year, month, day] = safeDate.split('-');
-//     switch (mode) {
-//         case 'full': return `${day}_${month}_${year}`;
-//         case 'yearAndMonth': return `${month}_${year}`;
-//         case 'yearOnly': return year;
-//         default: return;
-//     }
-// };
 
 export type AlternateDocument = {
     lang: Language;

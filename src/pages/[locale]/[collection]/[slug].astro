@@ -4,7 +4,7 @@ import type { CollectionDocument, CollectionDocumentType, Language } from '@root
 import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
 import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
-import { getAlternates, getContent, getSlug, getSummary, getTextLength, groupByLocalisedSlug } from '@lib/contentUtils';
+import { getAlternates, getContent, getDate, getDateTime, getLocation, getSlug, getSummary, getTextLength, groupByLocalisedSlug } from '@lib/contentUtils';
 import { registerId } from '@lib/registry';
 import { generateRoute, LOCALE_PREFIXES } from '@lib/routingUtils';
 import { DOCUMENT_COLLECTION_PATHS } from '@lib/routingUtils';
@@ -28,7 +28,6 @@ export const getStaticPaths: GetStaticPaths = async () => {
             '_type',
             'title',
             'slug',
-            'date',
             'summary',
             'mainImage',
             RESOLVED_CONTENT_QUERY,
@@ -39,6 +38,10 @@ export const getStaticPaths: GetStaticPaths = async () => {
                 'startTime',
                 'timezone',
                 'location',
+            );
+        } else {
+            baseQueryFields.push(
+                'date',
             );
         }
         const queryFields = baseQueryFields.join(', ');
@@ -98,6 +101,8 @@ const resolvedImage = doc.mainImage;
 const resolvedAlternates = getAlternates(doc, lang);
 const resolvedTextLength = getTextLength(doc, lang);
 const resolvedContent = getContent(doc, lang);
+const resolvedDate = 'date' in doc ? getDate(doc, 'custom') : 'startDate' in doc ? getDateTime(doc, lang) : undefined;
+const resolvedLocation = 'location' in doc ? getLocation(doc, lang) : undefined;
 ---
 
 <Layout
@@ -114,10 +119,17 @@ const resolvedContent = getContent(doc, lang);
         textLength={resolvedTextLength}
         alternates={resolvedAlternates}
     >
-        {resolvedTitle && (
-            <time slot='in-header'>
-                <bdi>00_00_0000</bdi>
-            </time>
+        {resolvedDate && (
+            <p slot='in-header'>
+                <time datetime={getDate(doc, 'iso')}>
+                    <bdi>{resolvedDate}</bdi>
+                </time>
+            </p>
+        )}
+        {resolvedLocation && (
+            <p slot='in-header'>
+                <bdi>{resolvedLocation}</bdi>
+            </p>
         )}
         {resolvedContent && (
             <PageContent source={resolvedContent} lang={lang} />
