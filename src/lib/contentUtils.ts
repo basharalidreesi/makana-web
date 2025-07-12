@@ -1,6 +1,7 @@
 import type { AnyContentDocument, AnyLocationedDocument, AnyMetaedDocument, AnyRichlyDatedDocument, AnySimplyDatedDocument, AnyTargetableDocument, AnyTargetableDocumentStub, AnyTargetableDocumentType, AnyTitledDocument, Language, PageBuilder } from '@root/sanity/sanity.types';
 import { DEFAULT_LANGUAGE_ID, FSI, PDI, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
 import { getFromRegistry } from '@lib/registry';
+import { DateTime } from 'luxon';
 
 const hasSlugForLang = (
     doc: AnyTargetableDocumentStub | undefined,
@@ -120,19 +121,24 @@ export const getDateTime = (
     if (!day || !month || !year || !dateString) return undefined;
     const hours = doc.startTime?.hours ? parseInt(doc.startTime.hours, 10) : undefined;
     const minutes = hours ? (doc.startTime?.minutes ? parseInt(doc.startTime.minutes, 10) : 0) : undefined;
-    const timeZone = doc.timezone;
-    if (!hours || !minutes || !timeZone) return getDate(doc, 'custom');
-    const isoString = `${year}-${month}-${day}T${pad(hours)}:${pad(minutes)}:00`;
-    const date = new Date(isoString);
+    const timeZoneName = doc.timezone;
+    if (!hours || !minutes || !timeZoneName) return getDate(doc, 'custom');
+    const dt = DateTime.fromObject({
+        year: parseInt(year, 10),
+        month: parseInt(month, 10),
+        day: parseInt(day, 10),
+        hour: hours,
+        minute: minutes,
+    }, { zone: timeZoneName });
+    if (!dt.isValid) return getDate(doc, 'custom');
     const timeFormatter = new Intl.DateTimeFormat(lang, {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-        timeZone: timeZone,
+        timeZone: timeZoneName,
         numberingSystem: 'latn',
     });
-    const timeParts = timeFormatter.formatToParts(date);
-    const timeString = timeParts.map((part) => part.value).join('').replace(',', '').trim();
+    const timeString = timeFormatter.format(dt.toJSDate());
     const comma = SUPPORTED_LANGUAGES_RECORD[lang].comma;
     return `${FSI}${dateString}${PDI}${comma} ${timeString}`;
 };
