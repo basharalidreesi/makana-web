@@ -5,25 +5,24 @@
     import type { AnyTargetableDocumentType, Language } from '@root/sanity/sanity.types';
     import { SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
 
-    // @ts-ignore
-    if (!window._isActionableClicksHandlerInitialised) {
-        // @ts-ignore
-        window._isActionableClicksHandlerInitialised = true;
+    if (!window._isActionHandlerInitialised) {
+        window._isActionHandlerInitialised = true;
 
         type Action =
             | 'open-windowed-content-skeleton'
             | 'close-windowed-content'
             | 'replace-windowed-content-with-skeleton'
+            | 'replace-windowed-content-with-superposed-content-skeleton'
             | 'open-superposed-content-skeleton'
             | 'close-superposed-content'
             | 'replace-superposed-content-with-skeleton'
+            | 'replace-superposed-content-with-windowed-content-skeleton'
             | 'close-any-content';
 
         type ActionParams = {
             targetLang: Language | undefined;
             targetType: AnyTargetableDocumentType | undefined;
             targetPathname: string | undefined;
-            originPath: string | undefined;
             preventDefault: string | undefined;
         };
 
@@ -39,7 +38,7 @@
             return value !== null ? (value as T) : undefined;
         };
 
-        const handleActionableClick = (event: Event) => {
+        const handleAction = (event: Event) => {
             const target = (event.target as HTMLElement).closest<HTMLElement>('[data-action]');
             if (!target) return;
             const action = getAttribute<Action>(target, 'data-action');
@@ -49,7 +48,6 @@
                 targetLang: getAttribute<Language>(target, 'data-action-target-lang'),
                 targetType: getAttribute<AnyTargetableDocumentType>(target, 'data-action-target-type'),
                 targetPathname: getAttribute<string>(target, 'data-action-target-pathname'), 
-                originPath: getAttribute<string>(target, 'data-action-origin-path'),
                 preventDefault: getAttribute<string>(target, 'data-action-prevent-default'),
             };
             if (lastActionParams.preventDefault === 'true') {
@@ -59,7 +57,7 @@
         };
 
         const handleLastAction = () => {
-            console.info('Actionable click triggered', {
+            console.info('Action triggered', {
                 lastAction,
                 lastActionParams,
             });
@@ -67,15 +65,17 @@
                 case 'open-windowed-content-skeleton': return openWindowedContentSkeleton();
                 case 'close-windowed-content': return closeWindowedContent();
                 case 'replace-windowed-content-with-skeleton': return replaceWindowedContentWithSkeleton();
-                case 'open-superposed-content-skeleton':
-                case 'close-superposed-content':
-                case 'replace-superposed-content-with-skeleton':
-                case 'close-any-content':
+                case 'replace-windowed-content-with-superposed-content-skeleton': return replaceWindowedContentWithSuperposedContentSkeleton();
+                case 'open-superposed-content-skeleton': return openSuperposedContentSkeleton();
+                case 'close-superposed-content': return closeSuperposedContent();
+                case 'replace-superposed-content-with-skeleton': return replaceSuperposedContentWithSkeleton();
+                case 'replace-superposed-content-with-windowed-content-skeleton': return replaceSuperposedContentWithWindowedContentSkeleton();
+                case 'close-any-content': return closeAnyContent();
                 default: return;
             };
         };
 
-        const openWindowedContentSkeleton = () => { // N.B. this flag assumes that no windowed-content or superposed-content instances exist
+        const openWindowedContentSkeleton = () => { // N.B. this flag assumes that there are no windowed-content or superposed-content instances currently active
             const mainElement = document.querySelector<HTMLElement>('main');
             const templateElement = document.querySelector<HTMLTemplateElement>('#windowed-content-template');
             if (!mainElement || !templateElement) return;
@@ -97,8 +97,8 @@
             windowedContent.style.setProperty('display', 'none');
             const navCurrent = document.querySelector<HTMLElement>(`.navigation-bar a[aria-current='page']`);
             navCurrent?.removeAttribute('aria-current');
-            if (lastActionParams?.originPath) {
-                history.pushState({}, '', lastActionParams.originPath);
+            if (lastActionParams?.targetPathname) {
+                history.pushState({}, '', lastActionParams.targetPathname);
             }
         };
         const replaceWindowedContentWithSkeleton = () => { // N.B. this flag assumes that the user is navigating from a currently-active windowed-content instance to another
@@ -112,15 +112,33 @@
                 }
             }
         };
+        const replaceWindowedContentWithSuperposedContentSkeleton = () => {
+            // TODO
+        };
+        const openSuperposedContentSkeleton = () => {
+            // TODO
+        };
+        const closeSuperposedContent = () => {
+            // TODO
+        };
+        const replaceSuperposedContentWithSkeleton = () => {
+            // TODO
+        };
+        const replaceSuperposedContentWithWindowedContentSkeleton = () => {
+            // TODO
+        };
+        const closeAnyContent = () => { // N.B. this flag assumes that there is a windowed-content and/or superposed-content instance currently active
+            closeWindowedContent();
+            closeSuperposedContent();
+        };
 
-        // @ts-ignore
-        // hoisting closeWindowedContent to the window context so we can use it elsewhere (see @components/NavigationBar.astro)
-        window.closeWindowedContent = closeWindowedContent;
+        // N.B. hoisting closeAnyContent to the window context so we can use it elsewhere (see @components/NavigationBar.astro)
+        window._closeAnyContent = closeAnyContent;
 
         const seekActionables = () => {
             const allActionables = document.querySelectorAll<HTMLElement>('[data-action]');
             allActionables.forEach((actionable) => {
-                actionable.addEventListener('click', handleActionableClick, { passive: false });
+                actionable.addEventListener('click', handleAction, { passive: false });
             });
         };
         seekActionables();

@@ -148,10 +148,8 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
 </div>
 
 <script>
-    // @ts-ignore
-    if (!window._isNavInitialised) {
-        // @ts-ignore
-        window._isNavInitialised = true;
+    if (!window._isNavigationBarInitialised) {
+        window._isNavigationBarInitialised = true;
         const navExpandButtons = document.querySelectorAll<HTMLElement>(`button[data-nav-expand]:not([aria-disabled='true'])`);
         navExpandButtons?.forEach((button) => button.addEventListener('click', () => {
             const expanded = button.getAttribute('aria-expanded') === 'true';
@@ -173,11 +171,8 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
             button.setAttribute('aria-expanded', String(isExpanding));
             menu.setAttribute('aria-hidden', String(!isExpanding));
             menu.hidden = !isExpanding;
-            // @ts-ignore
-            // see @components/ActionableClicksHandler.astro
-            if (typeof window.closeWindowedContent === 'function') {
-                // @ts-ignore
-                window.closeWindowedContent();
+            if (typeof window._closeAnyContent === 'function') {
+                window._closeAnyContent(); // N.B. see @components/ActionHandler.astro
             }
         }));
         const navAnchors = document.querySelectorAll<HTMLElement>(`.navigation-bar a:not([aria-disabled='true'])`);
@@ -244,7 +239,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
     }
     .navigation-submenu-item .time {
         margin-inline-end: var(--navigation-submenu-date-title-gap);
-        // display in @styles/global.scss
+        // N.B. display in @styles/global.scss
     }
     .navigation-submenu-item a {
         max-width: 100%;

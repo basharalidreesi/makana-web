@@ -5,7 +5,7 @@ import type { AnyTargetableDocumentType, Language } from '@root/sanity/sanity.ty
 // A document is only registered when it
 // is successfully published (i.e., when it
 // passes all the checks in getStaticPaths –
-// see @pages/[slug.astro] and
+// see @pages/[slug].astro and
 // @pages/[locale]/[collection].astro)
 
 type DocumentId = string;

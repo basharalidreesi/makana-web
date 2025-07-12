@@ -15,7 +15,7 @@ type DocumentCollectionPathDictionary = {
 
 export const DOCUMENT_COLLECTION_PATHS: DocumentCollectionPathDictionary = {
     project: {
-        ar: 'masharih',
+        ar: 'mashrouat',
         en: 'projects',
     },
     writing: {

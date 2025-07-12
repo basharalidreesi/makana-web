@@ -173,14 +173,14 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                 const formAttributesString = validFormAttributes?.join(' ');
                 const getNameFromLabel = (label: LocalisedString | undefined) => label
                     ? label[DEFAULT_LANGUAGE_ID]?.trim()?.toLowerCase()?.replace(/\s+/g, '_')
-                    : undefined; // todo
+                    : undefined;
                 return (`
                     <form
                         class='form-block'
                         action='${form.endpoint}'
                         method='POST'
                         onkeydown='if(event.key === "Enter" && event.target.tagName !== "TEXTAREA") event.preventDefault();'
-                        ${formAttributesString}
+                        ${formAttributesString ?? ''}
                     >
                         ${form.fields.map((field, fieldIndex) => {
                             const {
@@ -379,7 +379,7 @@ const html = toHTML(source, {
                 flex-wrap: wrap;
                 justify-content: center;
                 gap: var(--_gap);
-                // align-items and flex-direction in @styles/global.scss
+                // N.B. align-items and flex-direction in @styles/global.scss
             }
             .image {
                 flex-basis: calc((100% - ((var(--how-many-images) - 1) * var(--_gap))) / var(--how-many-images));
@@ -408,7 +408,7 @@ const html = toHTML(source, {
             }
             .inner-wrapper {
                 position: relative;
-                // padding-bottom calculated inline
+                // N.B. padding-bottom calculated inline
                 height: 0;
                 overflow:
                 hidden;

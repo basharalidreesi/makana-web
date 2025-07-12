@@ -10,7 +10,7 @@ import LogoBar from '@components/LogoBar.astro';
 import NavigationBar from '@components/NavigationBar.astro';
 import FeaturedBar from '@components/FeaturedBar.astro';
 import WindowedContent from '@components/WindowedContent.astro';
-import ActionableClicksHandler from '@components/ActionableClicksHandler.astro';
+import ActionHandler from '@components/ActionHandler.astro';
 import '@styles/reset.css';
 import '@styles/fonts.css';
 import '@styles/global.scss';
@@ -217,8 +217,18 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             title={undefined}
         />
     </template>
-    <ActionableClicksHandler />
+    <ActionHandler />
 </html>
+
+<script>
+    declare global {
+        interface Window {
+            _isNavigationBarInitialised?: boolean; // N.B. see @components/NavigationBar.astro
+            _isActionHandlerInitialised?: boolean; // N.B. see @components/ActionHandler.astro
+            _closeAnyContent?: () => void; // N.B. see @components/ActionHandler.astro
+        }
+    }
+</script>
 
 <style lang='scss'>
     html {
@@ -242,6 +252,6 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         padding-right: var(--page-padding-inline);
         padding-bottom: var(--page-padding-bottom);
         z-index: 1;
-        // flex-wrap and flex-direction in @styles/global.scss
+        // N.B. flex-wrap and flex-direction in @styles/global.scss
     }
 </style>

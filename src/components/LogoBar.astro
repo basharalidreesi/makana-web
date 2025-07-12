@@ -28,7 +28,14 @@ const resolvedAspectRatio = websiteSettings?.logoAspectRatio ?? FALLBACK_SVG_ASP
 
 <div class='logo-bar'>
     <div>
-        <a href='/' title={UI_DICTIONARY.websiteTitle[lang]} aria-label={UI_DICTIONARY.websiteTitle[lang]} data-action='close-any-content'>
+        <a
+            href='/'
+            title={UI_DICTIONARY.websiteTitle[lang]}
+            aria-label={UI_DICTIONARY.websiteTitle[lang]}
+            data-action='close-any-content'
+            data-action-target-pathname='/'
+            data-action-prevent-default='true'
+        >
             {svgContent ? (
                 <Fragment set:html={svgContent} />
             ) : (

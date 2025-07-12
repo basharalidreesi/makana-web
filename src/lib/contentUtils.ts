@@ -1,5 +1,5 @@
 import type { AnyContentDocument, AnyLocationedDocument, AnyMetaedDocument, AnyRichlyDatedDocument, AnySimplyDatedDocument, AnyTargetableDocument, AnyTargetableDocumentStub, AnyTargetableDocumentType, AnyTitledDocument, Language, PageBuilder } from '@root/sanity/sanity.types';
-import { DEFAULT_LANGUAGE_ID, FSI, PDI, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID, FSI, PDI, SUPPORTED_LANGUAGES_IDS, UI_DICTIONARY } from '@lib/languageUtils';
 import { getFromRegistry } from '@lib/registry';
 import { DateTime } from 'luxon';
 
@@ -139,7 +139,7 @@ export const getDateTime = (
         numberingSystem: 'latn',
     });
     const timeString = timeFormatter.format(dt.toJSDate());
-    const comma = SUPPORTED_LANGUAGES_RECORD[lang].comma;
+    const comma = UI_DICTIONARY.comma[lang];
     return `${FSI}${dateString}${PDI}${comma} ${timeString}`;
 };
 
