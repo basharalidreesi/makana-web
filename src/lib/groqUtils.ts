@@ -5,6 +5,7 @@ const PT_LINK_MARK_RESOLVER_QUERY = (`
         ...,
         type == 'internal' => {
             internalTarget->{
+                _id,
                 _type,
                 slug
             }

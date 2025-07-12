@@ -1,5 +1,5 @@
 ---
-import type { Language, Link, LocalisedString, PageBuilder, PortableTextAudioBlock, PortableTextFormBlock, PortableTextImageBlock, PortableTextVideoBlock } from '@root/sanity/sanity.types';
+import type { AnyTargetableDocumentType, Language, Link, LocalisedString, PageBuilder, PortableTextAudioBlock, PortableTextFormBlock, PortableTextImageBlock, PortableTextVideoBlock } from '@root/sanity/sanity.types';
 import { toHTML, uriLooksSafe, type PortableTextHtmlComponents } from '@portabletext/to-html';
 import { createSanityImage } from '@lib/imageUtils';
 import { escapeHtml, getPreferredSlug, normaliseAspectRatioForPadding } from '@lib/contentUtils';
@@ -275,7 +275,9 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                 externalTarget,
                 internalTarget,
             } = value as Link;
-            let href: string | undefined;
+            let href: string | undefined = undefined;
+            let langUsed: string | undefined = undefined;
+            let docType: AnyTargetableDocumentType | undefined = undefined;
             if (type === 'external' && externalTarget && uriLooksSafe(externalTarget)) {
                 href = escapeHtml(externalTarget);
             } else if (type === 'internal' && internalTarget) {
@@ -284,12 +286,22 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                     const routeToItem = generateRoute(internalTarget, slugData.langUsed);
                     if (routeToItem) {
                         href = routeToItem;
+                        langUsed = slugData.langUsed;
+                        docType = internalTarget._type;
                     }
                 }
             }
             const rel = href?.startsWith('/') ? undefined : 'noreferrer noopener'
+            const action = 'replace-windowed-content-with-skeleton';
             return href ? (
-                `<a href='${href}'${rel ? ` rel='${rel}'` : ''}>${children}</a>`
+                `<a href='${href}' ${rel ? `rel='${rel}'` : ''}${docType && langUsed ? [
+                    action ? `data-action='${action}'` : undefined,
+                    langUsed ? `data-action-target-lang='${langUsed}'` : undefined,
+                    docType ? `data-action-target-type='${docType}'` : undefined,
+                    `data-action-target-pathname='${href}'`,
+                ].filter(Boolean).join(' ') : ''}>
+                    ${children}
+                </a>`
             ) : children;
         },
         bdi: ({ children }) => `<bdi>${children}</bdi>`,
@@ -315,20 +327,6 @@ const html = toHTML(source, {
         <Fragment set:html={html} />
     </div>
 )}
-
-<!-- <script>
-    const anchors = document.querySelectorAll('.content a');
-    anchors.forEach((anchor) => {
-        anchor.addEventListener('click', () => {
-            // @ts-ignore
-            // see @components/WindowedContent.astro
-            if (typeof window.closeWindowedContentDirectly === 'function') {
-                // @ts-ignore
-                window.closeWindowedContentDirectly();
-            }
-        });
-    });
-</script> -->
 
 <style lang='scss' is:global>
     .content {

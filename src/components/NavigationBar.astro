@@ -73,7 +73,13 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                         {items.aboutPage && (
                             <li class='navigation-menu-item static-navigation-item'>
                                 {routeToAboutPage ? (
-                                    <a href={routeToAboutPage} aria-current={routeToAboutPage === currentPath ? 'page' : undefined}>
+                                    <a
+                                        href={routeToAboutPage}
+                                        aria-current={routeToAboutPage === currentPath ? 'page' : undefined}
+                                        data-action='open-windowed-content-skeleton'
+                                        data-action-target-lang={langId}
+                                        data-action-target-type={items.aboutPage._type}
+                                    >
                                         <bdi>{aboutPageTitle}</bdi>
                                     </a>
                                 ) : (
@@ -103,7 +109,13 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                                 if (!routeToItem) return;
                                                 return (
                                                     <li class='navigation-submenu-item static-navigation-item'>
-                                                        <a href={routeToItem} aria-current={routeToItem === currentPath ? 'page' : undefined}>
+                                                        <a
+                                                            href={routeToItem}
+                                                            aria-current={routeToItem === currentPath ? 'page' : undefined}
+                                                            data-action='open-windowed-content-skeleton'
+                                                            data-action-target-lang={langId}
+                                                            data-action-target-type={item._type}
+                                                        >
                                                             <span class='time'>
                                                                 <time datetime={getDate(item, 'iso')}>
                                                                     <bdi>{itemDate || '00_00_0000'}</bdi>
@@ -140,7 +152,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
     if (!window._isNavInitialised) {
         // @ts-ignore
         window._isNavInitialised = true;
-        const navExpandButtons: NodeListOf<HTMLElement> | null = document.querySelectorAll(`button[data-nav-expand]:not([aria-disabled='true'])`);
+        const navExpandButtons = document.querySelectorAll<HTMLElement>(`button[data-nav-expand]:not([aria-disabled='true'])`);
         navExpandButtons?.forEach((button) => button.addEventListener('click', () => {
             const expanded = button.getAttribute('aria-expanded') === 'true';
             const controls = button.getAttribute('aria-controls');
@@ -162,13 +174,13 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
             menu.setAttribute('aria-hidden', String(!isExpanding));
             menu.hidden = !isExpanding;
             // @ts-ignore
-            // see @components/WindowedContent.astro
-            if (typeof window.closeWindowedContentDirectly === 'function') {
+            // see @components/ActionableClicksHandler.astro
+            if (typeof window.closeWindowedContent === 'function') {
                 // @ts-ignore
-                window.closeWindowedContentDirectly();
+                window.closeWindowedContent();
             }
         }));
-        const navAnchors: NodeListOf<HTMLElement> | null = document.querySelectorAll(`.navigation-bar a:not([aria-disabled='true'])`);
+        const navAnchors = document.querySelectorAll<HTMLElement>(`.navigation-bar a:not([aria-disabled='true'])`);
         navAnchors?.forEach((anchor) => {
             anchor.addEventListener('click', () => {
                 anchor.setAttribute('aria-current', 'page');

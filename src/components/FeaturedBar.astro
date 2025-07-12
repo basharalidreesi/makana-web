@@ -40,7 +40,12 @@ const {
                             </div>
                         )}
                         <div class='title'>
-                            <a href={routeToItem}>
+                            <a
+                                href={routeToItem}
+                                data-action='open-windowed-content-skeleton'
+                                data-action-target-lang={slugData.langUsed}
+                                data-action-target-type={item._type}
+                            >
                                 {SUPPORTED_LANGUAGES_IDS.map((langId) => itemAsRegistered[langId]?.title && (
                                     <span lang={langId} dir={SUPPORTED_LANGUAGES_RECORD[langId].dir}>
                                         <bdi>{itemAsRegistered[langId]?.title}</bdi>

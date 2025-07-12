@@ -39,6 +39,24 @@
     --form-field-background-default-colour: #fff;
     --form-field-background-hover-colour: #f5f5f5;
     --form-button-background-colour: #fff;
+    // skeleton content
+    --skeleton-content-background-colour: rgba(0, 0, 0, 0.15);
+    --skeleton-content-border-radius: 4px;
+    --skeleton-content-animation: pulse 2s infinite;
+}
+:root {
+    // animations
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.4;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
 }
 :root {
     // page

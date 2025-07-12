@@ -9,6 +9,8 @@ import { ClientRouter } from 'astro:transitions';
 import LogoBar from '@components/LogoBar.astro';
 import NavigationBar from '@components/NavigationBar.astro';
 import FeaturedBar from '@components/FeaturedBar.astro';
+import WindowedContent from '@components/WindowedContent.astro';
+import ActionableClicksHandler from '@components/ActionableClicksHandler.astro';
 import '@styles/reset.css';
 import '@styles/fonts.css';
 import '@styles/global.scss';
@@ -199,26 +201,24 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
                 }}
                 transition:persist
             />
-            <FeaturedBar
+            <!-- <FeaturedBar
                 lang={lang}
                 items={resolvedFeaturedItems}
-            />
+            /> -->
         </header>
-        <main>
+        <main astro:before-swap='handleBeforeSwap'>
             <slot />
         </main>
     </body>
+    <template id='windowed-content-template'>
+        <WindowedContent
+            skeleton={true}
+            lang={undefined}
+            title={undefined}
+        />
+    </template>
+    <ActionableClicksHandler />
 </html>
-
-<script>
-    // TODO initiate skeletons
-    document.addEventListener('astro:before-preparation', () => {
-        console.log('now');
-        const windowedContentSkeleton: HTMLElement | null = document.querySelector('.windowed-content-skeleton');
-        if (!windowedContentSkeleton) return;
-        windowedContentSkeleton.hidden = false;
-    });
-</script>
 
 <style lang='scss'>
     html {

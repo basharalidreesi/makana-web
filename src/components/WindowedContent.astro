@@ -1,9 +1,10 @@
 ---
 import type { AnyContentDocumentType, Language } from '@root/sanity/sanity.types';
 import type { AlternateDocument } from '@lib/contentUtils';
-import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
 
 type Props = {
+    skeleton?: boolean;
     lang: Language | undefined;
     title: string | undefined;
     type?: AnyContentDocumentType | undefined;
@@ -12,6 +13,7 @@ type Props = {
 };
 
 const {
+    skeleton = false,
     lang = DEFAULT_LANGUAGE_ID,
     title,
     type = 'default',
@@ -22,23 +24,38 @@ const {
 const resolvedSize = textLength >= 1500 ? 'big' : 'small';
 ---
 
-<div class='windowed-content-container' dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}>
+<div class='windowed-content-container' id={skeleton ? 'windowed-content-skeleton-container' : 'windowed-content-container'} dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}>
     <div class=`windowed-content ${type}-windowed-content ${resolvedSize}-windowed-content`>
         <div class='windowed-content-orbs'>
-            {Array.isArray(alternates) && alternates.length > 0 && alternates.map((alternate) => {
+            {!skeleton && Array.isArray(alternates) && alternates.length > 0 && alternates.map((alternate) => {
                 const altRoute = alternate.route;
                 const altLang = alternate.lang;
                 if (!altRoute || !altLang) return;
                 return (
                     <div class='windowed-content-orb switch-content-language'>
-                        <a href={altRoute} title={UI_DICTIONARY.languageSwitchLabel[altLang]} aria-label={UI_DICTIONARY.languageSwitchLabel[altLang]}>
+                        <a
+                            href={altRoute}
+                            title={UI_DICTIONARY.languageSwitchLabel[altLang]}
+                            aria-label={UI_DICTIONARY.languageSwitchLabel[altLang]}
+                            data-action='replace-windowed-content-with-skeleton'
+                            data-action-target-lang={altLang}
+                            data-action-target-type={alternate.type}
+                            data-action-target-pathname={altRoute}
+                        >
                             <Fragment set:html={SUPPORTED_LANGUAGES_RECORD[altLang].symbol} />
                         </a>
                     </div>
                 );
             })}
             <div class='windowed-content-orb close-windowed-content'>
-                <a href='/' title={UI_DICTIONARY.closeButtonLabel[lang]} aria-label={UI_DICTIONARY.closeButtonLabel[lang]}>
+                <a
+                    href={skeleton ? undefined : '/'}
+                    title={UI_DICTIONARY.closeButtonLabel[lang]}
+                    aria-label={UI_DICTIONARY.closeButtonLabel[lang]}
+                    data-action='close-windowed-content'
+                    data-action-origin-path='/'
+                    data-action-prevent-default='true'
+                >
                     <svg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
                         <line x1='6' y1='6' x2='18' y2='18'/>
                         <line x1='6' y1='18' x2='18' y2='6'/>
@@ -47,58 +64,28 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
             </div>
         </div>
         <div class='windowed-content-header'>
-            <h2>
-                <bdi>{title || UI_DICTIONARY.untitledLabel[lang]}</bdi>
-            </h2>
-            <slot name='in-header' />
+            {skeleton ? (
+                <div class='skeleton skeleton-title'></div>
+                <div class='skeleton skeleton-subtitle'></div>
+            ) : (
+                <h2>
+                    <bdi>{title || UI_DICTIONARY.untitledLabel[lang]}</bdi>
+                </h2>
+                <slot name='in-header' />
+            )}
         </div>
-        <slot />
-        <div class='windowed-content-footer'>
-            <slot name='footer' />
-        </div>
+        {skeleton ? (
+            <div class='content'>
+                <div class='skeleton skeleton-text'></div>
+                <div class='skeleton skeleton-text'></div>
+                <div class='skeleton skeleton-text'></div>
+                <div class='skeleton skeleton-text'></div>
+            </div>
+        ) : (
+            <slot />
+        )}
     </div>
 </div>
-
-<script>
-    // const navAnchors = document.querySelectorAll('nav a');
-    // navAnchors?.forEach((anchor) => { // TODO
-    //     anchor.addEventListener('click', () => {
-    //         const header = document.querySelector('header');
-    //         header?.setAttribute('aria-hidden', 'true');
-    //     });
-    // });
-
-    // @ts-ignore
-    if (!window.isCloseWindowedContentInitialised) {
-        // @ts-ignore
-        window.isCloseWindowedContentInitialised = true;
-        const closeWindowedContentDirectly = () => {
-            const windowedContentContainer: HTMLElement | null = document.querySelector('.windowed-content-container');
-            if (windowedContentContainer) {
-                windowedContentContainer.style.setProperty('display', 'none');
-            }
-            history.pushState({}, '', '/');
-            const currentNavAnchor: HTMLElement | null = document.querySelector('.navigation-bar a[aria-current]');
-            currentNavAnchor?.removeAttribute('aria-current');
-            // const header: HTMLElement | null = document.querySelector('header');
-            // header?.setAttribute('aria-hidden', 'false'); // TODO
-        }
-        const attachCloseWindowedContent = () => {
-            const windowedContentControlsAnchor: HTMLElement | null = document.querySelector('.close-windowed-content a');
-            windowedContentControlsAnchor?.addEventListener('click', (event) => {
-                event.preventDefault();
-                closeWindowedContentDirectly();
-            }, { passive: false, once: true });
-        }
-        attachCloseWindowedContent();
-        document.addEventListener('astro:after-swap', () => {
-            attachCloseWindowedContent();
-        });
-        // @ts-ignore
-        // hoisted to the window so that it can be used elsewhere (see @components/NavigationBar.astro)
-        window.closeWindowedContentDirectly = closeWindowedContentDirectly;
-    }
-</script>
 
 <style lang='scss'>
     .windowed-content-container {
@@ -212,7 +199,34 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
     .windowed-content-orbs + .windowed-content-header {
         margin-top: var(--content-small-gap);
     }
-    .windowed-content-header + :global(.content) {
+    .windowed-content-header + :global(.content) { // N.B. .content exists here (as skeleton) and in @components/PageContent.astro
         margin-top: var(--content-big-gap);
+    }
+    .skeleton {
+        background-color: var(--skeleton-content-background-colour);
+        animation: var(--skeleton-content-animation);
+    }
+    .skeleton-title {
+        height: 1rem;
+        width: 100%;
+        max-width: 10ch;
+        border-radius: var(--skeleton-content-border-radius);
+    }
+    .skeleton-subtitle {
+        height: 1rem;
+        width: 100%;
+        max-width: 25ch;
+        margin-top: var(--content-small-gap);
+        border-radius: var(--skeleton-content-border-radius);
+    }
+    .skeleton-text {
+        height: 1rem;
+        width: 100%;
+        margin-bottom: var(--content-small-gap);
+        border-radius: var(--skeleton-content-border-radius);
+    }
+    .skeleton-text:last-of-type {
+        width: 75%;
+        margin-bottom: 0;
     }
 </style>
