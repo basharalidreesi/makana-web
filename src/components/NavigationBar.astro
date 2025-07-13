@@ -1,7 +1,7 @@
 ---
 import type { AboutPage, CollectionDocument, CollectionDocumentType, Happening, Language, Project, Resource, Writing } from '@root/sanity/sanity.types';
 import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_ORDERED, UI_DICTIONARY } from '@lib/languageUtils';
-import { getDate, getSlug, getTitle, groupByLocalisedSlug } from '@lib/contentUtils';
+import { filterByLocalisedSlug, getDate, getSlug, getTitle } from '@lib/contentUtils';
 import { generateRoute } from '@lib/routingUtils';
 
 type Props = {
@@ -79,6 +79,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                         data-action='open-windowed-content-skeleton'
                                         data-action-target-lang={langId}
                                         data-action-target-type={items.aboutPage._type}
+                                        data-action-target-pathname={routeToAboutPage}
                                     >
                                         <bdi>{aboutPageTitle}</bdi>
                                     </a>
@@ -90,21 +91,35 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                             </li>
                         )}
                         {contentCollectionsWithDocs.map(({ key, docs }) => {
-                            const localisedItems = (groupByLocalisedSlug(docs, langId) as CollectionDocument[]) || [];
+                            const localisedItems = (filterByLocalisedSlug(docs, langId) as CollectionDocument[]) || [];
                             const itemsExist = hasDocs(localisedItems);
                             const sectionTitle = UI_DICTIONARY[key][langId];
                             const delta = MINIMUM_MENU_ITEMS_COUNT - localisedItems.length;
+                            const buttonId = `nav-${key}-button-${langId}`;
+                            const submenuId = `nav-${key}-submenu-${langId}`;
                             return (
                                 <li class='navigation-menu-item collection-navigation-item'>
                                     {itemsExist ? (
-                                        <button type='button' data-nav-expand aria-expanded='false' aria-controls={`${key}-submenu-${langId}`}>
+                                        <button
+                                            id={buttonId}
+                                            type='button'
+                                            aria-expanded='false'
+                                            aria-controls={submenuId}
+                                            data-action='expand-navigation-submenu'
+                                            data-action-origin-id={buttonId}
+                                            data-action-prevent-default='true'
+                                        >
                                             <bdi>{sectionTitle}</bdi>
                                         </button>
-                                        <ul id={`${key}-submenu-${langId}`} class='navigation-submenu' aria-hidden='true' hidden tabindex='-1'>
+                                        <ul id={submenuId} class='navigation-submenu' aria-hidden='true' hidden tabindex='-1'>
                                             {localisedItems.map((item) => {
                                                 const itemSlug = getSlug(item, langId);
                                                 const itemTitle = getTitle(item, langId);
-                                                const itemDate = getDate(item, 'custom');
+                                                const itemDate = {
+                                                    iso: getDate(item, 'iso', langId),
+                                                    compact: getDate(item, 'compact', langId),
+                                                    readable: getDate(item, 'readable', langId),
+                                                };
                                                 const routeToItem = itemSlug && generateRoute(item, langId);
                                                 if (!routeToItem) return;
                                                 return (
@@ -115,10 +130,11 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                                             data-action='open-windowed-content-skeleton'
                                                             data-action-target-lang={langId}
                                                             data-action-target-type={item._type}
+                                                            data-action-target-pathname={routeToItem}
                                                         >
                                                             <span class='time'>
-                                                                <time datetime={getDate(item, 'iso')}>
-                                                                    <bdi>{itemDate || '00_00_0000'}</bdi>
+                                                                <time datetime={itemDate.iso} aria-label={itemDate.readable}>
+                                                                    <bdi>{itemDate.compact || '00_00_0000'}</bdi>
                                                                 </time>
                                                             </span>
                                                             <span class='title'>
@@ -148,45 +164,17 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
 </div>
 
 <script>
-    if (!window._isNavigationBarInitialised) {
-        window._isNavigationBarInitialised = true;
-        const navExpandButtons = document.querySelectorAll<HTMLElement>(`button[data-nav-expand]:not([aria-disabled='true'])`);
-        navExpandButtons?.forEach((button) => button.addEventListener('click', () => {
-            const expanded = button.getAttribute('aria-expanded') === 'true';
-            const controls = button.getAttribute('aria-controls');
-            if (!controls) return;
-            const menu = document.getElementById(controls);
-            if (!menu) return;
-            navExpandButtons.forEach((otherButton) => {
-                const otherControls = otherButton.getAttribute('aria-controls') || '';
-                const otherMenu = document.getElementById(otherControls);
-                if (!otherControls || !otherMenu) return;
-                if (otherButton !== button && otherMenu) {
-                    otherButton.setAttribute('aria-expanded', 'false');
-                    otherMenu.setAttribute('aria-hidden', 'true');
-                    otherMenu.hidden = true;
-                }
-            });
-            const isExpanding = !expanded;
-            button.setAttribute('aria-expanded', String(isExpanding));
-            menu.setAttribute('aria-hidden', String(!isExpanding));
-            menu.hidden = !isExpanding;
-            if (typeof window._closeAnyContent === 'function') {
-                window._closeAnyContent(); // N.B. see @components/ActionHandler.astro
-            }
-        }));
-        const navAnchors = document.querySelectorAll<HTMLElement>(`.navigation-bar a:not([aria-disabled='true'])`);
-        navAnchors?.forEach((anchor) => {
-            anchor.addEventListener('click', () => {
-                anchor.setAttribute('aria-current', 'page');
-                navAnchors.forEach((otherAnchor) => {
-                    if (otherAnchor !== anchor) {
-                        otherAnchor.removeAttribute('aria-current');
-                    }
-                });
-            });
-        });
-    }
+    let scrollPosition: number | null = null;
+    document.addEventListener('astro:before-preparation', () => {
+        const currentMenu = document.querySelector(`.navigation-submenu[aria-hidden='false']`);
+        if (!currentMenu) return;
+        scrollPosition = currentMenu.scrollTop;
+    });
+    document.addEventListener('astro:after-swap', () => {
+        const currentMenu = document.querySelector(`.navigation-submenu[aria-hidden='false']`);
+        if (!currentMenu || !scrollPosition) return;
+        currentMenu.scrollTop = scrollPosition;
+    });
 </script>
 
 <style lang='scss'>

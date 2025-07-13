@@ -8,7 +8,7 @@ const hasSlugForLang = (
     lang: Language | undefined,
 ): boolean => !!getSlug(doc, lang);
 
-export const groupByLocalisedSlug = (
+export const filterByLocalisedSlug = (
     docs: AnyTargetableDocument[] | undefined = [],
     lang: Language,
 ): AnyTargetableDocument[] | undefined => {
@@ -31,6 +31,7 @@ export const getPreferredSlug = (
     lang: Language | undefined,
 ): { slug: string; langUsed: Language } | undefined => {
     if (!doc || !lang) return undefined;
+    // Try requested lang, then fallback to default, then any other supported langs
     const preferredLangOrder = [
         lang,
         lang === DEFAULT_LANGUAGE_ID ? undefined : DEFAULT_LANGUAGE_ID,
@@ -45,6 +46,7 @@ export const getPreferredSlug = (
             }
         }
     }
+    return undefined;
 };
 
 export const getTitle = (
@@ -87,75 +89,84 @@ export const getTextLength = (
     return textLength;
 };
 
+type DateFormat = 'iso' | 'compact' | 'readable';
+
 const pad = (n: number): string => n.toString().padStart(2, '0');
+
+const formatDate = (
+    dateString: string | undefined,
+    format: DateFormat,
+    lang: Language | undefined,
+): string | undefined => {
+    if (!dateString || !lang) return undefined;
+    const dt = DateTime.fromISO(dateString);
+    if (!dt.isValid) return undefined;
+    const day = pad(dt.day);
+    const month = pad(dt.month);
+    const year = dt.year.toString();
+    switch (format) {
+        case 'iso':
+            return dt.toISODate();
+        case 'compact':
+            return `${day}_${month}_${year}`;
+        case 'readable':
+            return `${dt.day} ${UI_DICTIONARY.monthNames[lang][dt.month - 1]} ${year}`;
+        default: return undefined;
+    }
+};
+
+const formatDateTime = (
+    dateString: string | undefined,
+    time: { hours?: string; minutes?: string; } | undefined,
+    timezone: string | undefined,
+    format: DateFormat,
+    lang: Language | undefined,
+): string | undefined => {
+    const fallbackDate = formatDate(dateString, format, lang);
+    if (!dateString || !time?.hours || !timezone || !lang) return fallbackDate;
+    const hours = parseInt(time.hours ?? '', 10);
+    const minutes = time.minutes ? parseInt(time.minutes, 10) : 0;
+    if (isNaN(hours) || hours < 0 || hours > 23) return fallbackDate;
+    if (isNaN(minutes) || minutes < 0 || minutes > 59) return fallbackDate;
+    const dt = DateTime.fromISO(dateString, { zone: timezone }).set({
+        hour: hours,
+        minute: minutes,
+    });
+    if (!dt.isValid) return fallbackDate;
+    const day = pad(dt.day);
+    const month = pad(dt.month);
+    const year = dt.year.toString();
+    const monthName = UI_DICTIONARY.monthNames[lang][dt.month - 1];
+    const comma = UI_DICTIONARY.comma[lang];
+    const timeString = `${pad(dt.hour % 12 || 12)}:${pad(dt.minute)} ${dt.hour < 12 ? UI_DICTIONARY.timeAmLabel[lang] : UI_DICTIONARY.timePmLabel[lang]}`
+    switch (format) {
+        case 'iso':
+            return dt.toISO({ suppressMilliseconds: true });
+        case 'compact':
+            return `${FSI}${day}_${month}_${year}${PDI}${comma} ${timeString}`;
+        case 'readable':
+            return `${FSI}${dt.day} ${monthName} ${year}${PDI}${comma} ${timeString}`;
+        default: return undefined;
+    }
+};
 
 export const getDate = (
     doc: AnySimplyDatedDocument | AnyRichlyDatedDocument | undefined,
-    format: 'iso' | 'custom',
+    format: DateFormat,
+    lang: Language | undefined,
 ): string | undefined => {
-    if (!doc) return undefined;
-    if ('date' in doc) {
-        if (format === 'iso') return doc.date ?? undefined;
-        const dateString = renderDate(doc.date)?.dateString;
-        if (!dateString) return undefined;
-        return dateString;
-    }
-    if ('startDate' in doc) {
-        if (format === 'iso') return doc.startDate ?? undefined;
-        const dateString = renderDate(doc.startDate)?.dateString;
-        if (!dateString) return undefined;
-        return dateString;
-    }
+    if (!doc || !lang) return undefined;
+    const rawDate = 'date' in doc ? doc.date : 'startDate' in doc ? doc.startDate : undefined;
+    return formatDate(rawDate, format, lang);
 };
 
 export const getDateTime = (
     doc: AnyRichlyDatedDocument | undefined,
+    format: DateFormat,
     lang: Language | undefined,
 ): string | undefined => {
     if (!doc || !lang) return undefined;
-    const startDate = doc.startDate;
-    if (!startDate) return undefined;
-    const renderedDate = renderDate(startDate);
-    if (!renderedDate) return undefined;
-    const { day, month, year, dateString } = renderedDate;
-    if (!day || !month || !year || !dateString) return undefined;
-    const hours = doc.startTime?.hours ? parseInt(doc.startTime.hours, 10) : undefined;
-    const minutes = hours ? (doc.startTime?.minutes ? parseInt(doc.startTime.minutes, 10) : 0) : undefined;
-    const timeZoneName = doc.timezone;
-    if (!hours || !minutes || !timeZoneName) return getDate(doc, 'custom');
-    const dt = DateTime.fromObject({
-        year: parseInt(year, 10),
-        month: parseInt(month, 10),
-        day: parseInt(day, 10),
-        hour: hours,
-        minute: minutes,
-    }, { zone: timeZoneName });
-    if (!dt.isValid) return getDate(doc, 'custom');
-    const timeFormatter = new Intl.DateTimeFormat(lang, {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: timeZoneName,
-        numberingSystem: 'latn',
-    });
-    const timeString = timeFormatter.format(dt.toJSDate());
-    const comma = UI_DICTIONARY.comma[lang];
-    return `${FSI}${dateString}${PDI}${comma} ${timeString}`;
-};
-
-export const renderDate = (
-    date: string | undefined,
-): { day: string; month: string; year: string; dateString: string; } | undefined => {
-    if (!date) return undefined;
-    const [year, month, day] = date.split('-').map(Number);
-    const dateString = `${pad(day)}_${pad(month)}_${year}`;
-    if (!day || !month || !year) return undefined;
-    return {
-        day: pad(day),
-        month: pad(month),
-        year: String(year),
-        dateString: dateString,
-    };
+    return formatDateTime(doc.startDate, doc.startTime, doc.timezone, format, lang);
 };
 
 export const getLocation = (
@@ -219,7 +230,7 @@ export const getAlternates = (
     const allVersions = getFromRegistry(doc._id);
     if (!allVersions) return undefined;
     const alternates: AlternateDocument[] = [];
-    SUPPORTED_LANGUAGES_IDS.map((l) => {
+    SUPPORTED_LANGUAGES_IDS.forEach((l) => {
         if (l === lang) return;
         const entry = allVersions[l];
         if (entry) {

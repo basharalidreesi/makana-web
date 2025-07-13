@@ -5,144 +5,202 @@
     import type { AnyTargetableDocumentType, Language } from '@root/sanity/sanity.types';
     import { SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
 
-    if (!window._isActionHandlerInitialised) {
-        window._isActionHandlerInitialised = true;
+    enum Action {
+        ExpandNavigationSubmenu = 'expand-navigation-submenu',
+        OpenWindowedContentSkeleton = 'open-windowed-content-skeleton',
+        CloseWindowedContent = 'close-windowed-content',
+        ReplaceWindowedContentWithSkeleton = 'replace-windowed-content-with-skeleton',
+        ReplaceWindowedContentWithSuperposedContentSkeleton = 'replace-windowed-content-with-superposed-content-skeleton',
+        OpenSuperposedContentSkeleton = 'open-superposed-content-skeleton',
+        CloseSuperposedContent = 'close-superposed-content',
+        ReplaceSuperposedContentWithSkeleton = 'replace-superposed-content-with-skeleton',
+        ReplaceSuperposedContentWithWindowedContentSkeleton = 'replace-superposed-content-with-windowed-content-skeleton',
+        CloseAnyContent = 'close-any-content',
+    };
 
-        type Action =
-            | 'open-windowed-content-skeleton'
-            | 'close-windowed-content'
-            | 'replace-windowed-content-with-skeleton'
-            | 'replace-windowed-content-with-superposed-content-skeleton'
-            | 'open-superposed-content-skeleton'
-            | 'close-superposed-content'
-            | 'replace-superposed-content-with-skeleton'
-            | 'replace-superposed-content-with-windowed-content-skeleton'
-            | 'close-any-content';
+    type ActionParams = {
+        originId: string | undefined;
+        targetLang: Language | undefined;
+        targetType: AnyTargetableDocumentType | undefined;
+        targetPathname: string | undefined;
+        preventDefault: string | undefined;
+    };
 
-        type ActionParams = {
-            targetLang: Language | undefined;
-            targetType: AnyTargetableDocumentType | undefined;
-            targetPathname: string | undefined;
-            preventDefault: string | undefined;
+    let lastAction: Action | undefined = undefined;
+    let lastActionParams: ActionParams | undefined = undefined;
+
+    const handleClick = (event: Event) => {
+        const target = (event.target as HTMLElement).closest<HTMLElement>('[data-action]');
+        if (!target) return;
+        const action = getAttribute<Action>(target, 'data-action');
+        if (!action) return;
+        lastAction = action;
+        lastActionParams = {
+            originId: getAttribute<Language>(target, 'data-action-origin-id'),
+            targetLang: getAttribute<Language>(target, 'data-action-target-lang'),
+            targetType: getAttribute<AnyTargetableDocumentType>(target, 'data-action-target-type'),
+            targetPathname: getAttribute<string>(target, 'data-action-target-pathname'), 
+            preventDefault: getAttribute<string>(target, 'data-action-prevent-default'),
         };
+        if (lastActionParams.preventDefault === 'true') {
+            event.preventDefault();
+            handleLastAction();
+        }
+    };
 
-        let lastAction: Action | undefined = undefined;
-        let lastActionParams: ActionParams | undefined = undefined;
-
-        const getAttribute = <T extends string = string>(
-            element: HTMLElement | null,
-            attribute: string,
-        ): T | undefined => {
-            if (!element || !attribute) return undefined;
-            const value = element.getAttribute(attribute);
-            return value !== null ? (value as T) : undefined;
+    const handleLastAction = () => {
+        console.info('Action triggered', {
+            lastAction,
+            lastActionParams,
+        });
+        switch (lastAction) {
+            case Action.ExpandNavigationSubmenu:
+                expandNavigationSubmenu();
+                break;
+            case Action.OpenWindowedContentSkeleton:
+                openWindowedContentSkeleton();
+                break;
+            case Action.CloseWindowedContent:
+                closeWindowedContent();
+                break;
+            case Action.ReplaceWindowedContentWithSkeleton:
+                replaceWindowedContentWithSkeleton();
+                break;
+            case Action.ReplaceWindowedContentWithSuperposedContentSkeleton:
+                replaceWindowedContentWithSuperposedContentSkeleton();
+                break;
+            case Action.OpenSuperposedContentSkeleton:
+                openSuperposedContentSkeleton();
+                break;
+            case Action.CloseSuperposedContent:
+                closeSuperposedContent();
+                break;
+            case Action.ReplaceSuperposedContentWithSkeleton:
+                replaceSuperposedContentWithSkeleton();
+                break;
+            case Action.ReplaceSuperposedContentWithWindowedContentSkeleton:
+                replaceSuperposedContentWithWindowedContentSkeleton();
+                break;
+            case Action.CloseAnyContent:
+                closeAnyContent();
+                break;
+            default:
+                console.warn('No handler found for action', lastAction);
+                break;
         };
+    };
 
-        const handleAction = (event: Event) => {
-            const target = (event.target as HTMLElement).closest<HTMLElement>('[data-action]');
-            if (!target) return;
-            const action = getAttribute<Action>(target, 'data-action');
-            if (!action) return;
-            lastAction = action;
-            lastActionParams = {
-                targetLang: getAttribute<Language>(target, 'data-action-target-lang'),
-                targetType: getAttribute<AnyTargetableDocumentType>(target, 'data-action-target-type'),
-                targetPathname: getAttribute<string>(target, 'data-action-target-pathname'), 
-                preventDefault: getAttribute<string>(target, 'data-action-prevent-default'),
-            };
-            if (lastActionParams.preventDefault === 'true') {
-                event.preventDefault();
-                handleLastAction();
+    const expandNavigationSubmenu = () => {
+        if (!lastActionParams?.originId) return;
+        const button = document.querySelector<HTMLElement>(`#${lastActionParams.originId}`);
+        const buttonControlsId = button?.getAttribute('aria-controls');
+        if (!button || !buttonControlsId) return;
+        const submenu = document.querySelector<HTMLElement>(`#${buttonControlsId}`)
+        if (!submenu) return;
+        const allButtons = document.querySelectorAll<HTMLElement>(`button[data-action='expand-navigation-submenu']`);
+        allButtons?.forEach((otherButton) => {
+            const otherButtonControlsId = otherButton?.getAttribute('aria-controls');
+            if (!otherButtonControlsId) return;
+            const otherSubmenu = document.querySelector<HTMLElement>(`#${otherButtonControlsId}`);
+            if (!otherSubmenu) return;
+            if (otherButton !== button) {
+                otherButton.setAttribute('aria-expanded', 'false');
+                otherSubmenu.setAttribute('aria-hidden', 'true');
+                otherSubmenu.hidden = true;
             }
-        };
+        });
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        button.setAttribute('aria-expanded', String(!isExpanded));
+        submenu.setAttribute('aria-hidden', String(isExpanded));
+        submenu.hidden = isExpanded;
+        closeAnyContent();
+    };
 
-        const handleLastAction = () => {
-            console.info('Action triggered', {
-                lastAction,
-                lastActionParams,
-            });
-            switch (lastAction) {
-                case 'open-windowed-content-skeleton': return openWindowedContentSkeleton();
-                case 'close-windowed-content': return closeWindowedContent();
-                case 'replace-windowed-content-with-skeleton': return replaceWindowedContentWithSkeleton();
-                case 'replace-windowed-content-with-superposed-content-skeleton': return replaceWindowedContentWithSuperposedContentSkeleton();
-                case 'open-superposed-content-skeleton': return openSuperposedContentSkeleton();
-                case 'close-superposed-content': return closeSuperposedContent();
-                case 'replace-superposed-content-with-skeleton': return replaceSuperposedContentWithSkeleton();
-                case 'replace-superposed-content-with-windowed-content-skeleton': return replaceSuperposedContentWithWindowedContentSkeleton();
-                case 'close-any-content': return closeAnyContent();
-                default: return;
-            };
-        };
+    const openWindowedContentSkeleton = () => {
+        // N.B. this flag assumes that there are no windowed-content or superposed-content instances currently active
+        const mainElement = document.querySelector<HTMLElement>('main');
+        const templateElement = document.querySelector<HTMLTemplateElement>('#windowed-content-template');
+        if (!mainElement || !templateElement) return;
+        const fragment = templateElement.content.cloneNode(true) as DocumentFragment;
+        const wcsContainer = fragment.querySelector<HTMLElement>('#windowed-content-skeleton-container');
+        const wcsContent = wcsContainer?.querySelector('.windowed-content');
+        if (!wcsContainer || !wcsContent) return;
+        if (lastActionParams?.targetLang) {
+            wcsContainer.dir = SUPPORTED_LANGUAGES_RECORD[lastActionParams.targetLang].dir;
+        }
+        if (lastActionParams?.targetType) {
+            wcsContent.classList.replace('default-windowed-content', `${lastActionParams.targetType}-windowed-content`);
+        }
+        mainElement.replaceChildren(fragment);
+        updateAriaCurrent('replace');
+    };
+    const closeWindowedContent = () => {
+        // N.B. this flag assumes that there is a windowed-content instance currently active
+        const windowedContent = document.querySelector<HTMLElement>('#windowed-content-container');
+        if (!windowedContent) return;
+        windowedContent.style.setProperty('display', 'none');
+        updateAriaCurrent('remove');
+        if (lastActionParams?.targetPathname) {
+            history.pushState({}, '', lastActionParams.targetPathname);
+        }
+    };
+    const replaceWindowedContentWithSkeleton = () => {
+        // N.B. this flag assumes that the user is navigating from a windowed-content instance to another.
+        // It currently has the same procedure as openWindowedContentSkeleton.
+        // Keeping the distintion in case it is needed in the future.
+        openWindowedContentSkeleton();
+    };
+    const replaceWindowedContentWithSuperposedContentSkeleton = () => {
+        // N.B. this flag assumes that the user is navigating from a windowed-content instance to a superposed-content instance
+        // TODO
+    };
 
-        const openWindowedContentSkeleton = () => { // N.B. this flag assumes that there are no windowed-content or superposed-content instances currently active
-            const mainElement = document.querySelector<HTMLElement>('main');
-            const templateElement = document.querySelector<HTMLTemplateElement>('#windowed-content-template');
-            if (!mainElement || !templateElement) return;
-            const fragment = templateElement.content.cloneNode(true) as DocumentFragment;
-            const wcsContainer = fragment.querySelector<HTMLElement>('#windowed-content-skeleton-container');
-            const wcsContent = wcsContainer?.querySelector('.windowed-content');
-            if (!wcsContainer || !wcsContent) return;
-            if (lastActionParams?.targetLang) {
-                wcsContainer.dir = SUPPORTED_LANGUAGES_RECORD[lastActionParams.targetLang].dir;
-            }
-            if (lastActionParams?.targetType) {
-                wcsContent.classList.replace('default-windowed-content', `${lastActionParams.targetType}-windowed-content`);
-            }
-            mainElement.replaceChildren(fragment);
-        };
-        const closeWindowedContent = () => { // N.B. this flag assumes that there is a windowed-content instance currently active
-            const windowedContent = document.querySelector<HTMLElement>('#windowed-content-container');
-            if (!windowedContent) return;
-            windowedContent.style.setProperty('display', 'none');
-            const navCurrent = document.querySelector<HTMLElement>(`.navigation-bar a[aria-current='page']`);
-            navCurrent?.removeAttribute('aria-current');
-            if (lastActionParams?.targetPathname) {
-                history.pushState({}, '', lastActionParams.targetPathname);
-            }
-        };
-        const replaceWindowedContentWithSkeleton = () => { // N.B. this flag assumes that the user is navigating from a currently-active windowed-content instance to another
-            openWindowedContentSkeleton();
-            const outdatedNavCurrent = document.querySelector<HTMLElement>(`.navigation-bar a[aria-current='page']`);
-            if (outdatedNavCurrent) {
-                outdatedNavCurrent.removeAttribute('aria-current');
-                if (lastActionParams?.targetPathname) {
-                    const newNavCurrent = document.querySelector<HTMLElement>(`.navigation-bar a[href='${lastActionParams.targetPathname}']`); // N.B. assumes only one match
-                    newNavCurrent?.setAttribute('aria-current', 'page');
-                }
-            }
-        };
-        const replaceWindowedContentWithSuperposedContentSkeleton = () => {
-            // TODO
-        };
-        const openSuperposedContentSkeleton = () => {
-            // TODO
-        };
-        const closeSuperposedContent = () => {
-            // TODO
-        };
-        const replaceSuperposedContentWithSkeleton = () => {
-            // TODO
-        };
-        const replaceSuperposedContentWithWindowedContentSkeleton = () => {
-            // TODO
-        };
-        const closeAnyContent = () => { // N.B. this flag assumes that there is a windowed-content and/or superposed-content instance currently active
-            closeWindowedContent();
-            closeSuperposedContent();
-        };
+    const openSuperposedContentSkeleton = () => {
+        // TODO
+    };
+    const closeSuperposedContent = () => {
+        // TODO
+    };
+    const replaceSuperposedContentWithSkeleton = () => {
+        // TODO
+    };
+    const replaceSuperposedContentWithWindowedContentSkeleton = () => {
+        // TODO
+    };
+    
+    const closeAnyContent = () => {
+        // N.B. this flag assumes that there is a windowed-content and/or superposed-content instance currently active
+        closeWindowedContent();
+        closeSuperposedContent();
+    };
 
-        // N.B. hoisting closeAnyContent to the window context so we can use it elsewhere (see @components/NavigationBar.astro)
-        window._closeAnyContent = closeAnyContent;
+    const seekActionables = () => {
+        const allActionables = document.querySelectorAll<HTMLElement>('[data-action]');
+        allActionables?.forEach((actionable) => {
+            if (!actionable.getAttribute('data-action-bound')) {
+                actionable.addEventListener('click', handleClick, { passive: false });
+                actionable.setAttribute('data-action-bound', 'true');
+            }
+        });
+    };
+    seekActionables();
+    document.addEventListener('astro:after-swap', seekActionables);
+    document.addEventListener('astro:before-preparation', handleLastAction);
 
-        const seekActionables = () => {
-            const allActionables = document.querySelectorAll<HTMLElement>('[data-action]');
-            allActionables.forEach((actionable) => {
-                actionable.addEventListener('click', handleAction, { passive: false });
-            });
-        };
-        seekActionables();
-        document.addEventListener('astro:after-swap', seekActionables);
-        document.addEventListener('astro:before-preparation', handleLastAction);
-    }
+    const getAttribute = <T extends string = string>(
+        element: HTMLElement | null,
+        attribute: string,
+    ): T | undefined => {
+        if (!element || !attribute) return undefined;
+        const value = element.getAttribute(attribute);
+        return value !== null ? (value as T) : undefined;
+    };
+    const updateAriaCurrent = (mode: 'replace' | 'remove' = 'remove') => {
+        const outdatedAriaCurrent = document.querySelector<HTMLElement>(`.navigation-bar a[aria-current='page']`);
+        outdatedAriaCurrent?.removeAttribute('aria-current');
+        if (mode === 'replace' && lastActionParams?.targetPathname) {
+            const newAriaCurrent = document.querySelector<HTMLElement>(`.navigation-bar a[href='${lastActionParams.targetPathname}']`); // N.B. assumes only one match
+            newAriaCurrent?.setAttribute('aria-current', 'page');
+        }
+    };
 </script>

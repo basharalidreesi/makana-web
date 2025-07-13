@@ -1,12 +1,9 @@
 import type { AnyTargetableDocumentType, Language } from '@root/sanity/sanity.types';
 
-// The Registry is used as a validation gate
-// and a source for multi-language linking.
-// A document is only registered when it
-// is successfully published (i.e., when it
-// passes all the checks in getStaticPaths –
-// see @pages/[slug].astro and
-// @pages/[locale]/[collection].astro)
+// N.B. The Registry is used as a validation gate and a source for multi-language linking.
+// A document is only registered when it is successfully published
+// (i.e., when it passes all the checks in getStaticPaths).
+// See @pages/[slug].astro and @pages/[locale]/[collection].astro
 
 type DocumentId = string;
 

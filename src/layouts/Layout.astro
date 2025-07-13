@@ -6,11 +6,11 @@ import { type AlternateDocument } from '@lib/contentUtils';
 import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
 import { generateOgImageUrl } from '@lib/imageUtils';
 import { ClientRouter } from 'astro:transitions';
+import ActionHandler from '@components/ActionHandler.astro';
 import LogoBar from '@components/LogoBar.astro';
 import NavigationBar from '@components/NavigationBar.astro';
 import FeaturedBar from '@components/FeaturedBar.astro';
 import WindowedContent from '@components/WindowedContent.astro';
-import ActionHandler from '@components/ActionHandler.astro';
 import '@styles/reset.css';
 import '@styles/fonts.css';
 import '@styles/global.scss';
@@ -179,6 +179,7 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         )}
         <meta name='generator' content={Astro.generator} />
         <ClientRouter />
+        <ActionHandler />
     </head>
     <body>
         <header>
@@ -206,7 +207,7 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
                 items={resolvedFeaturedItems}
             /> -->
         </header>
-        <main astro:before-swap='handleBeforeSwap'>
+        <main>
             <slot />
         </main>
     </body>
@@ -217,18 +218,7 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             title={undefined}
         />
     </template>
-    <ActionHandler />
 </html>
-
-<script>
-    declare global {
-        interface Window {
-            _isNavigationBarInitialised?: boolean; // N.B. see @components/NavigationBar.astro
-            _isActionHandlerInitialised?: boolean; // N.B. see @components/ActionHandler.astro
-            _closeAnyContent?: () => void; // N.B. see @components/ActionHandler.astro
-        }
-    }
-</script>
 
 <style lang='scss'>
     html {

@@ -45,13 +45,15 @@ export const SUPPORTED_LANGUAGES_ORDERED = Object.entries(SUPPORTED_LANGUAGES_RE
     })
     .map(([id, def]) => ({ id: id as Language, ...def }));
 
+let cachedDefaultLanguage: ({ id: Language } & LanguageDefinition) | null = null;
+
 export const DEFAULT_LANGUAGE = (() => {
-    const lang = Object.entries(SUPPORTED_LANGUAGES_RECORD).find(([_, def]) => def.default);
-    if (!lang) throw new Error('No default language defined in SUPPORTED_LANGUAGES');
-    return {
-        id: lang[0] as Language,
-        ...lang[1]
-    };
+    if (cachedDefaultLanguage) return cachedDefaultLanguage;
+    const entry = Object.entries(SUPPORTED_LANGUAGES_RECORD).find(([_, def]) => def.default);
+    if (!entry) throw new Error('No default language defined in SUPPORTED_LANGUAGES');
+    const [id, def] = entry;
+    cachedDefaultLanguage = { id: id as Language, ...def };
+    return cachedDefaultLanguage;
 })();
 
 export const DEFAULT_LANGUAGE_ID = DEFAULT_LANGUAGE.id;
@@ -77,6 +79,9 @@ export const UI_DICTIONARY: UICategoryDictionary & {
     optionSelectPlaceholder: LocalisedUIDictionaryRecord<string>;
     error404Message: LocalisedUIDictionaryRecord<string>;
     comma: LocalisedUIDictionaryRecord<string>;
+    monthNames: LocalisedUIDictionaryRecord<string[]>;
+    timeAmLabel: LocalisedUIDictionaryRecord<string>;
+    timePmLabel: LocalisedUIDictionaryRecord<string>;
 } = {
     websiteTitle: {
         ar: 'مكانة',
@@ -118,6 +123,18 @@ export const UI_DICTIONARY: UICategoryDictionary & {
         ar: '،',
         en: ',',
     },
+    monthNames: {
+        ar: ['كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين الثاني', 'كانون الأول'],
+        en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    },
+    timeAmLabel: {
+        ar: 'ص',
+        en: 'AM',
+    },
+    timePmLabel: {
+        ar: 'م',
+        en: 'PM',
+    },
     aboutPage: {
         ar: 'عن مكانة',
         en: 'About',
@@ -140,6 +157,6 @@ export const UI_DICTIONARY: UICategoryDictionary & {
     },
 };
 
+// FSI and PDI are used for directional isolation in mixed LTR/RTL contexts
 export const FSI = '\u2068';
-
 export const PDI = '\u2069'

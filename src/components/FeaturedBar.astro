@@ -45,6 +45,7 @@ const {
                                 data-action='open-windowed-content-skeleton'
                                 data-action-target-lang={slugData.langUsed}
                                 data-action-target-type={item._type}
+                                data-action-target-pathname={routeToItem}
                             >
                                 {SUPPORTED_LANGUAGES_IDS.map((langId) => itemAsRegistered[langId]?.title && (
                                     <span lang={langId} dir={SUPPORTED_LANGUAGES_RECORD[langId].dir}>
