@@ -292,7 +292,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                 }
             }
             const rel = href?.startsWith('/') ? undefined : 'noreferrer noopener'
-            const action = 'replace-windowed-content-with-skeleton';
+            const action = 'open-windowed-content'; // previously `replace-windowed-content-with-skeleton`
             return href ? (
                 `<a href='${href}' ${rel ? `rel='${rel}'` : ''}${docType && langUsed ? [
                     action ? `data-action='${action}'` : undefined,

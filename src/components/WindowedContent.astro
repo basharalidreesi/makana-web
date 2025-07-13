@@ -37,7 +37,7 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
                             href={altRoute}
                             title={UI_DICTIONARY.languageSwitchLabel[altLang]}
                             aria-label={UI_DICTIONARY.languageSwitchLabel[altLang]}
-                            data-action='replace-windowed-content-with-skeleton'
+                            data-action='open-windowed-content'
                             data-action-target-lang={altLang}
                             data-action-target-type={alternate.type}
                             data-action-target-pathname={altRoute}
@@ -45,7 +45,7 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
                             <Fragment set:html={SUPPORTED_LANGUAGES_RECORD[altLang].symbol} />
                         </a>
                     </div>
-                );
+                ); // previously `replace-windowed-content-with-skeleton`
             })}
             <div class='windowed-content-orb close-windowed-content'>
                 <a

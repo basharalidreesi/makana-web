@@ -76,7 +76,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                     <a
                                         href={routeToAboutPage}
                                         aria-current={routeToAboutPage === currentPath ? 'page' : undefined}
-                                        data-action='open-windowed-content-skeleton'
+                                        data-action='open-windowed-content'
                                         data-action-target-lang={langId}
                                         data-action-target-type={items.aboutPage._type}
                                         data-action-target-pathname={routeToAboutPage}
@@ -84,7 +84,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                         <bdi>{aboutPageTitle}</bdi>
                                     </a>
                                 ) : (
-                                    <a aria-disabled='true' tabindex='-1'>
+                                    <a role='link' aria-disabled='true' tabindex='-1' onclick='return false;'>
                                         <bdi>{aboutPageTitle}</bdi>
                                     </a>
                                 )}
@@ -105,7 +105,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                             type='button'
                                             aria-expanded='false'
                                             aria-controls={submenuId}
-                                            data-action='expand-navigation-submenu'
+                                            data-action='expand-or-collapse-navigation-submenu'
                                             data-action-origin-id={buttonId}
                                             data-action-prevent-default='true'
                                         >
@@ -127,13 +127,13 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                                         <a
                                                             href={routeToItem}
                                                             aria-current={routeToItem === currentPath ? 'page' : undefined}
-                                                            data-action='open-windowed-content-skeleton'
+                                                            data-action='open-windowed-content'
                                                             data-action-target-lang={langId}
                                                             data-action-target-type={item._type}
                                                             data-action-target-pathname={routeToItem}
                                                         >
                                                             <span class='time'>
-                                                                <time datetime={itemDate.iso} aria-label={itemDate.readable}>
+                                                                <time {...(itemDate.iso && itemDate.readable ? { datetime: itemDate.iso, 'aria-label': itemDate.readable } : { role: 'presentation', 'aria-hidden': 'true' })}>
                                                                     <bdi>{itemDate.compact || '00_00_0000'}</bdi>
                                                                 </time>
                                                             </span>
@@ -149,7 +149,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                             ))}
                                         </ul>
                                     ) : (
-                                        <button type='button' aria-disabled='true' tabindex='-1'>
+                                        <button type='button' aria-disabled='true' disabled>
                                             <bdi>{sectionTitle}</bdi>
                                         </button>
                                     )}
@@ -164,6 +164,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
 </div>
 
 <script>
+    // Handlers to preserve scroll position within expanded navigation submenus
     let scrollPosition: number | null = null;
     document.addEventListener('astro:before-preparation', () => {
         const currentMenu = document.querySelector(`.navigation-submenu[aria-hidden='false']`);
@@ -259,12 +260,15 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
     .static-navigation-item a[aria-disabled='true'],
     .collection-navigation-item button[aria-disabled='true'] {
         color: var(--text-disabled-colour);
+        cursor: not-allowed;
     }
-    @media (any-hover: hover) {
-        .navigation-menu-item a:not([aria-disabled='true']):hover,
-        .navigation-menu-item button:not([aria-disabled='true']):hover {
-            color: var(--text-link-hover-colour);
-            cursor: pointer;
+    .navigation-menu-item a:not([aria-disabled='true']),
+    .navigation-menu-item button:not([aria-disabled='true']) {
+        cursor: pointer;
+        @media (any-hover: hover) {
+            &:hover {
+                color: var(--text-link-hover-colour);
+            }
         }
     }
 </style>

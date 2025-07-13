@@ -92,8 +92,8 @@ export const UI_DICTIONARY: UICategoryDictionary & {
         en: 'Untitled',
     },
     navigationMenuLabel: {
-        ar: 'قائمة التصفح',
-        en: 'Navigation menu',
+        ar: 'قائمة التصفح العربية',
+        en: 'English navigation menu',
     },
     featuredItemsLabel: {
         ar: 'مختارات',
