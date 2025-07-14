@@ -28,12 +28,16 @@
     --windowed-content-outline-colour: #707070;
     --windowed-content-backdrop-colour: #000;
     --windowed-content-backdrop-opacity: 0.22;
-    --windowed-content-orb-colour: #fff;
     --windowed-content-aboutPage-background-colour: #aeeb9b;
     --windowed-content-project-background-colour: #fff;
     --windowed-content-writing-background-colour: #fff;
     --windowed-content-happening-background-colour: #fff500;
     --windowed-content-resource-background-colour: #ff7d57;
+    // superposed content
+    --superposed-content-outline-colour: #707070;
+    // content orbs
+    --content-orb-background-colour: #fff;
+    --content-orb-outline-colour: #707070;
     // forms
     --form-field-outline-colour: #b7b7b7;
     --form-field-background-default-colour: #fff;
@@ -64,9 +68,9 @@
     --page-padding-bottom: 2.5rem;
     --page-padding-inline: calc(env(safe-area-inset-left, 0px) + 2.5rem);
     --page-gap: var(--menu-item-height);
-    // logo // N.B. logo-width and logo-aspect-ratio calculated in @components/LogoBar.astro
+    // logo // N.B. `--logo-width` and `--logo-aspect-ratio` calculated in @components/LogoBar.astro
     --logo-height: 3.5rem;
-    // navigation menu // N.B. how-many-menu-items and navigation-menu-height calculated in @components/NavigationBar.astro
+    // navigation menu // N.B. `--how-many-menu-items` and `--navigation-menu-height` calculated in @components/NavigationBar.astro
     --menu-item-padding-block: 0.666rem;
     --menu-item-height: calc(1lh + (var(--menu-item-padding-block) * 2) + 1px);
     --navigation-menu-margin-top: calc(var(--menu-item-padding-block) * -1 / 2);
@@ -84,8 +88,9 @@
     --windowed-content-container-extra-padding-top: 0px;
     --windowed-content-container-extra-padding-bottom: 0px;
     --windowed-content-container-extra-padding-inline: 0px;
-    --windowed-content-orb-width: 2.5rem;
-    --windowed-content-orb-padding: 0.25rem;
+    // content orbs
+    --content-orb-width: 2.5rem;
+    --content-orb-padding: 0.25rem;
     // featured items
     --featured-bar-width: calc(100% - var(--page-gap) - var(--logo-width) - 1px);
     --featured-bar-height: calc(100% - var(--navigation-menu-height) - var(--navigation-menu-margin-top) - var(--page-gap) + 1px);
@@ -168,6 +173,10 @@
     .navigation-submenu-item .time {
         display: none;
     }
+    // superposed content
+    .superposed-content-header time {
+        display: none;
+    }
 }
 @media (max-width: 640px) or (max-height: 448px) {
     :root {
@@ -210,8 +219,8 @@
     }
 }
 @media (min-width: 513px) {
-    // content
-    .content .image-block .wrapper {
+    // page content
+    .page-content .image-block .wrapper {
         align-items: flex-end;
     }
 }
@@ -227,8 +236,8 @@
         // featured items
         --featured-item-max-width: 100%;
     }
-    // content
-    .content .image-block .wrapper {
+    // page content
+    .page-content .image-block .wrapper {
         flex-direction: column;
         align-items: center;
     }
@@ -241,4 +250,29 @@
         --windowed-content-container-extra-padding-inline: 0.5rem;
         --windowed-content-padding-top: 1rem;
     }
+}
+
+.skeleton {
+    background-color: var(--skeleton-content-background-colour);
+    animation: var(--skeleton-content-animation);
+}
+.skeleton-title {
+    height: 1rem;
+    width: 100%;
+    max-width: 10ch;
+    border-radius: var(--skeleton-content-border-radius);
+}
+.skeleton-subtitle {
+    height: 1rem;
+    width: 100%;
+    max-width: 25ch;
+    border-radius: var(--skeleton-content-border-radius);
+}
+.skeleton-text {
+    height: 1rem;
+    width: 100%;
+    border-radius: var(--skeleton-content-border-radius);
+}
+.skeleton-text:last-of-type {
+    width: 75%;
 }

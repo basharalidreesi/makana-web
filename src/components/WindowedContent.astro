@@ -1,7 +1,8 @@
 ---
 import type { AnyContentDocumentType, Language } from '@root/sanity/sanity.types';
 import type { AlternateDocument } from '@lib/contentUtils';
-import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
+import { UI_DICTIONARY } from '@lib/uiDictionary';
 
 type Props = {
     skeleton?: boolean;
@@ -42,7 +43,7 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
                             data-action-target-type={alternate.type}
                             data-action-target-pathname={altRoute}
                         >
-                            <Fragment set:html={SUPPORTED_LANGUAGES_RECORD[altLang].symbol} />
+                            <Fragment set:html={UI_DICTIONARY.languageSwitchSymbol[altLang]} />
                         </a>
                     </div>
                 ); // previously `replace-windowed-content-with-skeleton`
@@ -55,11 +56,8 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
                     data-action='close-windowed-content'
                     data-action-target-pathname={skeleton ? undefined : '/'}
                     data-action-prevent-default='true'
-                >
-                    <svg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
-                        <line x1='6' y1='6' x2='18' y2='18'/>
-                        <line x1='6' y1='18' x2='18' y2='6'/>
-                    </svg>
+                > <!-- `data-action-target-pathname` should not be hardcoded TODO -->
+                    <Fragment set:html={UI_DICTIONARY.closeButtonSymbol} />
                 </a>
             </div>
         </div>
@@ -74,22 +72,22 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
                 <slot name='in-header' />
             )}
         </div>
-        {skeleton ? (
-            <div class='content'>
+        <div class='content'>
+            {skeleton ? (
                 <div class='skeleton skeleton-text'></div>
                 <div class='skeleton skeleton-text'></div>
                 <div class='skeleton skeleton-text'></div>
                 <div class='skeleton skeleton-text'></div>
-            </div>
-        ) : (
-            <slot />
-        )}
+            ) : (
+                <slot />
+            )}
+        </div>
     </div>
 </div>
 
 <style lang='scss'>
     .windowed-content-container {
-        z-index: 2;
+        z-index: 4;
         position: relative;
         pointer-events: none;
         padding-top: calc(var(--page-padding-top) + var(--windowed-content-container-extra-padding-top));
@@ -142,20 +140,20 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
         margin-inline: calc(var(--windowed-content-padding-inline) * -1);
     }
     .windowed-content-orb {
-        outline: 1px solid var(--windowed-content-outline-colour);
+        outline: 1px solid var(--content-orb-outline-colour);
         border-radius: 100%;
-        background-color: var(--windowed-content-orb-colour);
+        background-color: var(--content-orb-background-colour);
     }
     .windowed-content-orb a {
         display: block;
-        width: var(--windowed-content-orb-width);
-        height: var(--windowed-content-orb-width);
+        width: var(--content-orb-width);
+        height: var(--content-orb-width);
     }
     .windowed-content-orb :global(svg) {
         display: block;
         width: 100%;
         height: 100%;
-        padding: var(--windowed-content-orb-padding);
+        padding: var(--content-orb-padding);
         @media (any-hover: hover) {
             &:hover {
                 color: var(--text-link-hover-colour);
@@ -165,7 +163,7 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
     .switch-content-language :global(svg) {
         fill: currentColor;
     }
-    .close-windowed-content svg {
+    .close-windowed-content :global(svg) {
         stroke-width: 1px;
         stroke: currentColor;
     }
@@ -192,41 +190,21 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
         &:not(:lang(ar)) {
             line-height: var(--running-text-line-height-non-arabic);
         }
-        h2 {
-            font-weight: 400;
-        }
+    }
+    .windowed-content-header h2 {
+        font-weight: 400;
     }
     .windowed-content-orbs + .windowed-content-header {
         margin-top: var(--content-small-gap);
     }
-    .windowed-content-header + :global(.content) { // N.B. .content exists here (as skeleton) and in @components/PageContent.astro
+    .windowed-content-header + .content {
         margin-top: var(--content-big-gap);
     }
-    .skeleton {
-        background-color: var(--skeleton-content-background-colour);
-        animation: var(--skeleton-content-animation);
-    }
-    .skeleton-title {
-        height: 1rem;
-        width: 100%;
-        max-width: 10ch;
-        border-radius: var(--skeleton-content-border-radius);
-    }
+
     .skeleton-subtitle {
-        height: 1rem;
-        width: 100%;
-        max-width: 25ch;
         margin-top: var(--content-small-gap);
-        border-radius: var(--skeleton-content-border-radius);
     }
-    .skeleton-text {
-        height: 1rem;
-        width: 100%;
+    .skeleton-text:not(:last-of-type) {
         margin-bottom: var(--content-small-gap);
-        border-radius: var(--skeleton-content-border-radius);
-    }
-    .skeleton-text:last-of-type {
-        width: 75%;
-        margin-bottom: 0;
     }
 </style>

@@ -6,7 +6,7 @@
     font-weight: 300;
     font-display: block;
     src: url('/fonts/IBMPlexSans-Light.woff') format('woff');
-    unicode-range: U+0000-00FF, U+0100-024F; /* Latin */
+    unicode-range: U+0000-00FF, U+0100-024F; /** Latin */
 }
 @font-face {
     font-family: 'IBMPS';
@@ -14,7 +14,7 @@
     font-weight: 300;
     font-display: block;
     src: url('/fonts/IBMPlexSans-LightItalic.woff') format('woff');
-    unicode-range: U+0000-00FF, U+0100-024F; /* Latin */
+    unicode-range: U+0000-00FF, U+0100-024F; /** Latin */
 }
 @font-face {
     font-family: 'IBMPS';
@@ -22,7 +22,7 @@
     font-weight: 400;
     font-display: block;
     src: url('/fonts/IBMPlexSans-Regular.woff') format('woff');
-    unicode-range: U+0000-00FF, U+0100-024F; /* Latin */
+    unicode-range: U+0000-00FF, U+0100-024F; /** Latin */
 }
 @font-face {
     font-family: 'IBMPS';
@@ -30,7 +30,7 @@
     font-weight: 400;
     font-display: block;
     src: url('/fonts/IBMPlexSans-RegularItalic.woff') format('woff');
-    unicode-range: U+0000-00FF, U+0100-024F; /* Latin */
+    unicode-range: U+0000-00FF, U+0100-024F; /** Latin */
 }
 @font-face {
     font-family: 'IBMPS';
@@ -38,7 +38,7 @@
     font-weight: 300;
     font-display: block;
     src: url('/fonts/IBMPlexSansArabic-Light.woff') format('woff');
-    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /* Arabic */
+    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /** Arabic */
 }
 @font-face {
     font-family: 'IBMPS';
@@ -46,7 +46,7 @@
     font-weight: 300;
     font-display: block;
     src: url('/fonts/IBMPlexSansArabic-Light.woff') format('woff');
-    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /* Arabic */
+    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /** Arabic */
 }
 @font-face {
     font-family: 'IBMPS';
@@ -54,7 +54,7 @@
     font-weight: 400;
     font-display: block;
     src: url('/fonts/IBMPlexSansArabic-Regular.woff') format('woff');
-    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /* Arabic */
+    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /** Arabic */
 }
 @font-face {
     font-family: 'IBMPS';
@@ -62,5 +62,5 @@
     font-weight: 400;
     font-display: block;
     src: url('/fonts/IBMPlexSansArabic-Regular.woff') format('woff');
-    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /* Arabic */
+    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF; /** Arabic */
 }

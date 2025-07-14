@@ -1,9 +1,10 @@
 ---
 import type { AnyFeaturableDocument, Language } from '@root/sanity/sanity.types';
-import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD, UI_DICTIONARY } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
+import { UI_DICTIONARY } from '@lib/uiDictionary';
 import { getPreferredSlug } from '@lib/contentUtils';
 import { generateRoute } from '@lib/routingUtils';
-import { getFromRegistry } from '@lib/registry';
+import { getFromRegistry } from '@lib/idRegistry';
 import { createSanityImage } from '@lib/imageUtils';
 
 type Props = {
@@ -111,7 +112,7 @@ const {
         width: 100%;
         height: 100%;
         overflow: hidden;
-        // N.B. flex-direction, align-items, and justify-content in @styles/global.scss
+        // N.B. `flex-direction`, `align-items`, and `justify-content` declared in @styles/global.scss
     }
     .featured-item {
         position: relative;

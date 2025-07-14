@@ -1,0 +1,34 @@
+---
+import SuperposedContent from "@components/SuperposedContent.astro";
+import Layout from "@layouts/Layout.astro";
+
+---
+
+<Layout
+    lang={undefined}
+    title={undefined}
+>
+    <SuperposedContent
+        skeleton={false}
+        lang={'ar'}
+        title={undefined}
+    >
+        <div class='countermap'></div>
+        <div slot='in-orbs'>
+            <p>
+                Footer
+            </p>
+        </div>
+    </SuperposedContent>
+</Layout>
+
+<style lang='scss'>
+    .countermap {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: lightblue;
+    }
+</style>

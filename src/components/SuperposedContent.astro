@@ -1,4 +1,161 @@
 ---
+import type { Language } from '@root/sanity/sanity.types';
+import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
+import { UI_DICTIONARY } from '@lib/uiDictionary';
+
+type Props = {
+    skeleton?: boolean;
+    skeletonMode?: 'text' | 'fullscreen' | undefined;
+    lang: Language | undefined;
+    title: string | undefined;
+};
+
+const {
+    skeleton = false,
+    skeletonMode = 'text',
+    lang = DEFAULT_LANGUAGE_ID,
+    title,
+} = Astro.props;
 ---
 
-<!-- TODO -->
+<div class='superposed-content-container' id={skeleton ? 'superposed-content-skeleton-container' : 'superposed-content-container'} dir={SUPPORTED_LANGUAGES_RECORD[lang].dir}>
+    <div class='superposed-content'>
+        <div class='superposed-content-header'>
+            <div class='close-superposed-content'>
+                <a
+                    href={skeleton ? undefined : '/'}
+                    title={UI_DICTIONARY.backButtonLabel[lang]}
+                    aria-label={UI_DICTIONARY.backButtonLabel[lang]}
+                    data-action='close-superposed-content'
+                    data-action-target-pathname={skeleton ? undefined : '/'}
+                    data-action-prevent-default='true'
+                > <!-- `data-action-target-pathname` should not be hardcoded TODO -->
+                    <Fragment set:html={UI_DICTIONARY.backButtonSymbol[lang]} />
+                </a>
+            </div>
+            {skeleton ? (
+                <div class='skeleton skeleton-subtitle'></div>
+            ) : (
+                <h2>
+                    <bdi>{title || UI_DICTIONARY.untitledLabel[lang]}</bdi>
+                </h2>
+                <time datetime={'resolvedDate.iso'} aria-label={'resolvedDate.readable'}>
+                    <bdi>00_00_0000</bdi>
+                </time>
+            )}
+        </div>
+        <div class='content'>
+            {skeleton && skeletonMode === 'text' && (
+                <div class='skeleton skeleton-text'></div>
+                <div class='skeleton skeleton-text'></div>
+                <div class='skeleton skeleton-text'></div>
+                <div class='skeleton skeleton-text'></div>
+            )}
+            {skeleton && skeletonMode === 'fullscreen' && (
+                <div class='skeleton _skeleton-content'></div>
+            )}
+            {!skeleton && (
+                <slot />
+            )}
+        </div>
+        {!skeleton && (
+            <div class='superposed-content-orbs'>
+                <slot name='in-orbs' />
+            </div>
+        )}
+    </div>
+</div>
+
+<style lang='scss'>
+    .superposed-content-container {
+        z-index: 2;
+        position: relative;
+    }
+    .superposed-content {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        min-height: 100svh;
+    }
+    .superposed-content-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-start;
+        height: calc(var(--menu-item-height) + var(--page-padding-top) + var(--navigation-menu-margin-top));
+        padding-top: var(--page-padding-top);
+        padding-bottom: var(--menu-item-padding-block);
+        padding-inline-start: calc(var(--page-padding-inline) + var(--navigation-submenu-indent-inline-start));
+        padding-inline-end: var(--page-padding-inline);
+        border-bottom: 1px solid var(--superposed-content-outline-colour);
+        background-color: var(--page-background-colour);
+    }
+    .superposed-content-header time {
+        order: 1;
+        margin-inline-end: var(--navigation-submenu-date-title-gap);
+        // N.B. `display` declared in @styles/global.scss
+    }
+    .superposed-content-header h2 {
+        order: 2;
+        font-weight: 400;
+    }
+    .superposed-content-header time,
+    .superposed-content-header h2 {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        padding-block: 4px; // arbitrary to fix vertical clipping
+        margin-block: -4px; // same amount but negative
+    }
+    .close-superposed-content {
+        position: absolute;
+        top: calc(var(--page-padding-top) - var(--navigation-menu-margin-top));
+        inset-inline-start: var(--page-padding-inline);
+        height: 1lh;
+        width: auto;
+    }
+    .close-superposed-content a {
+        @media (any-hover: hover) {
+            &:hover {
+                color: var(--text-link-hover-colour);
+            }
+        }
+    }
+    .close-superposed-content :global(svg) {
+        display: block;
+        height: 100%;
+        width: auto;
+        fill: none;
+        stroke-width: 1px;
+        stroke: currentColor;
+    }
+    .superposed-content-orbs {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        padding-bottom: var(--page-padding-bottom);
+        padding-left: var(--page-padding-inline);
+        padding-right: calc(var(--page-padding-inline) + var(--logo-width) + var(--page-gap));
+    }
+    .content {
+        flex: 1;
+        position: relative;
+        padding-top: var(--content-big-gap);
+        padding-bottom: var(--page-padding-bottom);
+        padding-inline: var(--page-padding-inline);
+        background-color: var(--page-background-colour);
+    }
+
+    .skeleton-title {
+        margin-inline-start: calc(var(--navigation-submenu-date-title-gap));
+    }
+    .skeleton-text:not(:last-of-type) {
+        margin-bottom: var(--content-small-gap);
+    }
+    ._skeleton-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+</style>

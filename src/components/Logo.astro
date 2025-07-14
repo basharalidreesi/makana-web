@@ -1,7 +1,8 @@
 ---
 import type { Language, Website } from '@root/sanity/sanity.types';
-import { DEFAULT_LANGUAGE_ID, UI_DICTIONARY } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID } from '@lib/languageUtils';
 import { fetchSvg } from '@lib/imageUtils';
+import { UI_DICTIONARY } from '@lib/uiDictionary';
 
 type Props = {
     lang: Language;
@@ -26,7 +27,7 @@ const resolvedAspectRatio = websiteSettings?.logoAspectRatio ?? FALLBACK_SVG_ASP
 
 <Fragment set:html={`<style>:root{--logo-aspect-ratio:${resolvedAspectRatio};--logo-width:calc(var(--logo-height)*var(--logo-aspect-ratio));}</style>`} />
 
-<div class='logo-bar'>
+<div class='logo'>
     <div>
         <a
             href='/'
@@ -58,15 +59,15 @@ const resolvedAspectRatio = websiteSettings?.logoAspectRatio ?? FALLBACK_SVG_ASP
 </div>
 
 <style lang='scss'>
-    .logo-bar {
+    .logo {
         order: 3;
         margin-top: auto;
         margin-left: auto;
     }
-    .logo-bar div {
+    .logo div {
         height: var(--logo-height);
     }
-    .logo-bar :global(svg) {
+    .logo :global(svg) {
         display: block;
         height: 100%;
         width: auto;

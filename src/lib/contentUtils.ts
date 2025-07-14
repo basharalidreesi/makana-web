@@ -1,6 +1,7 @@
 import type { AnyContentDocument, AnyLocationedDocument, AnyMetaedDocument, AnyRichlyDatedDocument, AnySimplyDatedDocument, AnyTargetableDocument, AnyTargetableDocumentStub, AnyTargetableDocumentType, AnyTitledDocument, Language, PageBuilder } from '@root/sanity/sanity.types';
-import { DEFAULT_LANGUAGE_ID, FSI, PDI, SUPPORTED_LANGUAGES_IDS, UI_DICTIONARY } from '@lib/languageUtils';
-import { getFromRegistry } from '@lib/registry';
+import { DEFAULT_LANGUAGE_ID, FSI, PDI, SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
+import { UI_DICTIONARY } from './uiDictionary';
+import { getFromRegistry } from '@lib/idRegistry';
 import { DateTime } from 'luxon';
 
 const hasSlugForLang = (
@@ -146,7 +147,8 @@ const formatDateTime = (
             return `${FSI}${day}_${month}_${year}${PDI}${comma} ${timeString}`;
         case 'readable':
             return `${FSI}${dt.day} ${monthName} ${year}${PDI}${comma} ${timeString}`;
-        default: return undefined;
+        default:
+            return undefined;
     }
 };
 
@@ -189,30 +191,28 @@ export const escapeHtml = (str: string = '') => str.replace(
     }[c] || c)
 );
 
+// Function to convert an aspect ratio (assumes width ÷ height in `16:9`, `16/9`, `1`, or `1.5` formats) to a `padding-bottom` percentage string
 export const normaliseAspectRatioForPadding = (ratio: string | undefined): string | undefined => {
     if (!ratio) return undefined;
-    let numRatio: number | null = null;
-    if (ratio.includes('/')) {
-        const [w, h] = ratio.split('/').map(Number);
-        if (!isNaN(w) && !isNaN(h) && w !== 0) {
-            numRatio = h / w;
-        }
-    } else if (ratio.includes(':')) {
-        const [w, h] = ratio.split(':').map(Number);
-        if (!isNaN(w) && !isNaN(h) && w !== 0) {
-            numRatio = h / w;
+    let heightOverWidthRatio: number | undefined = undefined;
+    const separator = ratio.includes('/') ? '/' : ratio.includes(':') ? ':' : undefined;
+    if (separator) {
+        const [width, height] = ratio.split(separator).map(Number);
+        if (!isNaN(width) && !isNaN(height) && width !== 0) {
+            heightOverWidthRatio = height / width;
         }
     } else {
-        const parsed = Number(ratio);
-        if (!isNaN(parsed) && parsed > 0) {
-            numRatio = 1 / parsed; // important: assume it's width/height, invert for padding
+        // Assume decimal format
+        const numeric = Number(ratio);
+        if (!isNaN(numeric) && numeric > 0) {
+            heightOverWidthRatio = 1 / numeric; // Invert to get height ÷ width
         }
     }
-    if (!numRatio || numRatio <= 0) {
-        numRatio = 9 / 16;
+    if (!heightOverWidthRatio || heightOverWidthRatio <= 0) {
+        heightOverWidthRatio = 9 / 16;
     }
-    return (numRatio * 100) + '%'; // convert to percentage padding
-}
+    return `${heightOverWidthRatio * 100}%`; // Convert to percentage string for `padding-bottom`
+};
 
 export type AlternateDocument = {
     lang: Language;

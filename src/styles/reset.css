@@ -1,23 +1,23 @@
 @charset "UTF-8";
 
-/* Set body defaults */
+/** Set body defaults */
 body {
     min-height: 100vh;
     min-height: 100dvh;
 }
 
-/* Box sizing rules */
+/** Box sizing rules */
 *, *::before, *::after {
     box-sizing: border-box;
 }
 
-/* Remove default margin, padding in favour of better control in authored CSS */
+/** Remove default margin, padding in favour of better control in authored CSS */
 *, *::before, *::after {
     margin: 0;
     padding: 0;
 }
 
-/* Set text defaults */
+/** Set text defaults */
 html {
     font-size: max(16px, 100%);
     font-family: var(--font-family);
@@ -27,7 +27,7 @@ html {
     color: var(--text-default-colour);
 }
 
-/* Reset text properties in favour of better control in authored CSS */
+/** Reset text properties in favour of better control in authored CSS */
 *, *::before, *::after {
     font-size: inherit;
     font-family: inherit;
@@ -39,49 +39,49 @@ html {
     text-decoration: inherit;
 }
 
-/* Make sure text wrapping behaves as desired */
+/** Make sure text wrapping behaves as desired */
 *, *::before, *::after {
     overflow-wrap: break-word;
 }
 
-/* Prevent font size inflation */
+/** Prevent font size inflation */
 html {
     -moz-text-size-adjust: none;
     -webkit-text-size-adjust: none;
     text-size-adjust: none;
 }
 
-/* Make images easier to work with */
+/** Make images easier to work with */
 img, picture {
     display: block;
-    /* width: auto; */ /* N.B. breaks images – do not use */
+    /** width: auto; */ /** N.B. breaks images – do not use */
     height: auto;
     max-width: 100%;
 }
 
-/* Make svgs easier to work with */
+/** Make svgs easier to work with */
 svg {
     overflow: visible;
     fill: currentColor;
     stroke-width: 0px;
 }
 
-/* Make svg elements have consistent strokes */
+/** Make svg elements have consistent strokes */
 svg * {
     vector-effect: non-scaling-stroke;
 }
 
-/* Anything that has been anchored should have extra scroll margin */
+/** Anything that has been anchored should have extra scroll margin */
 :target {
     scroll-margin-block: 5ex;
 }
 
-/* Unset button appearance */
+/** Unset button appearance */
 button {
     all: unset;
 }
 
-/* Restore button focusability after unsetting its appearance */
+/** Restore button focusability after unsetting its appearance */
 button:focus-visible {
     outline: 5px auto Highlight;
     outline: 5px auto -webkit-focus-ring-color;

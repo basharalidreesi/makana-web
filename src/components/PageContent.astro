@@ -5,7 +5,8 @@ import { createSanityImage } from '@lib/imageUtils';
 import { escapeHtml, getPreferredSlug, normaliseAspectRatioForPadding } from '@lib/contentUtils';
 import { getFile } from '@lib/assetUtils';
 import { generateRoute } from '@lib/routingUtils';
-import { DEFAULT_LANGUAGE_ID, FSI, PDI, UI_DICTIONARY } from '@lib/languageUtils';
+import { DEFAULT_LANGUAGE_ID, FSI, PDI } from '@lib/languageUtils';
+import { UI_DICTIONARY } from '@lib/uiDictionary';
 
 type Props = {
     lang: Language;
@@ -159,7 +160,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                         try {
                             return JSON.parse(attrStr);
                         } catch {
-                            return null;
+                            return undefined;
                         }
                     })
                     ?.filter((attr) => attr && attr.key && attr.key.trim())
@@ -223,7 +224,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                                     const optionLabel = escapeHtml(rawOptionLabel);
                                                     return `<option value='${optionName}'>${FSI}${optionLabel}${PDI}</option>`;
                                                 } catch {
-                                                    return null;
+                                                    return undefined;
                                                 }
                                             }).filter(Boolean).join('\n')}
                                         </select>
@@ -246,7 +247,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                                                     </label>
                                                 `);
                                             } catch {
-                                                return null;
+                                                return undefined;
                                             }
                                         }).join('\n')}
                                     </fieldset>
@@ -292,14 +293,20 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                 }
             }
             const rel = href?.startsWith('/') ? undefined : 'noreferrer noopener'
+            const target = href?.startsWith('/') ? undefined : '_blank';
             const action = 'open-windowed-content'; // previously `replace-windowed-content-with-skeleton`
             return href ? (
-                `<a href='${href}' ${rel ? `rel='${rel}'` : ''}${docType && langUsed ? [
-                    action ? `data-action='${action}'` : undefined,
-                    langUsed ? `data-action-target-lang='${langUsed}'` : undefined,
-                    docType ? `data-action-target-type='${docType}'` : undefined,
-                    `data-action-target-pathname='${href}'`,
-                ].filter(Boolean).join(' ') : ''}>
+                `<a
+                    href='${href}'
+                    ${rel ? `rel='${rel}'` : ''}
+                    ${target ? `target='${target}'` : ''}
+                    ${action && langUsed && docType ? [
+                        `data-action='${action}'`,
+                        `data-action-target-lang='${langUsed}'`,
+                        `data-action-target-type='${docType}'`,
+                        `data-action-target-pathname='${href}'`,
+                    ].join(' ') : ''}
+                >
                     ${children}
                 </a>`
             ) : children;
@@ -323,13 +330,13 @@ const html = toHTML(source, {
 ---
 
 {Array.isArray(source) && source.length > 0 && html && (
-    <div class='content'>
+    <div class='page-content'>
         <Fragment set:html={html} />
     </div>
 )}
 
 <style lang='scss' is:global>
-    .content {
+    .page-content {
         &:lang(ar) {
             line-height: var(--running-text-line-height-arabic);
         }
@@ -379,7 +386,7 @@ const html = toHTML(source, {
                 flex-wrap: wrap;
                 justify-content: center;
                 gap: var(--_gap);
-                // N.B. align-items and flex-direction in @styles/global.scss
+                // N.B. `align-items` and `flex-direction` declared in @styles/global.scss
             }
             .image {
                 flex-basis: calc((100% - ((var(--how-many-images) - 1) * var(--_gap))) / var(--how-many-images));
@@ -408,7 +415,7 @@ const html = toHTML(source, {
             }
             .inner-wrapper {
                 position: relative;
-                // N.B. padding-bottom calculated inline
+                // N.B. `padding-bottom` calculated inline
                 height: 0;
                 overflow:
                 hidden;

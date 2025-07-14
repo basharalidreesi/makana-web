@@ -11,9 +11,9 @@
 }
 
 @mixin no-scrollbar() {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
-    &::-webkit-scrollbar { /* WebKit */
+    scrollbar-width: none; /** Firefox */
+    -ms-overflow-style: none; /** Internet Explorer 10+ */
+    &::-webkit-scrollbar { /** WebKit */
         width: 0;
         height: 0;
     }

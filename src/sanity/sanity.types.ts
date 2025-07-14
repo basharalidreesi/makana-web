@@ -291,7 +291,7 @@ export type Link = {
   externalTarget?: string
 }
 
-// Sanity Images and Assets
+// --- Sanity Images and Assets ---
 
 type Geopoint = {
   _type: 'geopoint'

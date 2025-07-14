@@ -135,7 +135,13 @@
         // TODO
     };
     const closeSuperposedContent = () => {
-        // TODO
+        const superposedContent = document.querySelector<HTMLElement>('#superposed-content-container');
+        if (!superposedContent) return;
+        superposedContent.style.setProperty('display', 'none');
+        updateAriaCurrent('remove');
+        if (lastActionParams?.targetPathname) {
+            history.pushState({}, '', lastActionParams.targetPathname);
+        }
     };
     const closeAnyContent = () => {
         closeWindowedContent();
