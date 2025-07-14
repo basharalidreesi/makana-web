@@ -59,4 +59,4 @@ export const DEFAULT_LANGUAGE_DIR = DEFAULT_LANGUAGE.dir;
 
 // FSI and PDI are used for directional isolation in mixed LTR/RTL contexts
 export const FSI = '\u2068';
-export const PDI = '\u2069'
+export const PDI = '\u2069';

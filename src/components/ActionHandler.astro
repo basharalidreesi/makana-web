@@ -77,6 +77,7 @@
 
     // --- Handlers ---
     const expandOrCollapseNavigationSubmenu = () => {
+        // Toggles navigation submenus
         if (!lastActionParams?.originId) return;
         const button = document.querySelector<HTMLElement>(`#${lastActionParams.originId}`);
         const buttonControlsId = button?.getAttribute('aria-controls');
@@ -106,6 +107,7 @@
         // closeAnyContent(); // Not needed
     };
     const openWindowedContent = () => {
+        // Displays a skeletoned windowed content instance to enhance the navigation experience
         const mainElement = document.querySelector<HTMLElement>('main');
         const templateElement = document.querySelector<HTMLTemplateElement>('#windowed-content-template');
         if (!mainElement || !templateElement) return;
@@ -119,13 +121,16 @@
         if (lastActionParams?.targetType) {
             skeletonContent.classList.replace('default-windowed-content', `${lastActionParams.targetType}-windowed-content`);
         }
-        mainElement.replaceChildren(skeletonFragment);
+        const existing = document.querySelector<HTMLElement>('#windowed-content-container');
+        existing?.remove();
+        mainElement.appendChild(skeletonFragment);
         updateAriaCurrent('replace');
     };
     const closeWindowedContent = () => {
+        // Intercepts normal navigation to simulate a SPA environment
         const windowedContent = document.querySelector<HTMLElement>('#windowed-content-container');
         if (!windowedContent) return;
-        windowedContent.style.setProperty('display', 'none');
+        windowedContent.remove();
         updateAriaCurrent('remove');
         if (lastActionParams?.targetPathname) {
             history.pushState({}, '', lastActionParams.targetPathname);
@@ -137,7 +142,7 @@
     const closeSuperposedContent = () => {
         const superposedContent = document.querySelector<HTMLElement>('#superposed-content-container');
         if (!superposedContent) return;
-        superposedContent.style.setProperty('display', 'none');
+        superposedContent.remove();
         updateAriaCurrent('remove');
         if (lastActionParams?.targetPathname) {
             history.pushState({}, '', lastActionParams.targetPathname);

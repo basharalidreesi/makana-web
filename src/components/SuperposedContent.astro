@@ -40,7 +40,7 @@ const {
                     <bdi>{title || UI_DICTIONARY.untitledLabel[lang]}</bdi>
                 </h2>
                 <time datetime={'resolvedDate.iso'} aria-label={'resolvedDate.readable'}>
-                    <bdi>00_00_0000</bdi>
+                    <bdi>{false || UI_DICTIONARY.datePlaceholder}</bdi> <!-- TODO -->
                 </time>
             )}
         </div>
@@ -91,8 +91,8 @@ const {
     }
     .superposed-content-header time {
         order: 1;
+        display: var(--navigation-submenu-date-display);
         margin-inline-end: var(--navigation-submenu-date-title-gap);
-        // N.B. `display` declared in @styles/global.scss
     }
     .superposed-content-header h2 {
         order: 2;

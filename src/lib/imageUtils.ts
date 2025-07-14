@@ -90,7 +90,7 @@ export const createSanityImage = ({
             'background-size: cover',
             'background-position: center',
     ] : [];
-    const stylesString = styles.filter(Boolean).join('; ');
+    const stylesString = styles.join('; ');
     return (`
         <img
             src='${src}'

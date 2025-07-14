@@ -24,6 +24,7 @@ export const UI_DICTIONARY: DocumentTypeLabels & {
     error404Message: LocalisedRecord<string>;
     comma: LocalisedRecord<string>;
     monthNames: LocalisedRecord<string[]>;
+    datePlaceholder: string;
     timeAmLabel: LocalisedRecord<string>;
     timePmLabel: LocalisedRecord<string>;
 } = {
@@ -84,6 +85,7 @@ export const UI_DICTIONARY: DocumentTypeLabels & {
         ar: ['كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين الثاني', 'كانون الأول'],
         en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
     },
+    datePlaceholder: '00_00_0000',
     timeAmLabel: {
         ar: 'ص',
         en: 'AM',

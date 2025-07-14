@@ -6,8 +6,8 @@ import { type AlternateDocument } from '@lib/contentUtils';
 import { DEFAULT_LANGUAGE_ID } from '@lib/languageUtils';
 import { UI_DICTIONARY } from '@lib/uiDictionary';
 import { generateOgImageUrl } from '@lib/imageUtils';
-import { ClientRouter } from 'astro:transitions';
 import ActionHandler from '@components/ActionHandler.astro';
+import { ClientRouter } from 'astro:transitions';
 import Logo from '@components/Logo.astro';
 import NavigationBar from '@components/NavigationBar.astro';
 import FeaturedBar from '@components/FeaturedBar.astro';
@@ -179,8 +179,8 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             <Fragment set:html={resolvedAnalytics} />
         )}
         <meta name='generator' content={Astro.generator} />
-        <ClientRouter />
         <ActionHandler />
+        <ClientRouter />
     </head>
     <body>
         <div class='logo-bar'>
@@ -230,19 +230,19 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
         background-color: var(--page-background-colour);
     }
     header {
+        z-index: 1;
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
         display: flex;
-        gap: var(--page-gap);
+        flex-direction: column;
+        row-gap: var(--page-gap);
         padding-top: var(--page-padding-top);
         padding-left: var(--page-padding-inline);
         padding-right: var(--page-padding-inline);
         padding-bottom: var(--page-padding-bottom);
-        z-index: 1;
-        // N.B. `flex-wrap` and `flex-direction` declared in @styles/global.scss
     }
     .logo-bar {
         z-index: 3;

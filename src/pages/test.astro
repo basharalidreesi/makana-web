@@ -1,7 +1,6 @@
 ---
 import SuperposedContent from "@components/SuperposedContent.astro";
 import Layout from "@layouts/Layout.astro";
-
 ---
 
 <Layout
@@ -9,8 +8,7 @@ import Layout from "@layouts/Layout.astro";
     title={undefined}
 >
     <SuperposedContent
-        skeleton={false}
-        lang={'ar'}
+        lang={undefined}
         title={undefined}
     >
         <div class='countermap'></div>
@@ -29,6 +27,6 @@ import Layout from "@layouts/Layout.astro";
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: lightblue;
+        background: linear-gradient(to bottom, lightskyblue, lightyellow);
     }
 </style>

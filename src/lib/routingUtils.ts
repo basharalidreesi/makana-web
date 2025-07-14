@@ -6,14 +6,15 @@ export const LOCALE_PREFIXES: Record<Language, string> = {
     en: 'en',
 };
 
-type LocalisedDocumentCollectionPathRecord<T> = {
+type LocalisedRecord<T> = {
     [L in Language]: T;
 };
-type DocumentCollectionPathDictionary = {
-  [K in CollectionDocumentType]: LocalisedDocumentCollectionPathRecord<string>;
+
+type DocumentTypePaths = {
+  [K in CollectionDocumentType]: LocalisedRecord<string>;
 };
 
-export const DOCUMENT_COLLECTION_PATHS: DocumentCollectionPathDictionary = {
+export const DOCUMENT_COLLECTION_PATHS: DocumentTypePaths = {
     project: {
         ar: 'mashrouat',
         en: 'projects',
@@ -46,8 +47,8 @@ export const generateRoute = (
     if (!slug) return undefined;
     if (isCollectionDocument(doc)) {
         const collectionPath: string = DOCUMENT_COLLECTION_PATHS[doc._type][lang];
-        return `/${localePath}/${collectionPath}/${slug}`;
+        return `/${localePath}/${collectionPath}/${slug}/`;
     } else {
-        return `/${localePath}/${slug}`;
+        return `/${localePath}/${slug}/`;
     }
 };

@@ -2,10 +2,6 @@
 
 @use '@styles/mixins.scss';
 
-.sr-only:not(:focus):not(:active) {
-    @include mixins.visually-hidden;
-}
-
 :root {
     // text
     --font-size: 18px;
@@ -49,20 +45,6 @@
     --skeleton-content-animation: pulse 2s infinite;
 }
 :root {
-    // animations
-    @keyframes pulse {
-        0% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.4;
-        }
-        100% {
-            opacity: 1;
-        }
-    }
-}
-:root {
     // page
     --page-padding-top: 2.5rem;
     --page-padding-bottom: 2.5rem;
@@ -77,6 +59,7 @@
     --navigation-submenu-indent-inline-start: 10rem;
     --navigation-submenu-indent-inline-end: 10rem;
     --navigation-submenu-date-title-gap: 4rem;
+    --navigation-submenu-date-display: initial;
     // windowed content
     --small-windowed-content-max-width: 37.5rem;
     --big-windowed-content-max-width: 47.5rem;
@@ -92,13 +75,15 @@
     --content-orb-width: 2.5rem;
     --content-orb-padding: 0.25rem;
     // featured items
-    --featured-bar-width: calc(100% - var(--page-gap) - var(--logo-width) - 1px);
-    --featured-bar-height: calc(100% - var(--navigation-menu-height) - var(--navigation-menu-margin-top) - var(--page-gap) + 1px);
-    --featured-items-gap: 2rem;
+    --featured-bar-width: calc(100% - var(--page-gap) - var(--logo-width));
+    --featured-bar-height: calc(100% - var(--navigation-menu-height) - var(--navigation-menu-margin-top) - var(--page-gap));
+    --featured-list-flex-direction: row;
+    --featured-list-flex-align: flex-end;
+    --featured-list-flex-justify: left;
     --featured-item-max-width: 25rem;
-    --featured-item-padding-top: 1.25rem;
-    --featured-item-padding-bottom: 1rem;
-    --featured-item-padding-inline: 1.25rem;
+    --featured-item-padding-top: 1rem;
+    --featured-item-padding-bottom: 0.75rem;
+    --featured-item-padding-inline: 1rem;
     // content & misc
     --content-small-gap: 0.5rem;
     --content-medium-gap: 1rem;
@@ -112,6 +97,8 @@
     --blockquote-indent-inline-start: 1rem;
     --media-landscape-max-width: 50rem;
     --media-portrait-max-width: 22.5rem;
+    --image-block-flex-direction: row;
+    --image-block-flex-align: flex-end;
 }
 
 // breakpoints
@@ -120,11 +107,7 @@
         // windowed content
         --big-windowed-content-max-width: 42.5rem;
         // featured items
-        --featured-items-gap: 1.5rem;
         --featured-item-max-width: 20rem;
-        --featured-item-padding-top: 1rem;
-        --featured-item-padding-bottom: 0.75rem;
-        --featured-item-padding-inline: 1rem;
     }
 }
 @media (max-width: 1024px) {
@@ -136,11 +119,8 @@
         --navigation-submenu-date-title-gap: 1.5rem;
         // windowed content
         --big-windowed-content-max-width: 37.5rem;
-    }
-}
-@media (min-width: 897px) {
-    .featured-items {
-        align-items: flex-end;
+        // featured items
+        --featured-item-max-width: 17.5rem;
     }
 }
 @media (max-width: 896px) {
@@ -148,34 +128,28 @@
         // windowed content
         --small-windowed-content-max-width: 31.25rem;
         --big-windowed-content-max-width: 31.25rem;
-    }
-    // featured items
-    .featured-items {
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: flex-end;
+        // featured items
+        --featured-list-flex-direction: column;
+        --featured-list-flex-align: left;
+        --featured-list-flex-justify: flex-end;
     }
 }
 @media (max-width: 768px) {
     :root {
         // text
         --font-size: 16px;
+        // page
+        --page-gap: 2rem;
         // navigation menu
         --menu-item-padding-block: 1rem;
+        --navigation-submenu-date-display: none;
         // windowed content
         --windowed-content-indent-inline-start: auto;
         --windowed-content-indent-inline-end: auto;
         --windowed-content-container-extra-padding-top: 1rem;
         --windowed-content-container-extra-padding-bottom: calc(1rem + var(--logo-height));
         --windowed-content-container-extra-padding-inline: 1rem;
-    }
-    // navigation menu
-    .navigation-submenu-item .time {
-        display: none;
-    }
-    // superposed content
-    .superposed-content-header time {
-        display: none;
+        --windowed-content-padding-inline: 1.5rem;
     }
 }
 @media (max-width: 640px) or (max-height: 448px) {
@@ -189,21 +163,11 @@
         --logo-height: 2.5rem;
     }
 }
-@media (min-width: 641px) {
-    header {
-        flex-wrap: wrap;
-    }
-}
 @media (max-width: 640px) {
     :root {
         // featured items
         --featured-bar-width: 100%;
-        --featured-bar-height: calc(100% - var(--navigation-menu-height) - var(--navigation-menu-margin-top) - var(--page-gap) - var(--page-gap) - var(--logo-height) + 1px);
-    }
-    // page
-    header {
-        flex-direction: column;
-        flex-wrap: nowrap;
+        --featured-bar-height: calc(100% - var(--navigation-menu-height) - var(--navigation-menu-margin-top) - var(--page-gap) - var(--page-gap) - var(--logo-height));
     }
 }
 @media (max-height: 384px) {
@@ -218,12 +182,6 @@
         --menu-item-padding-block: 0.666rem;
     }
 }
-@media (min-width: 513px) {
-    // page content
-    .page-content .image-block .wrapper {
-        align-items: flex-end;
-    }
-}
 @media (max-width: 512px) {
     :root {
         // navigation menu
@@ -232,14 +190,12 @@
         // windowed content
         --windowed-content-padding-top: 1.5rem;
         --windowed-content-padding-bottom: 1.5rem;
-        --windowed-content-padding-inline: 1.5rem;
+        --windowed-content-padding-inline: 1.25rem;
         // featured items
         --featured-item-max-width: 100%;
-    }
-    // page content
-    .page-content .image-block .wrapper {
-        flex-direction: column;
-        align-items: center;
+        // page content
+        --image-block-flex-direction: column;
+        --image-block-flex-align: center;
     }
 }
 @media (max-width: 384px) {
@@ -250,6 +206,10 @@
         --windowed-content-container-extra-padding-inline: 0.5rem;
         --windowed-content-padding-top: 1rem;
     }
+}
+
+.sr-only:not(:focus):not(:active) {
+    @include mixins.visually-hidden;
 }
 
 .skeleton {
@@ -275,4 +235,17 @@
 }
 .skeleton-text:last-of-type {
     width: 75%;
+}
+:root {
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.4;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
 }

@@ -135,7 +135,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                                         >
                                                             <span class='time'>
                                                                 <time {...(itemDate.iso && itemDate.readable ? { datetime: itemDate.iso, 'aria-label': itemDate.readable } : { role: 'presentation', 'aria-hidden': 'true' })}>
-                                                                    <bdi>{itemDate.compact || '00_00_0000'}</bdi>
+                                                                    <bdi>{itemDate.compact || UI_DICTIONARY.datePlaceholder}</bdi>
                                                                 </time>
                                                             </span>
                                                             <span class='title'>
@@ -185,10 +185,8 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
     .navigation-bar {
         position: relative;
         order: 1;
-        flex-basis: 100%;
         display: flex;
         margin-top: var(--navigation-menu-margin-top);
-        margin-bottom: auto;
     }
     .navigation-bar::after {
         content: '';
@@ -228,8 +226,8 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
         max-width: var(--navigation-submenu-indent-inline-start);
     }
     .navigation-submenu-item .time {
+        display: var(--navigation-submenu-date-display);
         margin-inline-end: var(--navigation-submenu-date-title-gap);
-        // N.B. `display` declared in @styles/global.scss
     }
     .navigation-submenu-item a {
         max-width: 100%;

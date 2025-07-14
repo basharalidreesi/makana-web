@@ -20,7 +20,7 @@ const {
 
 {Array.isArray(items) && items.length > 0 && (
     <aside class='featured-bar' aria-label={UI_DICTIONARY.featuredItemsLabel[lang]}>
-        <ul class='featured-items'>
+        <ul class='featured-list'>
             {items.map((item) => {
                 const slugData = getPreferredSlug(item, lang);
                 if (!slugData) return;
@@ -63,38 +63,41 @@ const {
 )}
 
 <!-- <script> // TODO
-    const THRESHOLD_AR = 2.0;
-    const updateThumbnails = () => {
-        const allThumbnails: NodeListOf<HTMLElement> | null = document.querySelectorAll('.featured-item .thumbnail');
-        const thumbnailsToHide: HTMLElement[] | null = [];
-        allThumbnails?.forEach((thumbnail) => {
-            thumbnail.style.display = '';
-        });
-        allThumbnails?.forEach((thumbnail) => {
-            const rect = thumbnail.getBoundingClientRect();
-            const rawAspectRatio = rect.width / rect.height;
-            const roundedAspectRatio = Math.round(rawAspectRatio * 100) / 100;
-            console.log(roundedAspectRatio);
-            if (roundedAspectRatio >= THRESHOLD_AR) {
-                thumbnailsToHide.push(thumbnail);
+    if (!window._blabla) {
+        window._blabla = true;
+        const THRESHOLD_AR = 16/9;
+        const updateThumbnails = () => {
+            const allThumbnails: NodeListOf<HTMLElement> | null = document.querySelectorAll('.featured-item .thumbnail');
+            const thumbnailsToHide: HTMLElement[] | null = [];
+            allThumbnails?.forEach((thumbnail) => {
+                thumbnail.style.display = '';
+            });
+            allThumbnails?.forEach((thumbnail) => {
+                const rect = thumbnail.getBoundingClientRect();
+                const rawAspectRatio = rect.width / rect.height;
+                const roundedAspectRatio = Math.round(rawAspectRatio * 100) / 100;
+                console.log(roundedAspectRatio);
+                if (roundedAspectRatio >= THRESHOLD_AR) {
+                    thumbnailsToHide.push(thumbnail);
+                }
+            });
+            thumbnailsToHide?.forEach((thumbnail) => {
+                thumbnail.style.display = 'none';
+            });
+        };
+        updateThumbnails();
+        const container: HTMLElement | null = document.querySelector('.featured-item')?.parentElement || document.body;
+        let resizeTimeout: number | null = null;
+        const observer = new ResizeObserver(() => {
+            if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
             }
+            resizeTimeout = window.setTimeout(() => {
+                updateThumbnails();
+            }, 50);
         });
-        thumbnailsToHide?.forEach((thumbnail) => {
-            thumbnail.style.display = 'none';
-        });
-    };
-    updateThumbnails();
-    const container: HTMLElement | null = document.querySelector('.featured-item')?.parentElement || document.body;
-    let resizeTimeout: number | null = null;
-    const observer = new ResizeObserver(() => {
-        if (resizeTimeout) {
-            clearTimeout(resizeTimeout);
-        }
-        resizeTimeout = window.setTimeout(() => {
-            updateThumbnails();
-        }, 50);
-    });
-    observer.observe(container);
+        observer.observe(container);
+    }
 </script> -->
 
 <style lang='scss'>
@@ -106,13 +109,14 @@ const {
         width: var(--featured-bar-width);
         height: var(--featured-bar-height);
     }
-    .featured-items {
+    .featured-list {
         display: flex;
-        gap: var(--featured-items-gap);
+        flex-direction: var(--featured-list-flex-direction);
+        align-items: var(--featured-list-flex-align);
+        justify-content: var(--featured-list-flex-justify);
+        gap: var(--page-gap);
         width: 100%;
         height: 100%;
-        overflow: hidden;
-        // N.B. `flex-direction`, `align-items`, and `justify-content` declared in @styles/global.scss
     }
     .featured-item {
         position: relative;
@@ -120,7 +124,6 @@ const {
         flex-direction: column;
         row-gap: var(--content-small-gap);
         width: 100%;
-        min-width: 0;
         max-width: var(--featured-item-max-width);
         height: fit-content;
         max-height: 100%;

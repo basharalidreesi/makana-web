@@ -383,10 +383,11 @@ const html = toHTML(source, {
             }
             .wrapper {
                 display: flex;
+                flex-direction: var(--image-block-flex-direction);
                 flex-wrap: wrap;
+                align-items: var(--image-block-flex-align);
                 justify-content: center;
                 gap: var(--_gap);
-                // N.B. `align-items` and `flex-direction` declared in @styles/global.scss
             }
             .image {
                 flex-basis: calc((100% - ((var(--how-many-images) - 1) * var(--_gap))) / var(--how-many-images));
