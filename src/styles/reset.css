@@ -81,6 +81,13 @@ button {
     all: unset;
 }
 
+/** Prevent double-tap zooming on interactive elements */
+button, a
+label, input, textarea, select,
+summary, details {
+    touch-action: manipulation;
+}
+
 /** Restore button focusability after unsetting its appearance */
 button:focus-visible {
     outline: 5px auto Highlight;

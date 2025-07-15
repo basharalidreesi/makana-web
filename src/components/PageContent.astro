@@ -306,9 +306,7 @@ const components: Pick<PortableTextHtmlComponents, 'types' | 'marks' | 'block' |
                         `data-action-target-type='${docType}'`,
                         `data-action-target-pathname='${href}'`,
                     ].join(' ') : ''}
-                >
-                    ${children}
-                </a>`
+                >${children}</a>`
             ) : children;
         },
         bdi: ({ children }) => `<bdi>${children}</bdi>`,
