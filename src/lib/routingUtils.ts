@@ -1,6 +1,8 @@
 import type { AnyTargetableDocumentStub, CollectionDocument, CollectionDocumentType, Language } from '@root/sanity/sanity.types';
 import { getSlug } from '@lib/contentUtils';
 
+export const HOME_PAGE_PATHNAME = '/';
+
 export const LOCALE_PREFIXES: Record<Language, string> = {
     ar: 'ar',
     en: 'en',

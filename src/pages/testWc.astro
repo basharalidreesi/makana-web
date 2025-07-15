@@ -1,0 +1,21 @@
+---
+import CounterMap from "@components/CounterMap.astro";
+import WindowedContent from "@components/WindowedContent.astro";
+import Layout from "@layouts/Layout.astro";
+---
+
+<Layout
+    lang={undefined}
+    title={undefined}
+>
+    <CounterMap />
+    <WindowedContent
+        lang={undefined}
+        title={undefined}
+        exitPathname={'/testSc/'}
+    > <!-- TODO dynamic exitPathname -->
+        <div>
+            Blablablabla
+        </div>
+    </WindowedContent>
+</Layout>

@@ -1,4 +1,5 @@
 import type { AnyTargetableDocumentType, Language } from '@root/sanity/sanity.types';
+import { HOME_PAGE_PATHNAME } from '@lib/routingUtils';
 
 type LocalisedRecord<T> = {
     [L in Language]: T;
@@ -74,8 +75,8 @@ export const UI_DICTIONARY: DocumentTypeLabels & {
         en: '-- select an option --',
     },
     error404Message: {
-        ar: `<h1>خطأ 404: الصفحة غير متوفرة</h1><p>قد تكون الصفحة التي تبحثون عنها نُقلت أو حُذفت، أو ربّما لم تكن موجودة أصلًا.</p><p>يمكنكم تجربة ما يلي:</p><ol><li>التحقق من صحة الرابط</li><li>العودة إلى <a href='/'>الصفحة الرئيسة</a></li></ol><p>إذا استمرت المشكلة، يُرجى التواصل معنا أو تكرار المحاولة لاحقًا.</p><p><em>مكانة</em></p>`,
-        en: `<h1>Error 404: Page not found</h1><p>The page you are looking for may have been moved or deleted, or it might have never existed at all.</p><p>A few things you can try:</p><ol><li>Check the URL for any typos</li><li>Go back to the <a href='/'>homepage</a></li></ol><p>If the problem persists, please contact us or try again later.</p><p><em>makāna</em></p>`,
+        ar: `<h1>خطأ 404: الصفحة غير متوفرة</h1><p>قد تكون الصفحة التي تبحثون عنها نُقلت أو حُذفت، أو ربّما لم تكن موجودة أصلًا.</p><p>يمكنكم تجربة ما يلي:</p><ol><li>التحقق من صحة الرابط</li><li>العودة إلى <a href='${HOME_PAGE_PATHNAME}'>الصفحة الرئيسة</a></li></ol><p>إذا استمرت المشكلة، يُرجى التواصل معنا أو تكرار المحاولة لاحقًا.</p><p><em>مكانة</em></p>`,
+        en: `<h1>Error 404: Page not found</h1><p>The page you are looking for may have been moved or deleted, or it might have never existed at all.</p><p>A few things you can try:</p><ol><li>Check the URL for any typos</li><li>Go back to the <a href='${HOME_PAGE_PATHNAME}'>homepage</a></li></ol><p>If the problem persists, please contact us or try again later.</p><p><em>makāna</em></p>`,
     },
     comma: {
         ar: '،',

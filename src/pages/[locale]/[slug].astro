@@ -6,7 +6,7 @@ import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
 import { filterByLocalisedSlug, getAlternates, getContent, getSlug, getTextLength, getTitle } from '@lib/contentUtils';
 import { registerId } from '@lib/idRegistry';
-import { generateRoute, LOCALE_PREFIXES } from '@lib/routingUtils';
+import { generateRoute, HOME_PAGE_PATHNAME, LOCALE_PREFIXES } from '@lib/routingUtils';
 import Layout from '@layouts/Layout.astro';
 import PageContent from '@components/PageContent.astro';
 import WindowedContent from '@components/WindowedContent.astro';
@@ -91,6 +91,7 @@ const resolvedContent = getContent(doc, lang);
         type={doc._type}
         textLength={resolvedTextLength}
         alternates={resolvedAlternates}
+        exitPathname={HOME_PAGE_PATHNAME}
     >
         {resolvedContent && (
             <PageContent source={resolvedContent} lang={lang} />

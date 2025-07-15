@@ -1,6 +1,6 @@
 import type { AnyContentDocument, AnyLocationedDocument, AnyMetaedDocument, AnyRichlyDatedDocument, AnySimplyDatedDocument, AnyTargetableDocument, AnyTargetableDocumentStub, AnyTargetableDocumentType, AnyTitledDocument, Language, PageBuilder } from '@root/sanity/sanity.types';
 import { DEFAULT_LANGUAGE_ID, FSI, PDI, SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
-import { UI_DICTIONARY } from './uiDictionary';
+import { UI_DICTIONARY } from '@lib/uiDictionary';
 import { getFromRegistry } from '@lib/idRegistry';
 import { DateTime } from 'luxon';
 

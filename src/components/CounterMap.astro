@@ -1,0 +1,37 @@
+---
+import SuperposedContent from '@components/SuperposedContent.astro';
+import { HOME_PAGE_PATHNAME } from '@lib/routingUtils';
+---
+
+<div transition:persist='countermap'>
+    <SuperposedContent
+        lang={undefined}
+        title={undefined}
+        exitPathname={HOME_PAGE_PATHNAME}
+    >
+        <div class='countermap'></div>
+        <div slot='in-orbs'>
+            <a
+                href='/testWc/'
+                data-action='open-windowed-content'
+                data-action-target-lang={'en'}
+                data-action-target-type={'project'}
+                data-action-target-pathname={'/testWc/'}
+            >
+                Orb
+            </a>
+        </div>
+    </SuperposedContent>
+</div>
+
+
+<style lang='scss'>
+    .countermap {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, lightskyblue, lightyellow);
+    }
+</style>

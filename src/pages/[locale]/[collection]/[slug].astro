@@ -6,7 +6,7 @@ import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
 import { filterByLocalisedSlug, getAlternates, getContent, getDate, getDateTime, getLocation, getSlug, getSummary, getTextLength } from '@lib/contentUtils';
 import { registerId } from '@lib/idRegistry';
-import { generateRoute, LOCALE_PREFIXES } from '@lib/routingUtils';
+import { generateRoute, HOME_PAGE_PATHNAME, LOCALE_PREFIXES } from '@lib/routingUtils';
 import { DOCUMENT_COLLECTION_PATHS } from '@lib/routingUtils';
 import { getTitle } from '@lib/contentUtils';
 import Layout from '@layouts/Layout.astro';
@@ -122,6 +122,7 @@ const resolvedLocation = 'location' in doc ? getLocation(doc, lang) : undefined;
         type={doc._type}
         textLength={resolvedTextLength}
         alternates={resolvedAlternates}
+        exitPathname={HOME_PAGE_PATHNAME}
     >
         {resolvedDate.compact && (
             <p slot='in-header'>

@@ -11,6 +11,7 @@ type Props = {
     type?: AnyContentDocumentType | undefined;
     textLength?: number | undefined;
     alternates?: AlternateDocument[] | undefined;
+    exitPathname: string | undefined;
 };
 
 const {
@@ -20,6 +21,7 @@ const {
     type = 'default',
     textLength = 0,
     alternates,
+    exitPathname,
 } = Astro.props;
 
 const resolvedSize = textLength >= 1500 ? 'big' : 'small';
@@ -50,13 +52,13 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
             })}
             <div class='windowed-content-orb close-windowed-content'>
                 <a
-                    href={skeleton ? undefined : '/'}
+                    href={skeleton ? undefined : exitPathname ?? undefined}
                     title={UI_DICTIONARY.closeButtonLabel[lang]}
                     aria-label={UI_DICTIONARY.closeButtonLabel[lang]}
                     data-action='close-windowed-content'
-                    data-action-target-pathname={skeleton ? undefined : '/'}
+                    data-action-target-pathname={skeleton ? undefined : exitPathname ?? undefined}
                     data-action-prevent-default='true'
-                > <!-- `data-action-target-pathname` should not be hardcoded TODO -->
+                >
                     <Fragment set:html={UI_DICTIONARY.closeButtonSymbol} />
                 </a>
             </div>

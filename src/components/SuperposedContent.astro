@@ -8,6 +8,7 @@ type Props = {
     skeletonMode?: 'text' | 'fullscreen' | undefined;
     lang: Language | undefined;
     title: string | undefined;
+    exitPathname: string | undefined;
 };
 
 const {
@@ -15,6 +16,7 @@ const {
     skeletonMode = 'text',
     lang = DEFAULT_LANGUAGE_ID,
     title,
+    exitPathname,
 } = Astro.props;
 ---
 
@@ -23,13 +25,13 @@ const {
         <div class='superposed-content-header'>
             <div class='close-superposed-content'>
                 <a
-                    href={skeleton ? undefined : '/'}
+                    href={skeleton ? undefined : (exitPathname ?? exitPathname)}
                     title={UI_DICTIONARY.backButtonLabel[lang]}
                     aria-label={UI_DICTIONARY.backButtonLabel[lang]}
                     data-action='close-superposed-content'
-                    data-action-target-pathname={skeleton ? undefined : '/'}
+                    data-action-target-pathname={skeleton ? undefined : (exitPathname ?? undefined)}
                     data-action-prevent-default='true'
-                > <!-- `data-action-target-pathname` should not be hardcoded TODO -->
+                >
                     <Fragment set:html={UI_DICTIONARY.backButtonSymbol[lang]} />
                 </a>
             </div>
@@ -69,7 +71,11 @@ const {
 <style lang='scss'>
     .superposed-content-container {
         z-index: 2;
-        position: relative;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
     }
     .superposed-content {
         display: flex;
