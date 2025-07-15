@@ -21,7 +21,8 @@ const {
 {Array.isArray(items) && items.length > 0 && (
     <aside class='featured-bar' aria-label={UI_DICTIONARY.featuredItemsLabel[lang]}>
         <ul class='featured-list'>
-            {items.map((item) => {
+            {items.map((item, index) => {
+                if (index > 1) return; // limit to two items
                 const slugData = getPreferredSlug(item, lang);
                 if (!slugData) return;
                 const routeToItem = generateRoute(item, slugData.langUsed);
@@ -62,44 +63,6 @@ const {
     </aside>
 )}
 
-<!-- <script> // TODO
-    if (!window._blabla) {
-        window._blabla = true;
-        const THRESHOLD_AR = 16/9;
-        const updateThumbnails = () => {
-            const allThumbnails: NodeListOf<HTMLElement> | null = document.querySelectorAll('.featured-item .thumbnail');
-            const thumbnailsToHide: HTMLElement[] | null = [];
-            allThumbnails?.forEach((thumbnail) => {
-                thumbnail.style.display = '';
-            });
-            allThumbnails?.forEach((thumbnail) => {
-                const rect = thumbnail.getBoundingClientRect();
-                const rawAspectRatio = rect.width / rect.height;
-                const roundedAspectRatio = Math.round(rawAspectRatio * 100) / 100;
-                console.log(roundedAspectRatio);
-                if (roundedAspectRatio >= THRESHOLD_AR) {
-                    thumbnailsToHide.push(thumbnail);
-                }
-            });
-            thumbnailsToHide?.forEach((thumbnail) => {
-                thumbnail.style.display = 'none';
-            });
-        };
-        updateThumbnails();
-        const container: HTMLElement | null = document.querySelector('.featured-item')?.parentElement || document.body;
-        let resizeTimeout: number | null = null;
-        const observer = new ResizeObserver(() => {
-            if (resizeTimeout) {
-                clearTimeout(resizeTimeout);
-            }
-            resizeTimeout = window.setTimeout(() => {
-                updateThumbnails();
-            }, 50);
-        });
-        observer.observe(container);
-    }
-</script> -->
-
 <style lang='scss'>
     ul, li {
         list-style: none;
@@ -120,7 +83,7 @@ const {
     }
     .featured-item {
         position: relative;
-        display: flex;
+        display: var(--featured-item-display);
         flex-direction: column;
         row-gap: var(--content-small-gap);
         width: 100%;
@@ -159,6 +122,9 @@ const {
         line-height: var(--average-text-line-height);
     }
     .thumbnail {
+        display: var(--featured-item-thumbnail-display);
+        align-items: center;
+        justify-content: center;
         overflow: hidden;
     }
     .thumbnail :global(img) {

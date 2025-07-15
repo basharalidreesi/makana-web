@@ -229,6 +229,12 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
         display: var(--navigation-submenu-date-display);
         margin-inline-end: var(--navigation-submenu-date-title-gap);
     }
+    .navigation-submenu-item .title {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        padding-block: 8px; // arbitrary to fix vertical clipping
+        margin-block: -8px; // same amount but negative
+    }
     .navigation-submenu-item a {
         max-width: 100%;
     }
@@ -252,8 +258,6 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
     .collection-navigation-item button {
         padding-block: var(--menu-item-padding-block);
         width: fit-content;
-        text-overflow: ellipsis;
-        overflow: hidden;
     }
     .static-navigation-item a[aria-current] {
         font-weight: 400;
