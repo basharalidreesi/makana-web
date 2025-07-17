@@ -50,14 +50,15 @@ export const getPreferredSlug = (
     return undefined;
 };
 
-export const getTitle = (
+export const getTitle = <F extends boolean | undefined = true>(
     doc: AnyTitledDocument | undefined,
     lang: Language | undefined,
-): string => {
-    const fallbackTitle = UI_DICTIONARY.untitledLabel[lang ?? DEFAULT_LANGUAGE_ID]
-    if (!doc || !lang) return fallbackTitle;
+    withFallback?: F,
+): F extends true ? string : string | undefined => {
+    const fallbackTitle = withFallback === true ? UI_DICTIONARY.untitledLabel[lang ?? DEFAULT_LANGUAGE_ID] : undefined;
+    if (!doc || !lang) return fallbackTitle as F extends true ? string : string | undefined;
     const title = doc.title?.[lang];
-    return title ?? fallbackTitle;
+    return title ?? fallbackTitle as F extends true ? string : string | undefined;
 };
 
 export const getSummary = (

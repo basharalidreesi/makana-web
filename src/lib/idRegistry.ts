@@ -16,7 +16,6 @@ import type { AnyTargetableDocumentType, Language } from '@root/sanity/sanity.ty
  * - @pages/[slug].astro
  * - @pages/[locale]/[collection].astro
  * - @lib/contentUtils.astro
- * - @components/FeaturedBar.astro
  */
 
 type DocumentId = string;

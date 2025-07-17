@@ -2,9 +2,8 @@
 import type { AnyFeaturableDocument, Language } from '@root/sanity/sanity.types';
 import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_IDS, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
 import { UI_DICTIONARY } from '@lib/uiDictionary';
-import { getPreferredSlug } from '@lib/contentUtils';
+import { getPreferredSlug, getTitle } from '@lib/contentUtils';
 import { generateRoute } from '@lib/routingUtils';
-import { getFromRegistry } from '@lib/idRegistry';
 import { createSanityImage } from '@lib/imageUtils';
 
 type Props = {
@@ -27,8 +26,6 @@ const {
                 if (!slugData) return;
                 const routeToItem = generateRoute(item, slugData.langUsed);
                 if (!routeToItem) return;
-                const itemAsRegistered = getFromRegistry(item._id);
-                if (!itemAsRegistered?.[slugData.langUsed]) return;
                 const thumbnail = createSanityImage({
                     source: item.mainImage,
                     width: 1200,
@@ -49,11 +46,14 @@ const {
                                 data-action-target-type={item._type}
                                 data-action-target-pathname={routeToItem}
                             >
-                                {SUPPORTED_LANGUAGES_IDS.map((langId) => itemAsRegistered[langId]?.title && (
-                                    <span lang={langId} dir={SUPPORTED_LANGUAGES_RECORD[langId].dir}>
-                                        <bdi>{itemAsRegistered[langId]?.title}</bdi>
-                                    </span>
-                                ))}
+                                {SUPPORTED_LANGUAGES_IDS.map((langId) => {
+                                    const itemTitleInLang = getTitle(item, langId, false);
+                                    return itemTitleInLang && (
+                                        <span lang={langId} dir={SUPPORTED_LANGUAGES_RECORD[langId].dir}>
+                                            <bdi>{itemTitleInLang}</bdi>
+                                        </span>
+                                    );
+                                })}
                             </a>
                         </div>
                     </li>
