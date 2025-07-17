@@ -86,15 +86,18 @@ const {
         display: var(--featured-item-display);
         flex-direction: column;
         row-gap: var(--content-small-gap);
-        width: 100%;
-        max-width: var(--featured-item-max-width);
-        height: fit-content;
+        width: var(--featured-item-max-width);
+        height: max-content;
         max-height: 100%;
         padding-top: var(--featured-item-padding-top);
         padding-bottom: var(--featured-item-padding-bottom);
         padding-inline: var(--featured-item-padding-inline);
         border: 1px solid;
         overflow: hidden;
+    }
+    .featured-list,
+    .featured-item {
+        min-height: 0;
     }
     a {
         display: flex;

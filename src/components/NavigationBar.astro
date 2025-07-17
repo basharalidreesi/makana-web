@@ -192,7 +192,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
         content: '';
         position: absolute;
         display: block;
-        top: 0;
+        top: -1px;
         left: 0;
         right: 0;
         height: 1px;
@@ -256,7 +256,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
     .static-navigation-item a,
     .collection-navigation-item button {
         padding-block: var(--menu-item-padding-block);
-        width: fit-content;
+        width: max-content;
     }
     .static-navigation-item a[aria-current] {
         font-weight: 400;

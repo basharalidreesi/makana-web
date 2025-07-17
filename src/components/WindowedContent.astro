@@ -203,6 +203,14 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
     .windowed-content-header + .content {
         margin-top: var(--content-big-gap);
     }
+    .windowed-content-header + :global(.content:has(
+        .page-content > p:first-child,
+        .page-content > ol:first-child,
+        .page-content > ul:first-child,
+        .page-content > blockquote:first-child
+    )) {
+        margin-top: var(--content-medium-gap);
+    }
 
     .skeleton-subtitle {
         margin-top: var(--content-small-gap);

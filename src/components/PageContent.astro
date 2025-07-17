@@ -336,9 +336,11 @@ const html = toHTML(source, {
 <style lang='scss' is:global>
     .page-content {
         &:lang(ar) {
+            --_lh: var(--running-text-line-height-arabic);
             line-height: var(--running-text-line-height-arabic);
         }
         &:not(:lang(ar)) {
+            --_lh: var(--running-text-line-height-non-arabic);
             line-height: var(--running-text-line-height-non-arabic);
         }
         h3, strong {
@@ -369,9 +371,9 @@ const html = toHTML(source, {
         blockquote::before {
             content: '';
             position: absolute;
+            top: calc((1em * var(--_lh)) * 0.2);
+            bottom: calc((1em * var(--_lh)) * 0.1);
             inset-inline-start: 0;
-            top: 0.2lh;
-            bottom: 0.1lh;
             width: 2px;
             background: var(--blockquote-indent-line-colour);
         }
@@ -478,7 +480,7 @@ const html = toHTML(source, {
                 row-gap: calc(var(--_gap) / 2);
             }
             .text-field label, .textarea-field label, .select-field label, .checkbox-field legend {
-                width: fit-content;
+                width: max-content;
                 max-width: 100%;
                 font-weight: 400;
             }
@@ -493,13 +495,13 @@ const html = toHTML(source, {
             }
             .textarea-field textarea {
                 resize: vertical;
-                min-height: calc(1lh + (var(--_field-padding) * 2) + (1px * 2));
+                min-height: calc((1em * var(--_lh)) + (var(--_field-padding) * 2) + (1px * 2));
             }
             .select-field select {
                 cursor: pointer;
                 background-image: url("data:image/svg+xml;utf8,<svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M6 9L12 15L18 9' stroke-width='1' stroke='currentColor' vector-effect='non-scaling-stroke'/></svg>");
                 background-repeat: no-repeat;
-                background-size: 1lh;
+                background-size: calc(1em * var(--_lh));
             }
             .select-field select:dir(rtl) {
                 background-position: left var(--_field-padding) center;
@@ -518,18 +520,18 @@ const html = toHTML(source, {
                 display: flex;
                 align-items: center;
                 column-gap: var(--_checkbox-label-gap);
-                width: fit-content;
+                width: max-content;
                 max-width: 100%;
                 cursor: pointer;
             }
             .checkbox-field input {
+                width: calc(1em * var(--_lh));
+                height: calc(1em * var(--_lh));
                 flex-grow: 0;
                 flex-shrink: 0;
                 position: relative;
                 align-self: flex-start;
                 appearance: none;
-                width: 1lh;
-                height: 1lh;
                 border: 1px solid var(--form-field-outline-colour);
                 background: var(--form-field-background-default-colour);
                 cursor: pointer;
@@ -547,7 +549,7 @@ const html = toHTML(source, {
             }
             button {
                 display: block;
-                width: fit-content;
+                width: max-content;
                 max-width: 100%;
                 margin-top: 0.25rem; // arbitrary
                 padding-block: var(--_button-block-padding);

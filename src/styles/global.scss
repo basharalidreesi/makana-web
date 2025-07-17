@@ -54,7 +54,7 @@
     --logo-height: 3.5rem;
     // navigation menu // N.B. `--how-many-menu-items` and `--navigation-menu-height` calculated in @components/NavigationBar.astro
     --menu-item-padding-block: 0.666rem;
-    --menu-item-height: calc(1lh + (var(--menu-item-padding-block) * 2) + 1px);
+    --menu-item-height: calc(1em + (var(--menu-item-padding-block) * 2) + 1px);
     --navigation-menu-margin-top: calc(var(--menu-item-padding-block) * -1 / 2);
     --navigation-submenu-indent-inline-start: 10rem;
     --navigation-submenu-indent-inline-end: 10rem;
