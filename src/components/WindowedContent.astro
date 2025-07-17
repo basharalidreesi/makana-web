@@ -143,8 +143,8 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
         margin-inline: calc(var(--windowed-content-padding-inline) * -1);
     }
     .windowed-content-orb {
-        outline: 1px solid var(--content-orb-outline-colour);
         border-radius: 100%;
+        box-shadow: 0 0 0 1px var(--content-orb-outline-colour);
         background-color: var(--content-orb-background-colour);
     }
     .windowed-content-orb a {
