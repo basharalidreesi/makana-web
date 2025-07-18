@@ -28,7 +28,7 @@ const resolvedAspectRatio = websiteSettings?.logoAspectRatio ?? FALLBACK_SVG_ASP
 
 <Fragment set:html={`<style>:root{--logo-aspect-ratio:${resolvedAspectRatio};--logo-width:calc(var(--logo-height)*var(--logo-aspect-ratio));}</style>`} />
 
-<div class='logo'>
+<div class='logo' transition:persist='logo'>
     <div>
         <a
             href={HOME_PAGE_PATHNAME}

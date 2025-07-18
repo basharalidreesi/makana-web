@@ -21,7 +21,6 @@ const {
     lang = DEFAULT_LANGUAGE_ID,
     items,
     currentPath,
-    ...rest
 } = Astro.props;
 
 type ContentCollection = {
@@ -61,7 +60,7 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
 
 <Fragment set:html={`<style>:root{--how-many-menu-items:${MINIMUM_MENU_ITEMS_COUNT};--navigation-menu-height:calc(var(--how-many-menu-items)*var(--menu-item-height));}</style>`} />
 
-<div class='navigation-bar' {...rest}>
+<div class='navigation-bar' transition:persist='navigation-bar'>
     {SUPPORTED_LANGUAGES_ORDERED.map((supportedLang) => {
         const langId = supportedLang.id;
         const langDir = supportedLang.dir;

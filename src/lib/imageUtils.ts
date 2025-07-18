@@ -101,7 +101,7 @@ export const createSanityImage = ({
             ${sizes ? `sizes='${sizes}'` : ''}
             ${loading ? `loading='${loading}'` : ''}
             decoding='async'
-            ${stylesString ? `style="${stylesString};"` : ''}
+            ${stylesString ? `style='${stylesString};'` : ''}
             data-orientation='${
                 width > height ? 'landscape'
                 : height > width ? 'portrait'

@@ -18,7 +18,7 @@ const {
 ---
 
 {Array.isArray(items) && items.length > 0 && (
-    <aside class='featured-bar' aria-label={UI_DICTIONARY.featuredItemsLabel[lang]}>
+    <aside class='featured-bar' aria-label={UI_DICTIONARY.featuredItemsLabel[lang]} transition:persist='featured-bar'>
         <ul class='featured-list'>
             {items.map((item, index) => {
                 if (index > 1) return; // limit to two items
