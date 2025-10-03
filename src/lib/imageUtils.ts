@@ -111,7 +111,7 @@ export const createSanityImage = ({
     `);
 };
 
-export const fetchSvg = async (source: string | undefined): Promise<string | undefined> => {
+export const fetchSvg = async (source: string | undefined, strip: boolean = false): Promise<string | undefined> => {
     if (!source) return undefined;
     try {
         const res = await fetch(source);
@@ -120,9 +120,10 @@ export const fetchSvg = async (source: string | undefined): Promise<string | und
         if (!contentType.includes('image/svg')) return undefined;
         const svg = await res.text();
         if (!svg) return undefined;
-        return svg
+        if (strip) return svg
             .replace(/\s*(style|class|id)\s*=\s*(['"])[\s\S]*?\2/gi, '')
             .replace(/<\s*style[^>]*>[\s\S]*?<\s*\/\s*style\s*>/gi, '');
+        return svg;
     } catch {
         console.warn('Logo fetch failed');
         console.warn('Using fallback logo');

@@ -1,5 +1,6 @@
 ---
 import type { Language } from '@root/sanity/sanity.types';
+import type { DateObject } from '@lib/contentUtils';
 import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_RECORD } from '@lib/languageUtils';
 import { UI_DICTIONARY } from '@lib/uiDictionary';
 
@@ -8,6 +9,7 @@ type Props = {
     skeletonMode?: 'text' | 'fullscreen' | undefined;
     lang: Language | undefined;
     title: string | undefined;
+    date: DateObject | undefined;
     exitPathname: string | undefined;
 };
 
@@ -16,6 +18,7 @@ const {
     skeletonMode = 'text',
     lang = DEFAULT_LANGUAGE_ID,
     title,
+    date,
     exitPathname,
 } = Astro.props;
 ---
@@ -25,14 +28,14 @@ const {
         <div class='superposed-content-header'>
             <div class='close-superposed-content'>
                 <a
-                    href={skeleton ? undefined : (exitPathname ?? exitPathname)}
+                    href={skeleton ? undefined : (exitPathname ?? undefined)}
                     title={UI_DICTIONARY.backButtonLabel[lang]}
                     aria-label={UI_DICTIONARY.backButtonLabel[lang]}
                     data-action='close-superposed-content'
                     data-action-target-pathname={skeleton ? undefined : (exitPathname ?? undefined)}
                     data-action-prevent-default='true'
                 >
-                    <Fragment set:html={UI_DICTIONARY.backButtonSymbol[lang]} />
+                    <Fragment set:html={UI_DICTIONARY.backButtonSymbol} />
                 </a>
             </div>
             {skeleton ? (
@@ -41,8 +44,8 @@ const {
                 <h2>
                     <bdi>{title || UI_DICTIONARY.untitledLabel[lang]}</bdi>
                 </h2>
-                <time datetime={'resolvedDate.iso'} aria-label={'resolvedDate.readable'}>
-                    <bdi>{false || UI_DICTIONARY.datePlaceholder}</bdi> <!-- TODO -->
+                <time datetime={date?.iso ?? undefined} aria-label={date?.readable ?? undefined}>
+                    <bdi>{date?.compact ?? UI_DICTIONARY.datePlaceholder}</bdi>
                 </time>
             )}
         </div>
@@ -133,6 +136,9 @@ const {
         fill: none;
         stroke-width: 1px;
         stroke: currentColor;
+    }
+    .close-superposed-content:dir(rtl) :global(svg) {
+        transform: scaleX(-1);
     }
     .superposed-content-orbs {
         position: fixed;

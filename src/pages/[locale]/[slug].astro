@@ -4,16 +4,18 @@ import type { HomePage, Language, RootDocument, RootDocumentType } from '@root/s
 import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
 import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
-import { filterByLocalisedSlug, getAlternates, getContent, getSlug, getTextLength, getTitle } from '@lib/contentUtils';
+import { filterByLocalisedSlug, getAlternates, getContent, getDate, getSlug, getSummary, getTextLength, getTitle, type DateObject } from '@lib/contentUtils';
 import { registerId } from '@lib/idRegistry';
 import { generateRoute, HOME_PAGE_PATHNAME, LOCALE_PREFIXES } from '@lib/routingUtils';
 import Layout from '@layouts/Layout.astro';
 import PageContent from '@components/PageContent.astro';
 import WindowedContent from '@components/WindowedContent.astro';
+import CounterMap from '@components/CounterMap.astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
     const documentTypes: RootDocumentType[] = [
         'aboutPage',
+        'specialProject_counterMap',
     ];
     const languages: Language[] = SUPPORTED_LANGUAGES_IDS as Language[];
     const paths: { params: Record<string, string>, props: Record<string, any> }[] = [];
@@ -25,7 +27,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
             'slug',
             RESOLVED_CONTENT_QUERY,
         ];
-        const queryFields = baseQueryFields.join(', ');
+        if (documentType === 'specialProject_counterMap') {
+            baseQueryFields.push(
+                'date',
+                'summary',
+                'mainImage',
+            );
+        }
+        const queryFields = baseQueryFields.filter(Boolean).join(', ');
         const documents: Exclude<RootDocument, HomePage>[] = await sanityClient.fetch(`
             *[_type == '${documentType}' && (${definedLocalisedSlug})] {
                 ${queryFields}
@@ -75,6 +84,8 @@ const {
 } = Astro.props;
 
 const resolvedTitle = getTitle(doc, lang);
+const resolvedDescription = 'summary' in doc && getSummary(doc, lang) || undefined;
+const resolvedImage = 'mainImage' in doc && doc.mainImage || undefined;
 const resolvedAlternates = getAlternates(doc, lang);
 const resolvedTextLength = getTextLength(doc, lang);
 const resolvedContent = getContent(doc, lang);
@@ -83,18 +94,28 @@ const resolvedContent = getContent(doc, lang);
 <Layout
     lang={lang}
     title={resolvedTitle}
+    description={resolvedDescription ?? undefined}
+    image={resolvedImage}
     alternates={resolvedAlternates}
 >
-    <WindowedContent
-        lang={lang}
-        title={resolvedTitle}
-        type={doc._type}
-        textLength={resolvedTextLength}
-        alternates={resolvedAlternates}
-        exitPathname={HOME_PAGE_PATHNAME}
-    >
-        {resolvedContent && (
-            <PageContent source={resolvedContent} lang={lang} />
-        )}
-    </WindowedContent>
+    {doc._type === 'aboutPage' && (
+        <WindowedContent
+            lang={lang}
+            title={resolvedTitle}
+            type={doc._type}
+            textLength={resolvedTextLength}
+            alternates={resolvedAlternates}
+            exitPathname={HOME_PAGE_PATHNAME}
+        >
+            {resolvedContent && (
+                <PageContent source={resolvedContent} lang={lang} />
+            )}
+        </WindowedContent>
+    )}
+    {doc._type === 'specialProject_counterMap' && (
+        <CounterMap
+            lang={lang}
+            exitPathname={HOME_PAGE_PATHNAME}
+        />
+    )}
 </Layout>

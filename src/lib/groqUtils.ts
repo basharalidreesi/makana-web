@@ -59,6 +59,8 @@ const PT_RESOLVERS = [
 export const definedLocalisedSlug = SUPPORTED_LANGUAGES_IDS
     .map((langId) => `defined(slug.${langId}.current)`).join(' || ');
 
+export const definedMapAsset = `defined(mapAsset.asset)`;
+
 export const RESOLVED_CONTENT_QUERY = (`
     content {
         ${SUPPORTED_LANGUAGES_IDS.map((langId) => (`

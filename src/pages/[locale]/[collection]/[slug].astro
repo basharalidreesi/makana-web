@@ -1,10 +1,10 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import type { CollectionDocument, CollectionDocumentType, Language } from '@root/sanity/sanity.types';
+import type { CollectionDocument, CollectionDocumentType, CounterMap as CounterMapProps, Language } from '@root/sanity/sanity.types';
 import { SUPPORTED_LANGUAGES_IDS } from '@lib/languageUtils';
-import { definedLocalisedSlug, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
+import { definedLocalisedSlug, definedMapAsset, RESOLVED_CONTENT_QUERY } from '@lib/groqUtils';
 import sanityClient from '@root/sanity/sanity.cli';
-import { filterByLocalisedSlug, getAlternates, getContent, getDate, getDateTime, getLocation, getSlug, getSummary, getTextLength } from '@lib/contentUtils';
+import { filterByLocalisedSlug, getAlternates, getContent, getDate, getDateTime, getLocation, getSlug, getSummary, getTextLength, type DateObject } from '@lib/contentUtils';
 import { registerId } from '@lib/idRegistry';
 import { generateRoute, HOME_PAGE_PATHNAME, LOCALE_PREFIXES } from '@lib/routingUtils';
 import { DOCUMENT_COLLECTION_PATHS } from '@lib/routingUtils';
@@ -12,6 +12,7 @@ import { getTitle } from '@lib/contentUtils';
 import Layout from '@layouts/Layout.astro';
 import PageContent from '@components/PageContent.astro';
 import WindowedContent from '@components/WindowedContent.astro';
+import CounterMap from '@components/CounterMap.astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
     const documentTypes: CollectionDocumentType[] = [
@@ -19,6 +20,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
         'writing',
         'happening',
         'resource',
+        'specialProject_counterMap_initiative',
     ];
     const languages: Language[] = SUPPORTED_LANGUAGES_IDS as Language[];
     const paths: { params: Record<string, string>, props: Record<string, any> }[] = [];
@@ -39,7 +41,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
                 'timezone',
                 'location',
             );
-        } else {
+        }
+        if (['project', 'writing', 'resource'].includes(documentType)) {
             baseQueryFields.push(
                 'date',
             );
@@ -101,12 +104,23 @@ const resolvedImage = doc.mainImage;
 const resolvedAlternates = getAlternates(doc, lang);
 const resolvedTextLength = getTextLength(doc, lang);
 const resolvedContent = getContent(doc, lang);
-const resolvedDate = {
+const resolvedDate: DateObject = {
     iso: 'date' in doc ? getDate(doc, 'iso', lang) : 'startDate' in doc ? getDateTime(doc, 'iso', lang) : undefined,
     compact: 'date' in doc ? getDate(doc, 'compact', lang) : 'startDate' in doc ? getDateTime(doc, 'compact', lang) : undefined,
     readable: 'date' in doc ? getDate(doc, 'readable', lang) : 'startDate' in doc ? getDateTime(doc, 'readable', lang) : undefined,
 };
 const resolvedLocation = 'location' in doc ? getLocation(doc, lang) : undefined;
+
+let counterMapExitPathname = undefined;
+if (doc._type === 'specialProject_counterMap_initiative') {
+    const counterMapDoc: CounterMapProps = await sanityClient.fetch(`
+        *[_type == 'specialProject_counterMap' && (${definedLocalisedSlug}) && (${definedMapAsset})][0] {
+            _type,
+            slug,
+        }
+    `);
+    counterMapExitPathname = generateRoute(counterMapDoc, lang);
+}
 ---
 
 <Layout
@@ -116,13 +130,19 @@ const resolvedLocation = 'location' in doc ? getLocation(doc, lang) : undefined;
     image={resolvedImage}
     alternates={resolvedAlternates}
 >
+    {doc._type === 'specialProject_counterMap_initiative' && (
+        <CounterMap
+            lang={lang}
+            exitPathname={HOME_PAGE_PATHNAME}
+        />
+    )}
     <WindowedContent
         lang={lang}
         title={resolvedTitle}
         type={doc._type}
         textLength={resolvedTextLength}
         alternates={resolvedAlternates}
-        exitPathname={HOME_PAGE_PATHNAME}
+        exitPathname={doc._type === 'specialProject_counterMap_initiative' ? counterMapExitPathname : HOME_PAGE_PATHNAME}
     >
         {resolvedDate.compact && (
             <p slot='in-header'>

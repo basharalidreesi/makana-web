@@ -52,11 +52,11 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
             })}
             <div class='windowed-content-orb close-windowed-content'>
                 <a
-                    href={skeleton ? undefined : exitPathname ?? undefined}
+                    href={skeleton ? undefined : (exitPathname ?? undefined)}
                     title={UI_DICTIONARY.closeButtonLabel[lang]}
                     aria-label={UI_DICTIONARY.closeButtonLabel[lang]}
                     data-action='close-windowed-content'
-                    data-action-target-pathname={skeleton ? undefined : exitPathname ?? undefined}
+                    data-action-target-pathname={skeleton ? undefined : (exitPathname ?? undefined)}
                     data-action-prevent-default='true'
                 >
                     <Fragment set:html={UI_DICTIONARY.closeButtonSymbol} />
@@ -133,6 +133,9 @@ const resolvedSize = textLength >= 1500 ? 'big' : 'small';
     }
     .resource-windowed-content {
         background-color: var(--windowed-content-resource-background-colour);
+    }
+    .specialProject_counterMap_initiative-windowed-content {
+        background-color: var(--windowed-content-initiative-background-colour);
     }
     .windowed-content-orbs {
         display: flex;

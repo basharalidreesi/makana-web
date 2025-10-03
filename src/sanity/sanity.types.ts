@@ -98,11 +98,21 @@ export type Resource = SanityDocumentBase
   _type: 'resource'
 }
 
+export type CounterMapInitiative = SanityDocumentBase
+  & IsTargetable
+  & HasTitle
+  & HasContent
+  & HasMeta
+  & {
+  _type: 'specialProject_counterMap_initiative'
+}
+
 export type CollectionDocument =
   | Project
   | Writing
   | Happening
   | Resource
+  | CounterMapInitiative
 
 export type CollectionDocumentType = CollectionDocument['_type']
 
@@ -122,9 +132,29 @@ export type HomePage = SanityDocumentBase
   featuredItems?: Array<ResolvedSanityReference<AnyFeaturableDocument>>
 }
 
+export type CounterMap = SanityDocumentBase
+  & IsTargetable
+  & IsFeaturable
+  & HasTitle
+  & HasContent
+  & HasSimpleDate
+  & HasMeta
+  & {
+  _type: 'specialProject_counterMap'
+  submissionForm?: ResolvedSanityReference<Form>
+  mapAsset?: ResolvedSanityReference<SanityImage>
+  mapMarkers?: Array<{
+    _key: string
+    x?: number
+    y?: number
+    initiative?: ResolvedSanityReference<CounterMapInitiative>
+  }>
+}
+
 export type RootDocument = 
   | AboutPage
   | HomePage
+  | CounterMap
 
 export type RootDocumentType = RootDocument['_type']
 

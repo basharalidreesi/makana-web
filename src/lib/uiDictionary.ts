@@ -20,7 +20,7 @@ export const UI_DICTIONARY: DocumentTypeLabels & {
     closeButtonLabel: LocalisedRecord<string>;
     closeButtonSymbol: string;
     backButtonLabel: LocalisedRecord<string>;
-    backButtonSymbol: LocalisedRecord<string>;
+    backButtonSymbol: string;
     optionSelectPlaceholder: LocalisedRecord<string>;
     error404Message: LocalisedRecord<string>;
     comma: LocalisedRecord<string>;
@@ -66,10 +66,7 @@ export const UI_DICTIONARY: DocumentTypeLabels & {
         ar: 'إغلاق',
         en: 'Close',
     },
-    backButtonSymbol: {
-        ar: `<svg width='48' height='24' viewBox='0 0 48 24' xmlns='http://www.w3.org/2000/svg'><line x1='6' y1='12' x2='36' y2='12'/><polyline points='30 6, 36 12, 30 18'/></svg>`,
-        en: `<svg width='48' height='24' viewBox='0 0 48 24' xmlns='http://www.w3.org/2000/svg'><line x1='42' y1='12' x2='12' y2='12'/><polyline points='18 6, 12 12, 18 18'/></svg>`,
-    },
+    backButtonSymbol: `<svg width='48' height='24' viewBox='0 0 48 24' xmlns='http://www.w3.org/2000/svg'><line x1='42' y1='12' x2='12' y2='12'/><polyline points='18 6, 12 12, 18 18'/></svg>`,
     optionSelectPlaceholder: {
         ar: '-- يرجى الاختيار --',
         en: '-- select an option --',
@@ -114,5 +111,13 @@ export const UI_DICTIONARY: DocumentTypeLabels & {
     resource: {
         ar: 'موارد',
         en: 'Resources',
+    },
+    specialProject_counterMap: {
+        ar: 'خريطة عمّان المضادة',
+        en: 'Counter-Map of Amman',
+    },
+    specialProject_counterMap_initiative: {
+        ar: 'مبادرات',
+        en: 'Initiatives',
     },
 };

@@ -1,7 +1,7 @@
 ---
 import sanityClient from '@root/sanity/sanity.cli';
-import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImage, HomePage } from '@root/sanity/sanity.types';
-import { definedLocalisedSlug } from '@lib/groqUtils';
+import type { AboutPage, Happening, Project, Resource, Website, Writing, Language, SanityImage, HomePage, CounterMap } from '@root/sanity/sanity.types';
+import { definedLocalisedSlug, definedMapAsset } from '@lib/groqUtils';
 import { type AlternateDocument } from '@lib/contentUtils';
 import { DEFAULT_LANGUAGE_ID } from '@lib/languageUtils';
 import { UI_DICTIONARY } from '@lib/uiDictionary';
@@ -12,6 +12,7 @@ import Logo from '@components/Logo.astro';
 import NavigationBar from '@components/NavigationBar.astro';
 import FeaturedBar from '@components/FeaturedBar.astro';
 import WindowedContent from '@components/WindowedContent.astro';
+import SuperposedContent from '@components/SuperposedContent.astro';
 import '@styles/reset.css';
 import '@styles/fonts.css';
 import '@styles/global.scss';
@@ -95,6 +96,15 @@ const resources: Resource[] | undefined = await sanityClient.fetch(`
         slug,
         date
     } | order(date desc, title asc)
+`);
+
+const counterMap: CounterMap | undefined = await sanityClient.fetch(`
+    *[_type == 'specialProject_counterMap' && (${definedLocalisedSlug}) && (${definedMapAsset})][0] {
+        _type,
+        title,
+        slug,
+        date
+    }
 `);
 
 type Props = {
@@ -199,6 +209,7 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
                     writings: writings,
                     happenings: happenings,
                     resources: resources,
+                    specialProject_counterMap: counterMap,
                 }}
             />
             <FeaturedBar
@@ -218,7 +229,16 @@ const resolvedFeaturedItems = (homePage?.featuredItems || []).filter((item) => O
             exitPathname={undefined}
         />
     </template>
-    <!-- TODO SuperposedContent template -->
+    <template id='superposed-content-template'>
+        <SuperposedContent
+            skeleton={true}
+            skeletonMode={'fullscreen'}
+            lang={undefined}
+            title={undefined}
+            date={undefined}
+            exitPathname={undefined}
+        />
+    </template>
 </html>
 
 <style lang='scss'>

@@ -15,7 +15,7 @@ const {
     websiteSettings,
 } = Astro.props;
 
-const svgContent = websiteSettings?.logoUrl && await fetchSvg(websiteSettings.logoUrl);
+const svgContent = websiteSettings?.logoUrl && await fetchSvg(websiteSettings.logoUrl, true);
 
 const FALLBACK_SVG_WIDTH = 493.2;
 

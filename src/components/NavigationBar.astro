@@ -1,9 +1,9 @@
 ---
-import type { AboutPage, CollectionDocument, CollectionDocumentType, Happening, Language, Project, Resource, Writing } from '@root/sanity/sanity.types';
+import type { AboutPage, CollectionDocument, CollectionDocumentType, CounterMap, Happening, Language, Project, Resource, Writing } from '@root/sanity/sanity.types';
 import { DEFAULT_LANGUAGE_ID, SUPPORTED_LANGUAGES_ORDERED } from '@lib/languageUtils';
 import { generateRoute } from '@lib/routingUtils';
 import { UI_DICTIONARY } from '@lib/uiDictionary';
-import { filterByLocalisedSlug, getDate, getSlug, getTitle } from '@lib/contentUtils';
+import { filterByLocalisedSlug, getDate, getSlug, getTitle, type DateObject } from '@lib/contentUtils';
 
 type Props = {
     lang: Language;
@@ -14,6 +14,7 @@ type Props = {
         writings: Writing[] | undefined;
         happenings: Happening[] | undefined;
         resources: Resource[] | undefined;
+        specialProject_counterMap: CounterMap | undefined;
     };
 };
 
@@ -49,7 +50,10 @@ const contentCollections: ContentCollection[] = [
 
 const hasDocs = (docs: CollectionDocument[] | undefined) => Array.isArray(docs) && docs.length > 0;
 
-const contentCollectionsWithDocs = contentCollections.filter(({ docs }) => hasDocs(docs));
+const contentCollectionsWithDocs = contentCollections.filter(({ key, docs }) => {
+    if (key === 'project' && items.specialProject_counterMap) return true;
+    return hasDocs(docs);
+});
 
 const baseMenuItemsCount = items.aboutPage ? 1 : 0;
 
@@ -66,6 +70,13 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
         const langDir = supportedLang.dir;
         const routeToAboutPage = items.aboutPage?.slug?.[langId]?.current && generateRoute(items.aboutPage, langId);
         const aboutPageTitle = items.aboutPage?.title?.[langId] || UI_DICTIONARY.aboutPage[langId];
+        const routeToCounterMap = items.specialProject_counterMap?.slug?.[langId]?.current && generateRoute(items.specialProject_counterMap, langId);
+        const counterMapTitle = items.specialProject_counterMap?.title?.[langId] || UI_DICTIONARY.specialProject_counterMap[langId];
+        const counterMapDate: DateObject = {
+            iso: getDate(items.specialProject_counterMap, 'iso', langId),
+            compact: getDate(items.specialProject_counterMap, 'compact', langId),
+            readable: getDate(items.specialProject_counterMap, 'readable', langId),
+        };
         return (
             <section lang={langId} dir={langDir}>
                 <nav aria-label={UI_DICTIONARY.navigationMenuLabel[langId]}>
@@ -112,14 +123,34 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                             <bdi>{sectionTitle}</bdi>
                                         </button>
                                         <ul id={submenuId} class='navigation-submenu' aria-hidden='true' hidden tabindex='-1'>
+                                            {key === 'project' && items.specialProject_counterMap && routeToCounterMap && (
+                                                <li class='navigation-submenu-item static-navigation-item'>
+                                                    <a
+                                                        href={routeToCounterMap}
+                                                        aria-current={routeToCounterMap === currentPath ? 'page' : undefined}
+                                                        data-action='open-superposed-content'
+                                                        data-action-target-lang={langId}
+                                                        data-action-target-pathname={routeToCounterMap}
+                                                    >
+                                                        <span class='time'>
+                                                            <time {...(counterMapDate.iso && counterMapDate.readable ? { datetime: counterMapDate.iso, 'aria-label': counterMapDate.readable } : { role: 'presentation', 'aria-hidden': 'true' })}>
+                                                                <bdi>{counterMapDate.compact || UI_DICTIONARY.datePlaceholder}</bdi>
+                                                            </time>
+                                                        </span>
+                                                        <span class='title'>
+                                                            <bdi>{counterMapTitle}</bdi>
+                                                        </span>
+                                                    </a>
+                                                </li>
+                                            )}
                                             {localisedItems.map((item) => {
                                                 const itemSlug = getSlug(item, langId);
                                                 const itemTitle = getTitle(item, langId);
-                                                const itemDate = {
+                                                const itemDate: DateObject | undefined = 'date' in item ? {
                                                     iso: getDate(item, 'iso', langId),
                                                     compact: getDate(item, 'compact', langId),
                                                     readable: getDate(item, 'readable', langId),
-                                                };
+                                                } : undefined;
                                                 const routeToItem = itemSlug && generateRoute(item, langId);
                                                 if (!routeToItem) return;
                                                 return (
@@ -132,11 +163,13 @@ const MINIMUM_MENU_ITEMS_COUNT = baseMenuItemsCount + dynamicMenuItemsCount;
                                                             data-action-target-type={item._type}
                                                             data-action-target-pathname={routeToItem}
                                                         >
-                                                            <span class='time'>
-                                                                <time {...(itemDate.iso && itemDate.readable ? { datetime: itemDate.iso, 'aria-label': itemDate.readable } : { role: 'presentation', 'aria-hidden': 'true' })}>
-                                                                    <bdi>{itemDate.compact || UI_DICTIONARY.datePlaceholder}</bdi>
-                                                                </time>
-                                                            </span>
+                                                            {itemDate && (
+                                                                <span class='time'>
+                                                                    <time {...(itemDate.iso && itemDate.readable ? { datetime: itemDate.iso, 'aria-label': itemDate.readable } : { role: 'presentation', 'aria-hidden': 'true' })}>
+                                                                        <bdi>{itemDate.compact || UI_DICTIONARY.datePlaceholder}</bdi>
+                                                                    </time>
+                                                                </span>
+                                                            )}
                                                             <span class='title'>
                                                                 <bdi>{itemTitle}</bdi>
                                                             </span>

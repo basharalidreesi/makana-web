@@ -16,7 +16,8 @@
     "@sanity/image-url": "^1.1.0",
     "astro": "^5.10.1",
     "luxon": "^3.7.1",
-    "sass": "^1.89.2"
+    "sass": "^1.89.2",
+    "svg-pan-zoom": "^3.6.2"
   },
   "devDependencies": {
     "@types/luxon": "^3.6.2"

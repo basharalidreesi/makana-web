@@ -93,6 +93,10 @@ export const getTextLength = (
 
 type DateFormat = 'iso' | 'compact' | 'readable';
 
+export type DateObject = {
+    [K in DateFormat]?: string;
+}
+
 const pad = (n: number): string => n.toString().padStart(2, '0');
 
 const formatDate = (

@@ -137,7 +137,21 @@
         }
     };
     const openSuperposedContent = () => {
-        // TODO
+        // Displays a skeletoned superposed content instance to enhance the navigation experience
+        const mainElement = document.querySelector<HTMLElement>('main');
+        const templateElement = document.querySelector<HTMLTemplateElement>('#superposed-content-template');
+        if (!mainElement || !templateElement) return;
+        const skeletonFragment = templateElement.content.cloneNode(true) as DocumentFragment;
+        const skeletonContainer = skeletonFragment.querySelector<HTMLElement>('#superposed-content-skeleton-container');
+        const skeletonContent = skeletonContainer?.querySelector('.superposed-content');
+        if (!skeletonContainer || !skeletonContent) return;
+        if (lastActionParams?.targetLang) {
+            skeletonContainer.dir = SUPPORTED_LANGUAGES_RECORD[lastActionParams.targetLang].dir;
+        }
+        const existing = document.querySelector<HTMLElement>('#superposed-content-container');
+        existing?.remove();
+        mainElement.appendChild(skeletonFragment);
+        updateAriaCurrent('replace');
     };
     const closeSuperposedContent = () => {
         const superposedContent = document.querySelector<HTMLElement>('#superposed-content-container');

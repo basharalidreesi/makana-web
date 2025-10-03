@@ -33,6 +33,10 @@ export const DOCUMENT_COLLECTION_PATHS: DocumentTypePaths = {
         ar: 'mawarid',
         en: 'resources',
     },
+    specialProject_counterMap_initiative: {
+        ar: 'mubadarat',
+        en: 'initiatives',
+    },
 };
 
 const isCollectionDocument = (doc: AnyTargetableDocumentStub): doc is CollectionDocument => {

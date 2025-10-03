@@ -19,7 +19,7 @@
     --text-disabled-colour: #b7b7b7;
     --text-link-hover-colour: #808080;
     --text-link-underline-colour: #666;
-    --blockquote-indent-line-colour: #3A3A3A;
+    --blockquote-indent-line-colour: #3a3a3a;
     // windowed content
     --windowed-content-outline-colour: #707070;
     --windowed-content-backdrop-colour: #000;
@@ -29,11 +29,20 @@
     --windowed-content-writing-background-colour: #fff;
     --windowed-content-happening-background-colour: #fff500;
     --windowed-content-resource-background-colour: #ff7d57;
+    --windowed-content-initiative-background-colour: #fff;
     // superposed content
     --superposed-content-outline-colour: #707070;
     // content orbs
     --content-orb-background-colour: #fff;
     --content-orb-outline-colour: #707070;
+    // counter-map
+    --counter-map-viewport-background-colour: rgba(0, 0, 0, 0.15);
+    --counter-map-marker-enabled-background-colour: #fff500;
+    --counter-map-marker-enabled-foreground-colour: var(--text-default-colour);
+    --counter-map-marker-hover-foreground-colour: var(--text-link-hover-colour);
+    --counter-map-marker-disabled-background-colour: #b7b7b7;
+    --counter-map-marker-disabled-foreground-colour: #3a3a3a;
+    --counter-map-marker-outline-colour: #707070;
     // forms
     --form-field-outline-colour: #b7b7b7;
     --form-field-background-default-colour: #fff;
