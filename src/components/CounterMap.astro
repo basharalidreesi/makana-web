@@ -130,65 +130,121 @@ const svgContent = hasMapAsset && await fetchSvg(doc.mapAssetUrl, false);
 
 <script>
     import svgPanZoom from 'svg-pan-zoom';
+    import Hammer from 'hammerjs';
 
-    const initSvgPanZoom = () => {
+    const initPanZoom = () => {
         const counterMapContainer: HTMLElement | null = document.querySelector('#counter-map');
-        const counterMapAsset = counterMapContainer?.querySelector('svg');
-        if (counterMapContainer && counterMapAsset) {
-            const FIT = true;
-            const GUTTER_WIDTH = 300;
-            const GUTTER_HEIGHT = 300;
-            const MIN_ZOOM = 1;
-            const MAX_ZOOM = 5;
-            const ZOOM_SENSITIVITY = 0.2;
-            let isDragging = false;
-            const pzCounterMap = svgPanZoom(counterMapAsset, {
-                fit: FIT,
-                contain: !FIT,
-                center: true,
-                panEnabled: true,
-                zoomEnabled: true,
-                controlIconsEnabled: false,
-                dblClickZoomEnabled: true,
-                mouseWheelZoomEnabled: true,
-                preventMouseEventsDefault: true,
-                zoomScaleSensitivity: ZOOM_SENSITIVITY,
-                minZoom: MIN_ZOOM,
-                maxZoom: MAX_ZOOM,
-            });
-            interface Point {
-                x: number;
-                y: number;
+        const counterMapSvg = counterMapContainer?.querySelector('svg');
+
+        if (!counterMapContainer || !counterMapSvg) return;
+
+        // Declare parameters
+        const FIT = true;
+        const GUTTER_WIDTH = 300;
+        const GUTTER_HEIGHT = 300;
+        const MIN_ZOOM = 1;
+        const MAX_ZOOM = 5;
+        const ZOOM_SENSITIVITY = 0.2;
+        let isDragging = false;
+
+        // Create an instance of svgPanZoom
+        const panZoomInstance = svgPanZoom(counterMapSvg, {
+            fit: FIT,
+            contain: !FIT,
+            center: true,
+            panEnabled: true,
+            zoomEnabled: true,
+            controlIconsEnabled: false,
+            dblClickZoomEnabled: true,
+            mouseWheelZoomEnabled: true,
+            preventMouseEventsDefault: false,
+            zoomScaleSensitivity: ZOOM_SENSITIVITY,
+            minZoom: MIN_ZOOM,
+            maxZoom: MAX_ZOOM,
+        });
+
+        // Limit panning
+        interface Point {
+            x: number;
+            y: number;
+        };
+        const beforePan = (_oldPan: Point, newPan: Point) => {
+            const sizes = panZoomInstance.getSizes();
+            const leftLimit = -((sizes.viewBox.x + sizes.viewBox.width) * sizes.realZoom) + GUTTER_WIDTH;
+            const rightLimit = sizes.width - GUTTER_WIDTH - (sizes.viewBox.x * sizes.realZoom);
+            const topLimit = -((sizes.viewBox.y + sizes.viewBox.height) * sizes.realZoom) + GUTTER_HEIGHT;
+            const bottomLimit = sizes.height - GUTTER_HEIGHT - (sizes.viewBox.y * sizes.realZoom);
+            const customPan: Point = {
+                x: 0,
+                y: 0,
             };
-            const beforePan = (_oldPan: Point, newPan: Point) => {
-                const sizes = pzCounterMap.getSizes();
-                const leftLimit = -((sizes.viewBox.x + sizes.viewBox.width) * sizes.realZoom) + GUTTER_WIDTH;
-                const rightLimit = sizes.width - GUTTER_WIDTH - (sizes.viewBox.x * sizes.realZoom);
-                const topLimit = -((sizes.viewBox.y + sizes.viewBox.height) * sizes.realZoom) + GUTTER_HEIGHT;
-                const bottomLimit = sizes.height - GUTTER_HEIGHT - (sizes.viewBox.y * sizes.realZoom);
-                const customPan: Point = {
-                    x: 0,
-                    y: 0,
-                };
-                customPan.x = Math.max(leftLimit, Math.min(rightLimit, newPan.x));
-                customPan.y = Math.max(topLimit, Math.min(bottomLimit, newPan.y));
-                return customPan;
-            };
-            pzCounterMap.setBeforePan(beforePan);
-            counterMapContainer.addEventListener('mousedown', () => {
-                isDragging = true;
-                counterMapContainer.style.cursor = 'grabbing';
-            });
-            counterMapContainer.addEventListener('mouseup', () => {
-                if (!isDragging) return;
-                isDragging = false;
-                counterMapContainer.style.removeProperty('cursor');
-            });
-        }
+            customPan.x = Math.max(leftLimit, Math.min(rightLimit, newPan.x));
+            customPan.y = Math.max(topLimit, Math.min(bottomLimit, newPan.y));
+            return customPan;
+        };
+        panZoomInstance.setBeforePan(beforePan);
+
+        // Add 'grabbing' cursor effect
+        counterMapContainer.addEventListener('mousedown', () => {
+            isDragging = true;
+            counterMapContainer.style.cursor = 'grabbing';
+        });
+        counterMapContainer.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            counterMapContainer.style.removeProperty('cursor');
+        });
+
+        // Prevent panning when user clicks or taps on a link
+        counterMapSvg.addEventListener('mousedown', (event) => {
+            const isInsideLink = (event?.target as HTMLElement)?.closest('a');
+            if (isInsideLink) {
+                panZoomInstance.disablePan();
+            }
+        });
+        counterMapSvg.addEventListener('mouseup', () => {
+            panZoomInstance.enablePan();
+        });
+        counterMapSvg.addEventListener('touchstart', (event) => {
+            const isInsideLink = (event?.target as HTMLElement)?.closest('a');
+            if (isInsideLink) {
+                panZoomInstance.disablePan();
+            }
+        });
+        counterMapSvg.addEventListener('touchend', () => {
+            panZoomInstance.enablePan();
+        });
+
+        // Enable pinch zooming
+        const hammer = new Hammer(counterMapSvg);
+        hammer.get('pinch').set({ enable: true });
+        hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+        let lastScale: number | null = null;
+        let lastDelta = { x: 0, y: 0 };
+        hammer.on('pinchstart pinchmove', (event) => {
+            if (event.type === 'pinchstart') {
+                lastScale = panZoomInstance.getZoom();
+            }
+            if (lastScale) {
+                panZoomInstance.zoomAtPoint(lastScale * event.scale, { x: event.center.x, y: event.center.y });
+            }
+        });
+        hammer.on('panstart panmove', (event) => {
+            const dx = event.deltaX - lastDelta.x;
+            const dy = event.deltaY - lastDelta.y;
+            panZoomInstance.panBy({ x: dx, y: dy });
+            lastDelta = { x: event.deltaX, y: event.deltaY };
+        });
+        hammer.on('panend', () => {
+            lastDelta = { x: 0, y: 0 };
+        });
+        hammer.on('pinchend', () => {
+            lastScale = null;
+        });
     };
 
-    initSvgPanZoom();
-    document.addEventListener('astro:after-swap', initSvgPanZoom);
+    initPanZoom();
+    document.addEventListener('astro:after-swap', initPanZoom);
 </script>
 
 <style lang='scss'>
@@ -200,6 +256,7 @@ const svgContent = hasMapAsset && await fetchSvg(doc.mapAssetUrl, false);
         bottom: 0;
         background: var(--counter-map-viewport-background-colour);
         overflow: hidden;
+        touch-action: none;
     }
     #counter-map > :global(svg) {
         display: block;
