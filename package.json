@@ -15,13 +15,11 @@
     "@sanity/client": "^7.6.0",
     "@sanity/image-url": "^1.1.0",
     "astro": "^5.10.1",
-    "hammerjs": "^2.0.8",
     "luxon": "^3.7.1",
     "sass": "^1.89.2",
     "svg-pan-zoom": "^3.6.2"
   },
   "devDependencies": {
-    "@types/hammerjs": "^2.0.46",
     "@types/luxon": "^3.6.2"
   }
 }

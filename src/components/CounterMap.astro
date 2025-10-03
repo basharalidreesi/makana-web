@@ -130,7 +130,6 @@ const svgContent = hasMapAsset && await fetchSvg(doc.mapAssetUrl, false);
 
 <script>
     import svgPanZoom from 'svg-pan-zoom';
-    import Hammer from 'hammerjs';
 
     const initPanZoom = () => {
         const counterMapContainer: HTMLElement | null = document.querySelector('#counter-map');
@@ -195,52 +194,8 @@ const svgContent = hasMapAsset && await fetchSvg(doc.mapAssetUrl, false);
             counterMapContainer.style.removeProperty('cursor');
         });
 
-        // Prevent panning when user clicks or taps on a link
-        counterMapSvg.addEventListener('mousedown', (event) => {
-            const isInsideLink = (event?.target as HTMLElement)?.closest('a');
-            if (isInsideLink) {
-                panZoomInstance.disablePan();
-            }
-        });
-        counterMapSvg.addEventListener('mouseup', () => {
-            panZoomInstance.enablePan();
-        });
-        counterMapSvg.addEventListener('touchstart', (event) => {
-            const isInsideLink = (event?.target as HTMLElement)?.closest('a');
-            if (isInsideLink) {
-                panZoomInstance.disablePan();
-            }
-        });
-        counterMapSvg.addEventListener('touchend', () => {
-            panZoomInstance.enablePan();
-        });
-
         // Enable pinch zooming
-        const hammer = new Hammer(counterMapSvg);
-        hammer.get('pinch').set({ enable: true });
-        hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
-        let lastScale: number | null = null;
-        let lastDelta = { x: 0, y: 0 };
-        hammer.on('pinchstart pinchmove', (event) => {
-            if (event.type === 'pinchstart') {
-                lastScale = panZoomInstance.getZoom();
-            }
-            if (lastScale) {
-                panZoomInstance.zoomAtPoint(lastScale * event.scale, { x: event.center.x, y: event.center.y });
-            }
-        });
-        hammer.on('panstart panmove', (event) => {
-            const dx = event.deltaX - lastDelta.x;
-            const dy = event.deltaY - lastDelta.y;
-            panZoomInstance.panBy({ x: dx, y: dy });
-            lastDelta = { x: event.deltaX, y: event.deltaY };
-        });
-        hammer.on('panend', () => {
-            lastDelta = { x: 0, y: 0 };
-        });
-        hammer.on('pinchend', () => {
-            lastScale = null;
-        });
+        // TODO
     };
 
     initPanZoom();
