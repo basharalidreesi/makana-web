@@ -130,6 +130,7 @@ const svgContent = hasMapAsset && await fetchSvg(doc.mapAssetUrl, false);
 
 <script>
     import svgPanZoom from 'svg-pan-zoom';
+    import Hammer from 'hammerjs';
 
     const initPanZoom = () => {
         const counterMapContainer: HTMLElement | null = document.querySelector('#counter-map');
@@ -160,6 +161,57 @@ const svgContent = hasMapAsset && await fetchSvg(doc.mapAssetUrl, false);
             zoomScaleSensitivity: ZOOM_SENSITIVITY,
             minZoom: MIN_ZOOM,
             maxZoom: MAX_ZOOM,
+            customEventsHandler: {
+                haltEventListeners: [
+                    'touchstart',
+                    'touchend',
+                    'touchmove',
+                    'touchleave',
+                    'touchcancel',
+                ],
+                init: function(this: any, options) {
+                    const instance = options.instance;
+                    let initialScale = 1;
+                    let pannedX = 0;
+                    let pannedY = 0;
+                    this.hammer = new Hammer(options.svgElement, {
+                        // @ts-ignore
+                        inputClass: Hammer.SUPPORT_POINTER_EVENTS
+                            ? Hammer.PointerEventInput
+                            : Hammer.TouchInput,
+                    });
+                    this.hammer.get('pinch').set({ enable: true });
+                    this.hammer.on('doubletap', function () {
+                        instance.zoomIn();
+                    });
+                    this.hammer.on('panstart panmove', function (event: HammerInput) {
+                        if (event.type === 'panstart') {
+                            pannedX = 0;
+                            pannedY = 0;
+                        }
+                        instance.panBy({ x: event.deltaX - pannedX, y: event.deltaY - pannedY });
+                        pannedX = event.deltaX;
+                        pannedY = event.deltaY;
+                    });
+                    this.hammer.on('pinchstart pinchmove', function (event: HammerInput) {
+                        if (event.type === 'pinchstart') {
+                            initialScale = instance.getZoom();
+                        }
+                        instance.zoomAtPoint(initialScale * event.scale, {
+                            x: event.center.x,
+                            y: event.center.y,
+                        });
+                    });
+                    options.svgElement.addEventListener('touchmove', function (e) {
+                        e.preventDefault();
+                    });
+                },
+                destroy: function(this: any) {
+                    if (this.hammer) {
+                        this.hammer.destroy();
+                    }
+                },
+            },
         });
 
         // Limit panning
